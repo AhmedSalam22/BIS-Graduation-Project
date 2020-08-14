@@ -1,0 +1,28 @@
+{% extends 'home/base.html'%}
+{% load static %}
+{% block content%}
+<div class="container">
+  <div class="row">
+  {% for project in projects_list %}
+
+    {% if forloop.counter|divisibleby:3   %} 
+      <div class="row"></div>
+    {% endif %}
+    <div class="col-auto col-sm-12 col-md-12 col-lg-4 col-xl-4" style="padding-top: 15px;padding-bottom: 15px;padding-right: 15px;padding-left: 15px;">
+      <div class="bg-light border rounded shadow card" data-bs-hover-animate="pulse"><img class="card-img-top" src="{{ project.img }}">
+          <div class="card-body">
+              <h3 class="card-title" style="font-family: Antic, sans-serif;color: rgb(81,87,94);">{{ project.title }}</h3>
+              <h5 class="card-sub-title" style="font-family: Antic, sans-serif;color: #4634e2;">{{ project.tag }}</h5>
+              <p class="card-text" style="font-family: Antic, sans-serif;color: rgb(24, 114, 218);"></p><p id="lorem">{{ project.summary }}</p>
+              <button class="btn btn-primary" type="button" style="font-weight: normal;font-family: Antic, sans-serif;">Lorem in LinkedIn&nbsp;<i class="icon-social-linkedin"></i></button></div>
+      </div>
+    </div>  
+
+    <!-- {% if forloop.counter|divisibleby:3 %} 
+      </div>
+    {% endif %} -->
+  
+  {% endfor %}
+</div>
+
+{% endblock %}

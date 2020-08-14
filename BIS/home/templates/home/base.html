@@ -8,6 +8,8 @@
     <title>BIS</title>
     
     <link rel="stylesheet" href="{% static 'home/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'home/css/styles.min.css' %}">
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
 </head>
@@ -22,14 +24,14 @@
                 </a>
                 <hr class="sidebar-divider my-0">
                 <ul class="nav navbar-nav text-light" id="accordionSidebar">
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="index.html"><i class="fas fa-home"></i><span>Home</span></a><a class="nav-link" href="index.html"><i class="fab fa-app-store"></i><span>Projects</span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:home' %}"><i class="fas fa-home"></i><span>Home</span></a><a class="nav-link" href="index.html"><i class="fab fa-app-store"></i><span>Projects</span></a></li>
                     <li class="nav-item" role="presentation"></li>
                     <li class="nav-item" role="presentation"></li>
                     {% if user.is_authenticated %}
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'logout' %}?next={{ request.path }}"><i class="far fa-user-circle"></i><span>Logout</span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:logout' %}?next={{ request.path }}"><i class="far fa-user-circle"></i><span>Logout</span></a></li>
 
                     {% else %}
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'login' %}?next={{ request.path }}"><i class="far fa-user-circle"></i><span>Login</span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:login' %}?next={{ request.path }}"><i class="far fa-user-circle"></i><span>Login</span></a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="register.html"><i class="fas fa-user-circle"></i><span>Register</span></a></li>
                     {% endif %}
 
@@ -68,6 +70,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
     <script src="{% static 'home/js/script.min.js'%}"></script>
+
 </body>
 
 </html>
