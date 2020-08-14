@@ -24,7 +24,7 @@
                 </a>
                 <hr class="sidebar-divider my-0">
                 <ul class="nav navbar-nav text-light" id="accordionSidebar">
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:home' %}"><i class="fas fa-home"></i><span>Home</span></a><a class="nav-link" href="index.html"><i class="fab fa-app-store"></i><span>Projects</span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:home' %}"><i class="fas fa-home"></i><span>Home</span></a><a class="nav-link" href="{% url 'projects:home' %}"><i class="fab fa-app-store"></i><span>Projects</span></a></li>
                     <li class="nav-item" role="presentation"></li>
                     <li class="nav-item" role="presentation"></li>
                     {% if user.is_authenticated %}

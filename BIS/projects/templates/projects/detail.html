@@ -1,0 +1,29 @@
+{% extends 'home/base.html'%}
+
+{% block content %}
+
+<div class="article-clean">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 col-xl-8 offset-lg-1 offset-xl-2">
+                <img class="img-fluid" src="\{{ projects.img }} ">
+
+                <div class="intro">
+                    <h1 class="text-center">{{ projects.title }}</h1>
+                    <p class="text-center"><span class="by">by</span> <a href="#">Author Name</a><span class="date">{{ projects.release_date }}</span></p>
+                </div>
+                <div class="text">
+                    <p>
+                        {{ projects.summary }}
+                    </p>
+                    <p>
+                        {{ projects.detail }}
+                    </p>
+           
+                  
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
