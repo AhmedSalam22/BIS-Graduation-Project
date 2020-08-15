@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.conf import settings
 
 # Create your models here.
 class Accounts(models.Model):
@@ -46,7 +46,7 @@ class Journal(models.Model):
         ],
         default= "Debit",
     )
-    comment = models.CharField(max_lenght=1500)
+    comment = models.CharField(max_length=1500)
 
     def __str__(self):
         return self.account
