@@ -10,7 +10,7 @@
         <div class="card-body">
           
             
-            <a href="{% url 'sole_propritorship:accounts_create' %}">
+            <a href="{% url 'sole_proprietorship:accounts_create' %}">
               <button class="btn btn-primary"> Add an account </button>
             </a> 
           
@@ -50,8 +50,8 @@
                             <td><strong>{{ accounts.normal_balance}}</strong></td>
                             <td><strong>{{ accounts.account_type}}</strong></td>
                                   {% if accounts.owner == user %}
-                                  <td><a href="{% url 'sole_propritorship:accounts_update' accounts.id %}">Edit</a> </td>
-                                  <td><a href="{% url 'sole_propritorship:accounts_delete' accounts.id %}">Delete</a></td>
+                                  <td><a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">Edit</a> </td>
+                                  <td><a href="{% url 'sole_proprietorship:accounts_delete' accounts.id %}">Delete</a></td>
                                   {% endif %}
                             </tr>
                             {% endfor %}

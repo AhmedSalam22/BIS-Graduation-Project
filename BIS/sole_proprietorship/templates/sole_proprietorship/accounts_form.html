@@ -5,7 +5,7 @@
     {% csrf_token %}
     {{ form }}
     <input type="submit" value="Submit">
-    <input type="submit" value="Cancel" onclick="window.location.href='{% url 'sole_propritorship:all' %}';return false;">
+    <input type="submit" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:all' %}';return false;">
   </form>
 </p>
 {% endblock %}
