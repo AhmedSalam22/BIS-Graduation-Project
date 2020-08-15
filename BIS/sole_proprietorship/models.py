@@ -49,4 +49,4 @@ class Journal(models.Model):
     comment = models.CharField(max_length=1500)
 
     def __str__(self):
-        return self.account
+        return "{}".format(self.account)

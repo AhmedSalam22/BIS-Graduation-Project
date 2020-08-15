@@ -1,0 +1,18 @@
+{% extends "home/base.html" %}
+{% block content %}
+<h1>Delete accounts</h1>
+
+<p>Are you sure you want to delete the account: {{ accounts }}?</p>
+<pre>
+  Some Details 
+  account:{{ accounts.account }}
+  normal ballance: {{ accounts.normal_balance }}
+  type : {{ accounts.account_type }}
+  this also will delete all transaction related to this accounts 
+</pre>
+
+<form action="" method="POST">
+  {% csrf_token %}
+  <input type="submit" value="Yes, delete.">
+</form>
+{% endblock %}
