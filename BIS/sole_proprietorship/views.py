@@ -18,3 +18,22 @@ class AccountsUpdateView(OwnerUpdateView):
 class AccountsDeleteView(OwnerDeleteView):
     model = Accounts
 
+
+class JournalListView(OwnerListView):
+    model = Journal
+    # By convention:
+    # template_name = "app_name/model_list.html"
+
+
+class JournalCreateView(OwnerCreateView):
+    model = Journal
+    fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+
+class JournalUpdateView(OwnerUpdateView):
+    model = Journal
+    fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+
+class JournalDeleteView(OwnerDeleteView):
+    model = Journal
+
+
