@@ -34,7 +34,7 @@
                                         {% csrf_token %}
                                         {{ form.as_p }}
                                         <input type="submit" class="btn btn-primary btn-block text-white btn-user" value="Login" />
-                                        <input type="hidden" name="next" value="" />
+                                        <input type="hidden" name="next" value="{{ next }}" />
                                         <!-- {% if form.errors %}
                                         <p>Your username and password didn't match. Please try again.</p>
                                         {% endif %} -->

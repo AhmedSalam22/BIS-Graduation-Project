@@ -1,5 +1,6 @@
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
+from .forms import JournalForm
 
 class AccountsListView(OwnerListView):
     model = Accounts
@@ -28,6 +29,10 @@ class JournalListView(OwnerListView):
 class JournalCreateView(OwnerCreateView):
     model = Journal
     fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+    def get_form(self, form_class=JournalForm):
+        form = super(OwnerCreateView,self).get_form(form_class) #instantiate using parent
+        form.fields['account'].queryset = Accounts.objects.filter(owner=self.request.user)
+        return form
 
 class JournalUpdateView(OwnerUpdateView):
     model = Journal
