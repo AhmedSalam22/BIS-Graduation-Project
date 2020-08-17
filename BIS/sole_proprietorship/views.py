@@ -12,6 +12,7 @@ import csv
 from django.http import HttpResponse
 from django.utils import timezone
 
+
 def prepare_data_frame( journal  ,  accounts):
     accounts = pd.DataFrame(accounts)
     journal  = pd.DataFrame(journal)
@@ -143,18 +144,19 @@ class FinancialStatements(LoginRequiredMixin, View):
 
 
 
-def export_journal(request):
-    # Create the HttpResponse object with the appropriate CSV header.
-    owner= request.user
-    journal = Journal.objects.filter(owner=owner).all()
+class ExportJournal(LoginRequiredMixin , View):
+    def get(self , request):
+        # Create the HttpResponse object with the appropriate CSV header.
+        owner= request.user
+        journal = Journal.objects.filter(owner=owner).all()
 
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="journal{}.csv"'.format(timezone.now())
 
-    writer = csv.writer(response)
-    writer.writerow(['Date', 'Account', 'balance', 'transaction type' , 'comment'])
-    
-    for row in journal:
-        writer.writerow([row.date , row.account , row.balance , row.transaction_type , row.comment ])
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Account', 'balance', 'transaction type' , 'comment'])
+        
+        for row in journal:
+            writer.writerow([row.date , row.account , row.balance , row.transaction_type , row.comment ])
 
-    return response
+        return response
