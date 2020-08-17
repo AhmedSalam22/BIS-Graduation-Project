@@ -20,7 +20,8 @@ urlpatterns = [
         views.JournalUpdateView.as_view(success_url=reverse_lazy('sole_proprietorship:journal_all')), name='journal_update'),
     path('/journal/<int:pk>/delete', 
         views.JournalDeleteView.as_view(success_url=reverse_lazy('sole_proprietorship:journal_all')), name='journal_delete'),
-    path("/financialstatements" ,views.FinancialStatements.as_view() , name="financialstatements" )
+    path("/financialstatements" ,views.FinancialStatements.as_view() , name="financialstatements" ) , 
+    path("/export_journal" , views.export_journal , name = "export_journal") ,
 ]
 
 # We use reverse_lazy in urls.py to delay looking up the view until all the paths are defined
