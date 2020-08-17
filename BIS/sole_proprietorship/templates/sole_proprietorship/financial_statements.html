@@ -1,0 +1,66 @@
+{% extends "home/base.html" %}
+{% block content%}
+
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold">Trial Balance</p>
+    </div>
+    <div class="card-body">
+        <div class="mx-auto" style="width: 300px;">
+        {{ trial_balance|safe }}
+        {{ debit_credit }}
+        </div>
+    </div>
+<div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold">Net income</p>
+    </div>
+    <div class="card-body">
+        <div class="mx-auto" style="width: 300px;">
+        {{ net_income|safe }}
+        {{ revenue_expenses }}
+        </div>
+    </div>
+<div>
+
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold">Owner's equity statements</p>
+    </div>
+    <div class="card-body">
+        <div class="mx-auto" >
+            <pre>
+                | Owner's Equity Statement          |
+                |-----------------------------------|:-----------------:|------------------:|
+                | Owner's capital investment        |                       {{investment}}    
+                | Add net income/substract net loss |  {{amount}}                          
+                | Less: Drawings                    |  ({{drawings}})                      
+                | Owner's Equity is equal to        |                       {{ equity}}       
+            </pre>
+        </div>
+    </div>
+<div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold">Balance Sheet</p>
+    </div>
+    <div class="card-body">
+        <div class="mx-auto" style="width: 300px;">
+        <p>Assest</p>
+        {{ assest|safe }}
+        <p>Assest Balance : {{ total_assest }}</p>
+        <p>liabilities</p>
+        {{ liabilities|safe }}
+        <p>liabilities Balance : {{ total_liabilities }}</p>
+        <p>Owner's Equity {{ equity }}</p>
+        
+        </div>
+    </div>
+<div>
+
+{% endblock %}
