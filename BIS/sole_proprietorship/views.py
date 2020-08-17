@@ -51,6 +51,8 @@ def prepare_finacial_statement(df):
 
 
 class AccountsListView(OwnerListView):
+    paginate_by = 10
+
     model = Accounts
     # By convention:
     # template_name = "app_name/model_list.html"
@@ -69,6 +71,8 @@ class AccountsDeleteView(OwnerDeleteView):
 
 
 class JournalListView(OwnerListView):
+    paginate_by = 10
+
     model = Journal
     # By convention:
     # template_name = "app_name/model_list.html"
