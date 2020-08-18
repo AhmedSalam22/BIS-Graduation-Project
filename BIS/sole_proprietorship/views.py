@@ -14,6 +14,8 @@ from django.utils import timezone
 from django.db.models import Avg
 import plotly.graph_objects as go
 import plotly
+from .forms import AccountForm
+import plotly.express as px
 
 
 def prepare_data_frame( journal  ,  accounts):
@@ -185,17 +187,33 @@ class Dashboard(LoginRequiredMixin , View):
 
         assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
 
-
+        # revenue vs expense
         labels = ['Revenues','expenses']
         values = [net_income[1][1], net_income[1][0]]
 
         fig = go.Figure(data=[go.Pie(labels=labels, values=values )] )
-        revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
+        fig.update_layout(title_text='Revenues vs expenses')
 
+        revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
+        # investment vs drawings
         labels2 = ['Investment','Drawings']
         values2 = [investment, drawings ]
         fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
+        fig2.update_layout(title_text='Investment vs Drawings')
+
         investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
+        # total accounts
+        q = data.groupby("account_type")["balance_negative"].sum()
+        q.sort_values(ascending=False , inplace=True)
+        fig3 = go.Figure([go.Bar(x=q.index , y=q.values)] )
+        fig3.update_layout(title_text='accounts type')
+        accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
+
+        #line chart 
+        account_form = AccountForm()
+        q2 = data.query("account == '{}' ".format(request.GET.get("account_name") , None))
+        line_fig = px.line(q2, x="date", y="balance_negative")
+        line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
 
         ctx = {
             "total_transaction" : total_transaction , 
@@ -203,7 +221,10 @@ class Dashboard(LoginRequiredMixin , View):
             "avg_transaction" : avg_transaction , 
             "revenues_expenses_fig" : revenues_expenses_fig , 
             "investment_drwaings_fig" : investment_drwaings_fig , 
-            "equity" : equity
+            "equity" : equity  , 
+            "accounts_fig" : accounts_fig , 
+            "account_form" : account_form ,
+            "line_fig": line_fig
         }
 
 

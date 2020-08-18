@@ -67,5 +67,19 @@
         {{ investment_drwaings_fig|safe }}
     </div>
 </div>
+<div class="row">
+    <div class="col-md-12">
+        {{ accounts_fig|safe }}
 
+    </div>
+</div>
+<div class="row">
+    <form method="GET" action="">
+        {{ account_form}}
+    <input type="submit" , value="query line chart">
+    </form>
+    <div class="col-md-12">
+        {{ line_fig|safe }}
+    </div>
+</div>
 {% endblock %}
