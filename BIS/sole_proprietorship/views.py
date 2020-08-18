@@ -11,6 +11,9 @@ import numpy as np
 import csv
 from django.http import HttpResponse
 from django.utils import timezone
+from django.db.models import Avg
+import plotly.graph_objects as go
+import plotly
 
 
 def prepare_data_frame( journal  ,  accounts):
@@ -160,3 +163,57 @@ class ExportJournal(LoginRequiredMixin , View):
             writer.writerow([row.date , row.account , row.balance , row.transaction_type , row.comment ])
 
         return response
+
+class Dashboard(LoginRequiredMixin , View):
+    def get(self, request):
+        owner =  request.user
+        total_transaction = Journal.objects.filter(owner=owner).count()
+        total_accounts = Accounts.objects.filter(owner=owner).count()
+        avg_transaction = Journal.objects.filter(owner=owner).aggregate(Avg("balance")) 
+
+
+        accounts = Accounts.objects.filter(owner=owner).all().values()
+        journal = Journal.objects.filter(owner=owner).all().values()
+
+
+        data = prepare_data_frame(journal , accounts)
+        trial_balance = prepare_trial_balance(data)
+        net_income =  prepare_net_income(data)
+        amount = net_income[1][1] - net_income[1][0]
+        investment ,  drawings = prepare_equity_statement(data)
+        equity = investment + amount - drawings
+
+        assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
+
+
+        labels = ['Revenues','expenses']
+        values = [net_income[1][1], net_income[1][0]]
+
+        fig = go.Figure(data=[go.Pie(labels=labels, values=values )] )
+        revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
+
+        labels2 = ['Investment','Drawings']
+        values2 = [investment, drawings ]
+        fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
+        investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
+
+        ctx = {
+            "total_transaction" : total_transaction , 
+            "total_accounts" : total_accounts  , 
+            "avg_transaction" : avg_transaction , 
+            "revenues_expenses_fig" : revenues_expenses_fig , 
+            "investment_drwaings_fig" : investment_drwaings_fig , 
+            "equity" : equity
+        }
+
+
+        return render(request , "sole_proprietorship/dashboard.html"  , ctx)
+
+from django.db import connection
+
+def my_custom_sql(self):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM sole_proprietorship_journal " )
+        row = cursor.fetchall()
+
+    return HttpResponse(row)
