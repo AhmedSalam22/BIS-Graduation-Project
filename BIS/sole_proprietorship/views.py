@@ -81,7 +81,6 @@ class AccountsDeleteView(OwnerDeleteView):
 
 class JournalListView(OwnerListView):
     paginate_by = 10
-
     model = Journal
     # By convention:
     # template_name = "app_name/model_list.html"

@@ -2,6 +2,8 @@ from django.forms import ModelForm
 from .models import Journal  , Accounts
 from django import forms
 
+
+
 class JournalForm(ModelForm):
     class Meta:
         model = Journal
@@ -9,4 +11,5 @@ class JournalForm(ModelForm):
 
 class AccountForm(forms.Form):
     account_name = forms.CharField()
+
 
