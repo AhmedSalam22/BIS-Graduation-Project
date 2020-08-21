@@ -115,7 +115,10 @@ class FinancialStatements(LoginRequiredMixin, View):
         data = prepare_data_frame(journal , accounts)
         trial_balance = prepare_trial_balance(data)
         net_income =  prepare_net_income(data)
-        amount = net_income[1][1] - net_income[1][0]
+        try:
+            amount = net_income[1][1] - net_income[1][0]
+        except:
+            amount = 0
         investment ,  drawings = prepare_equity_statement(data)
         equity = investment + amount - drawings
 
@@ -134,9 +137,9 @@ class FinancialStatements(LoginRequiredMixin, View):
             "drawings" : drawings ,
             "equity": equity ,
             "assest": assest.to_html(), 
-            "total_assest" : total_assest.values[0] ,
+            "total_assest" : total_assest ,
             "liabilities" : liabilities.to_html() ,
-            "total_liabilities" : total_liabilities.values[0]
+            "total_liabilities" : total_liabilities
 
 
 
@@ -180,7 +183,10 @@ class Dashboard(LoginRequiredMixin , View):
         data = prepare_data_frame(journal , accounts)
         trial_balance = prepare_trial_balance(data)
         net_income =  prepare_net_income(data)
-        amount = net_income[1][1] - net_income[1][0]
+        try:
+            amount = net_income[1][1] - net_income[1][0]
+        except:
+            amount = 0
         investment ,  drawings = prepare_equity_statement(data)
         equity = investment + amount - drawings
 
@@ -188,7 +194,10 @@ class Dashboard(LoginRequiredMixin , View):
 
         # revenue vs expense
         labels = ['Revenues','expenses']
-        values = [net_income[1][1], net_income[1][0]]
+        try:
+            values = [net_income[1][1], net_income[1][0]]
+        except:
+            values = [0,0]
 
         fig = go.Figure(data=[go.Pie(labels=labels, values=values )] )
         fig.update_layout(title_text='Revenues vs expenses')
