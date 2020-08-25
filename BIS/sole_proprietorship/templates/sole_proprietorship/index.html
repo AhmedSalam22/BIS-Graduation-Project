@@ -1,8 +1,21 @@
 {% extends "home/base.html" %}
 
+{% block breadcrumb %}
+
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:home' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:all' %}">Accounts</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:journal_all' %}">Journal</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:financialstatements' %}">Financial Statements</a></li>
+
+    </ol>
+</nav>
+{% endblock %}
+
 {% block content %}
-<div>
-    <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-3" style="background-color:#3399ff;">
                 <div></div>
@@ -29,6 +42,4 @@
                 <a href="{% url 'sole_proprietorship:financialstatements' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
             </div>
         </div>
-    </div>
-</div>
 {% endblock %}
