@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     # pip installed app
     'crispy_forms',
     'tellme',
-    
+    'easy_pdf',
     #Django app
     'django.contrib.admin',
     'django.contrib.auth',

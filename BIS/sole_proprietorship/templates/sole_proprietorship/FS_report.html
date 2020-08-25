@@ -1,0 +1,44 @@
+{% extends "easy_pdf/base.html" %}
+
+{% block content %}
+<h1>BIS - Ahmed Maher Salam</h1>
+        <p class="text-primary m-0 font-weight-bold">Trial Balance</p>
+ 
+        {{ trial_balance|safe }}
+        {{ debit_credit }}
+  
+        <p class="text-primary m-0 font-weight-bold">Net income</p>
+   
+        {{ net_income|safe }}
+        {{ revenue_expenses }}
+  
+        <p class="text-primary m-0 font-weight-bold">Owner's equity statements</p>
+    
+            <pre>
+                | Owner's Equity Statement          |
+                |-----------------------------------|:-----------------:|------------------:|
+                | Owner's capital investment        |                       {{investment}}    
+                | Add net income/substract net loss |  {{amount}}                          
+                | Less: Drawings                    |  ({{drawings}})                      
+                | Owner's Equity is equal to        |                       {{ equity}}       
+            </pre>
+        </div>
+    </div>
+<div>
+
+
+        <p class="text-primary m-0 font-weight-bold">Balance Sheet</p>
+ 
+        <p>Assest</p>
+        {{ assest|safe }}
+        <div class="alert alert-primary" role="alert">
+            Assest Balance : {{ total_assest }}
+        </div>
+        <p>liabilities</p>
+        {{ liabilities|safe }}
+        liabilities Balance : {{ total_liabilities }}
+ 
+        Owner's Equity: {{ equity }}
+
+
+{% endblock %}

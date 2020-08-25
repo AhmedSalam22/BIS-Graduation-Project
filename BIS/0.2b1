@@ -1,0 +1,7 @@
+Requirement already satisfied: xhtml2pdf in i:\bis-graduation project\env\lib\site-packages (0.2.4)
+Requirement already satisfied: reportlab>=3.0 in i:\bis-graduation project\env\lib\site-packages (from xhtml2pdf) (3.5.48)
+Requirement already satisfied: html5lib>=1.0 in i:\bis-graduation project\env\lib\site-packages (from xhtml2pdf) (1.1)
+Requirement already satisfied: Pillow in i:\bis-graduation project\env\lib\site-packages (from xhtml2pdf) (7.2.0)
+Requirement already satisfied: six in i:\bis-graduation project\env\lib\site-packages (from xhtml2pdf) (1.15.0)
+Requirement already satisfied: pyPdf2 in i:\bis-graduation project\env\lib\site-packages (from xhtml2pdf) (1.26.0)
+Requirement already satisfied: webencodings in i:\bis-graduation project\env\lib\site-packages (from html5lib>=1.0->xhtml2pdf) (0.5.1)

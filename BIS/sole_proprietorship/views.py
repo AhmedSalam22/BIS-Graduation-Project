@@ -16,6 +16,9 @@ import plotly.graph_objects as go
 import plotly
 from .forms import AccountForm
 import plotly.express as px
+from easy_pdf.views import PDFTemplateView , PDFTemplateResponseMixin
+
+
 
 
 def prepare_data_frame( journal  ,  accounts):
@@ -111,6 +114,62 @@ class FinancialStatements(LoginRequiredMixin, View):
         accounts = Accounts.objects.filter(owner=owner).all().values()
         journal = Journal.objects.filter(owner=owner).all().values()
 
+        try:
+            data = prepare_data_frame(journal , accounts)
+            trial_balance = prepare_trial_balance(data)
+            net_income =  prepare_net_income(data)
+            try:
+                amount = net_income[1][1] - net_income[1][0]
+            except:
+                amount = 0
+            investment ,  drawings = prepare_equity_statement(data)
+            equity = investment + amount - drawings
+
+            assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
+
+            # df_accounts.to_csv('accounts.csv',index=False)
+            # df_journal.to_csv('journal.csv',index=False)
+
+            ctx = {
+                "trial_balance": trial_balance[0].to_html(classes = "table table-hover table-borderless") , 
+                "debit_credit" : trial_balance[1] , 
+                "net_income" : net_income[0].to_html(classes = "table table-hover table-borderless") ,
+                "revenue_expenses": net_income[1] , 
+                "amount"  : amount , 
+                "investment" : investment , 
+                "drawings" : drawings ,
+                "equity": equity ,
+                "assest": assest.to_html(classes = "table table-hover table-borderless"), 
+                "total_assest" : total_assest[0] ,
+                "liabilities" : liabilities.to_html(classes = "table table-hover table-borderless") ,
+                "total_liabilities" : total_liabilities[0]
+
+
+
+
+            }
+            return render(request , "sole_proprietorship/financial_statements.html"  , ctx)
+        except:
+            return HttpResponse("<p><strong>You Should Complete all accounts first to get this feature</strong><p>")
+ 
+
+                
+
+
+
+
+
+class FinancialStatementsPDF(PDFTemplateView):
+    template_name = 'sole_proprietorship/FS_report.html'
+
+    def get_context_data(self, *args, **kwargs):
+        owner=self.request.user
+        # Accounts.objects.filter(owner=owner)[0].journal_set.values()
+        #Accounts.objects.filter(owner=owner).all().values()
+
+        accounts = Accounts.objects.filter(owner=owner).all().values()
+        journal = Journal.objects.filter(owner=owner).all().values()
+
 
         data = prepare_data_frame(journal , accounts)
         trial_balance = prepare_trial_balance(data)
@@ -128,27 +187,24 @@ class FinancialStatements(LoginRequiredMixin, View):
         # df_journal.to_csv('journal.csv',index=False)
 
         ctx = {
-            "trial_balance": trial_balance[0].to_html(classes = "table table-hover table-borderless") , 
+            "trial_balance": trial_balance[0].to_html(classes="table") , 
             "debit_credit" : trial_balance[1] , 
-            "net_income" : net_income[0].to_html(classes = "table table-hover table-borderless") ,
+            "net_income" : net_income[0].to_html() ,
             "revenue_expenses": net_income[1] , 
             "amount"  : amount , 
             "investment" : investment , 
             "drawings" : drawings ,
             "equity": equity ,
-            "assest": assest.to_html(classes = "table table-hover table-borderless"), 
+            "assest": assest.to_html(), 
             "total_assest" : total_assest[0] ,
-            "liabilities" : liabilities.to_html(classes = "table table-hover table-borderless") ,
+            "liabilities" : liabilities.to_html() ,
             "total_liabilities" : total_liabilities[0]
 
 
 
 
         }
-
-        return render(request , "sole_proprietorship/financial_statements.html"  , ctx)
-
-
+        return ctx
 
 
 class ExportJournal(LoginRequiredMixin , View):
@@ -170,79 +226,84 @@ class ExportJournal(LoginRequiredMixin , View):
 
 class Dashboard(LoginRequiredMixin , View):
     def get(self, request):
-        owner =  request.user
-        total_transaction = Journal.objects.filter(owner=owner).count()
-        total_accounts = Accounts.objects.filter(owner=owner).count()
-        avg_transaction = Journal.objects.filter(owner=owner).aggregate(Avg("balance")) 
-
-
-        accounts = Accounts.objects.filter(owner=owner).all().values()
-        journal = Journal.objects.filter(owner=owner).all().values()
-
-
-        data = prepare_data_frame(journal , accounts)
-        trial_balance = prepare_trial_balance(data)
-        net_income =  prepare_net_income(data)
         try:
-            amount = net_income[1][1] - net_income[1][0]
-        except:
-            amount = 0
-        investment ,  drawings = prepare_equity_statement(data)
-        equity = investment + amount - drawings
-
-        assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
-
-        # revenue vs expense
-        labels = ['Revenues','expenses']
-        try:
-            values = [net_income[1][1], net_income[1][0]]
-        except:
-            values = [0,0]
-
-        fig = go.Figure(data=[go.Pie(labels=labels, values=values )] )
-        fig.update_layout(title_text='Revenues vs expenses')
-
-        revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
-        # investment vs drawings
-        labels2 = ['Investment','Drawings']
-        values2 = [investment, drawings ]
-        fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
-        fig2.update_layout(title_text='Investment vs Drawings')
-
-        investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
-        # total accounts
-        q = data.groupby("account_type")["balance_negative"].sum()
-        q.sort_values(ascending=False , inplace=True)
-        fig3 = go.Figure([go.Bar(x=q.index , y=q.values)] )
-        fig3.update_layout(title_text='accounts type')
-        accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
-
-        #line chart 
-        account_form = AccountForm()
-        q2 = data.query("account == '{}' ".format(request.GET.get("account_name") , None))
-        line_fig = px.line(q2, x="date", y="balance_negative")
-        line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
-
-        ctx = {
-            "total_transaction" : total_transaction , 
-            "total_accounts" : total_accounts  , 
-            "avg_transaction" : avg_transaction , 
-            "revenues_expenses_fig" : revenues_expenses_fig , 
-            "investment_drwaings_fig" : investment_drwaings_fig , 
-            "equity" : equity  , 
-            "accounts_fig" : accounts_fig , 
-            "account_form" : account_form ,
-            "line_fig": line_fig
-        }
+            owner =  request.user
+            total_transaction = Journal.objects.filter(owner=owner).count()
+            total_accounts = Accounts.objects.filter(owner=owner).count()
+            avg_transaction = Journal.objects.filter(owner=owner).aggregate(Avg("balance")) 
 
 
-        return render(request , "sole_proprietorship/dashboard.html"  , ctx)
+            accounts = Accounts.objects.filter(owner=owner).all().values()
+            journal = Journal.objects.filter(owner=owner).all().values()
 
-from django.db import connection
 
-def my_custom_sql(self):
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM sole_proprietorship_journal " )
-        row = cursor.fetchall()
+            data = prepare_data_frame(journal , accounts)
+            trial_balance = prepare_trial_balance(data)
+            net_income =  prepare_net_income(data)
+            try:
+                amount = net_income[1][1] - net_income[1][0]
+            except:
+                amount = 0
+            investment ,  drawings = prepare_equity_statement(data)
+            equity = investment + amount - drawings
 
-    return HttpResponse(row)
+            assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
+
+            # revenue vs expense
+            labels = ['Revenues','expenses']
+            try:
+                values = [net_income[1][1], net_income[1][0]]
+            except:
+                values = [0,0]
+
+            fig = go.Figure(data=[go.Pie(labels=labels, values=values )] )
+            fig.update_layout(title_text='Revenues vs expenses')
+
+            revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
+            # investment vs drawings
+            labels2 = ['Investment','Drawings']
+            values2 = [investment, drawings ]
+            fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
+            fig2.update_layout(title_text='Investment vs Drawings')
+
+            investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
+            # total accounts
+            q = data.groupby("account_type")["balance_negative"].sum()
+            q.sort_values(ascending=False , inplace=True)
+            fig3 = go.Figure([go.Bar(x=q.index , y=q.values)] )
+            fig3.update_layout(title_text='accounts type')
+            accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
+
+            #line chart 
+            account_form = AccountForm()
+            q2 = data.query("account == '{}' ".format(request.GET.get("account_name") , None))
+            line_fig = px.line(q2, x="date", y="balance_negative")
+            line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
+
+            ctx = {
+                "total_transaction" : total_transaction , 
+                "total_accounts" : total_accounts  , 
+                "avg_transaction" : avg_transaction , 
+                "revenues_expenses_fig" : revenues_expenses_fig , 
+                "investment_drwaings_fig" : investment_drwaings_fig , 
+                "equity" : equity  , 
+                "accounts_fig" : accounts_fig , 
+                "account_form" : account_form ,
+                "line_fig": line_fig
+            }
+
+
+            return render(request , "sole_proprietorship/dashboard.html"  , ctx)
+        except Exception  as error:
+            return HttpResponse("<p><strong>You Should Complete all accounts first to get this feature -- {}</strong><p>".format(error))
+
+
+
+# from django.db import connection
+
+# def my_custom_sql(self):
+#     with connection.cursor() as cursor:
+#         cursor.execute("SELECT * FROM sole_proprietorship_journal " )
+#         row = cursor.fetchall()
+
+#     return HttpResponse(row)
