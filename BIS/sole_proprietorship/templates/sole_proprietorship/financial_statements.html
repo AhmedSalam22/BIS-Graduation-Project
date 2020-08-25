@@ -53,12 +53,16 @@
         <div class="mx-auto" style="width: 300px;">
         <p>Assest</p>
         {{ assest|safe }}
-        <p>Assest Balance : {{ total_assest }}</p>
+        <div class="alert alert-primary" role="alert">
+            Assest Balance : {{ total_assest }}
+        </div>
         <p>liabilities</p>
         {{ liabilities|safe }}
-        <p>liabilities Balance : {{ total_liabilities }}</p>
-        <p>Owner's Equity {{ equity }}</p>
-        
+        <div class="alert alert-primary" role="alert">
+            liabilities Balance : {{ total_liabilities }}
+        </div>
+        <div class="alert alert-primary" role="alert">
+            Owner's Equity: {{ equity }}
         </div>
     </div>
 <div>

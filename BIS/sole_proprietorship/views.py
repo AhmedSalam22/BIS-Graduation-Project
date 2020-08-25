@@ -128,18 +128,18 @@ class FinancialStatements(LoginRequiredMixin, View):
         # df_journal.to_csv('journal.csv',index=False)
 
         ctx = {
-            "trial_balance": trial_balance[0].to_html() , 
+            "trial_balance": trial_balance[0].to_html(classes = "table table-hover table-borderless") , 
             "debit_credit" : trial_balance[1] , 
-            "net_income" : net_income[0].to_html() ,
+            "net_income" : net_income[0].to_html(classes = "table table-hover table-borderless") ,
             "revenue_expenses": net_income[1] , 
             "amount"  : amount , 
             "investment" : investment , 
             "drawings" : drawings ,
             "equity": equity ,
-            "assest": assest.to_html(), 
-            "total_assest" : total_assest ,
-            "liabilities" : liabilities.to_html() ,
-            "total_liabilities" : total_liabilities
+            "assest": assest.to_html(classes = "table table-hover table-borderless"), 
+            "total_assest" : total_assest[0] ,
+            "liabilities" : liabilities.to_html(classes = "table table-hover table-borderless") ,
+            "total_liabilities" : total_liabilities[0]
 
 
 
