@@ -5,10 +5,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>BIS</title>
+    <title>BIS-{% block title %} {% endblock %}</title>
     
     <link rel="stylesheet" href="{% static 'home/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'home/css/styles.min.css' %}">
+    <!-- tellme for feedback -->
+    <link href="{% static 'tellme/feedback.min.css' %}" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
@@ -34,6 +36,9 @@
                     <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:login' %}?next={{ request.path }}"><i class="far fa-user-circle"></i><span>Login</span></a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="register.html"><i class="fas fa-user-circle"></i><span>Register</span></a></li>
                     {% endif %}
+                    <li type="button" id="feedback-btn" class="btn btn-primary vertical-left-aligned">
+                        Feedback <span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
+                    </li>
 
                 </ul>
 
@@ -55,7 +60,10 @@
                         </div>
                     </div>
                 </nav>
-                <div class="container-fluid">
+
+                <div class="container">
+
+                  
                     <!-- <h3 class="text-dark mb-1">Blank Page</h3> -->
                     {% block content %}{% endblock%}
                 </div>
@@ -71,6 +79,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
     <script src="{% static 'home/js/script.min.js'%}"></script>
+    <!-- tellme for feddback -->
+    {%  include 'tellme/js_inc.html' %}
 
 </body>
 

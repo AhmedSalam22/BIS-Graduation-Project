@@ -2,16 +2,16 @@
 {% block content %}
 <div class="container-fluid">
   <div class="row"></div>
-  
   <div class="row">
     <div class="col-sm"></div>
     <div class="col-sm">
+      {% load crispy_forms_tags %}
       <form action="" method="post">
         {% csrf_token %}
-        {{ form.as_ul }}
+        {{ form|crispy }}
         <input type="submit" value="Submit">
         <input type="submit" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">
-  </form>
+      </form>
     </div>
     <div class="col-sm"></div>
   </div>

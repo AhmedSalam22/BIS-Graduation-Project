@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'projects',
     'sole_proprietorship',
     # pip installed app
+    'crispy_forms',
+    'tellme',
     
     #Django app
     'django.contrib.admin',
