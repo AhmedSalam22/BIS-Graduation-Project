@@ -34,7 +34,7 @@
 
                     {% else %}
                     <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:login' %}?next={{ request.path }}"><i class="far fa-user-circle"></i><span>Login</span></a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="register.html"><i class="fas fa-user-circle"></i><span>Register</span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:register'%}?next={{ request.path }}"><i class="fas fa-user-circle"></i><span>Register</span></a></li>
                     {% endif %}
                     <li type="button" id="feedback-btn" class="btn btn-primary vertical-left-aligned">
                         Feedback <span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
@@ -62,6 +62,14 @@
                 </nav>
 
                 <div class="container">
+
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-success" role="alert">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
                     {% block breadcrumb %}{% endblock %}
                   
                     <!-- <h3 class="text-dark mb-1">Blank Page</h3> -->

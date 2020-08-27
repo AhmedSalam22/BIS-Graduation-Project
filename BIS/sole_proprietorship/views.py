@@ -149,11 +149,8 @@ class FinancialStatements(LoginRequiredMixin, View):
 
             }
             return render(request , "sole_proprietorship/financial_statements.html"  , ctx)
-        except:
-            return HttpResponse("<p><strong>You Should Complete all accounts first to get this feature</strong><p>")
- 
-
-                
+        except Exception  as error:
+            return HttpResponse("<p><strong>You Should Complete all accounts first to get this feature -- {}</strong><p>".format(error))
 
 
 
