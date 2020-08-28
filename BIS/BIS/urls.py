@@ -24,6 +24,8 @@ urlpatterns = [
     path("projects" , include("projects.urls")),
     path("sole_proprietorship" , include("sole_proprietorship.urls")) ,
     path('^tellme/', include("tellme.urls")),
+    path('cms/', include('cms.urls')),
+
 
 ]
 
