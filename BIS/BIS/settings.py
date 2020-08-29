@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'menus',
     'treebeard',
     'sekizai' , 
-    'djangocms_admin_style',
+    # 'djangocms_admin_style',
     'filer', #  provides file and image management
     'easy_thumbnails', #create new versions of images in different sizes;
     'mptt',
@@ -110,7 +110,7 @@ TEMPLATES = [
 ]
 
 CMS_TEMPLATES = [
-    ('home/home.html', 'Home page template'),
+    ('home/CV.html', 'CV'),
 ]
 
 WSGI_APPLICATION = 'BIS.wsgi.application'
@@ -174,10 +174,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # CMS
 SITE_ID = 1
-# LANGUAGES = [
-#     ('en', 'English'),
-#     ('ar', "Arabic")
-# ]
+LANGUAGES = [
+    ('en', 'English'),
+    ('ar', "Arabic")
+]
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # 'easy_thumbnails'
