@@ -25,7 +25,7 @@ class Result(models.Model):
 
 
     def __str__(self):
-        return self.name
+        return self.description
 
 @receiver(post_delete, sender=Result)
 def submission_delete(sender, instance, **kwargs):

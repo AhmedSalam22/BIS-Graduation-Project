@@ -6,11 +6,20 @@ import pandas as pd
 # Create your views here.
 def result_query(request , share):
     obj = get_object_or_404(Result , share=share)
-    df = pd.read_csv(obj.uploaded_file)
-    query = request.GET.get('query')
-    result = df.query('account_id == @query')
+    query = request.GET.get('query' , None) 
+    try:
+        query = int(query)
+    except:
+        query = None
+
+    try:
+        df = pd.read_csv(obj.uploaded_file , sep=";")
+        result = df[df[obj.name] == query]
+    except:
+        df = pd.read_csv(obj.uploaded_file , sep=",")
+        result = df[df[obj.name] == query]
 
     ctx = {
-        'result': result.to_html()
+        'result': result.T.to_html(classes = "table table-hover table-borderless")
     }
     return render(request , 'result/query.html' , ctx)
