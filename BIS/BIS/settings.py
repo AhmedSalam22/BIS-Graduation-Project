@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'projects',
     'sole_proprietorship',
     'new_partner_admission', 
+    'result' , 
+    
 
     # pip installed app
     'crispy_forms',

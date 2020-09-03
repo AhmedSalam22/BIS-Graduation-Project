@@ -1,0 +1,9 @@
+<form method="GET">
+    {% csrf_token %}
+  <label for="query">Query:</label>
+  <input type="text" id="query" name="query">
+ 
+  <input type="submit" value="Submit">
+</form>
+
+{{ result|safe }}
