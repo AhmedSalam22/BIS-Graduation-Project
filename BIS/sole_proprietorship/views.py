@@ -94,7 +94,7 @@ class JournalListView(OwnerListView):
         context = super().get_context_data(**kwargs)
         with connection.cursor() as cursor:
             cursor.execute(""" 
-                            SELECT sum(helper) , normal_balance FROM (
+                            SELECT sum(balance) , transaction_type FROM (
                                                     SELECT * ,
                                                     CASE
                                                         WHEN j.transaction_type = a.normal_balance Then  j.balance
@@ -105,10 +105,17 @@ class JournalListView(OwnerListView):
                                                     on j.account_id = a.id
                                                     where j.owner_id = %s 
                                                     )
-                            GROUP by normal_balance
+                            GROUP by transaction_type
                                                     """ , [self.request.user.id])
-            row = cursor.fetchall()
-        context["TotalDebit_TotalCredit"] = row
+            row = list(cursor.fetchall())
+            print(row)
+        try:
+            context[row[0][1]] = row[0][0]
+            context[row[1][1]] = row[1][0]
+        except IndexError:
+            context["Debit"] = 0
+            context["Credit"] = 0
+
         return context
 
 

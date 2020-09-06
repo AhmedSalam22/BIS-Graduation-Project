@@ -1,9 +1,56 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block content %}
 
+{% if Debit != Credit %}
+<div class="row">
+    <div class="col-12">
+        <div class="card text-white bg-danger shadow">
+            <div class="card-body">
+                <p class="m-0">Danger</p>
+                <strong>
+                    <p class="text-white-50 big m-0">Total Debit is not equal Total Credit
+                    </p>
+                </strong>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+<br>
+    <div class="row">
+
+        <div class="col-6">
+            <div class="card shadow border-left-primary py-2">
+                <div class="card-body">
+                    <div class="row align-items-center no-gutters">
+                        <div class="col mr-2">
+                            <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total Debit</span></div>
+                            <div class="text-dark font-weight-bold h5 mb-0"><span>{{Debit}}</span></div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            <div class="col-6">
+                <div class="card shadow border-left-primary py-2">
+                    <div class="card-body">
+                        <div class="row align-items-center no-gutters">
+                            <div class="col mr-2">
+                                <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total Credit</span></div>
+                                <div class="text-dark font-weight-bold h5 mb-0"><span>{{Credit}}</span></div>
+                            </div>
+                            <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+<br>
    <div class="container-fluid">
     <h3 class="text-dark mb-4">journal</h3>
-    {{TotalDebit_TotalCredit}}
     <div class="card shadow">
         <div class="card-header py-3">
             <p class="text-primary m-0 font-weight-bold">journal</p>
