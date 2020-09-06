@@ -17,6 +17,8 @@ import plotly
 from .forms import AccountForm
 import plotly.express as px
 from easy_pdf.views import PDFTemplateView , PDFTemplateResponseMixin
+from django.db import connection
+
 
 
 
@@ -87,6 +89,27 @@ class JournalListView(OwnerListView):
     model = Journal
     # By convention:
     # template_name = "app_name/model_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        with connection.cursor() as cursor:
+            cursor.execute(""" 
+                            SELECT sum(helper) , normal_balance FROM (
+                                                    SELECT * ,
+                                                    CASE
+                                                        WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                        ELSE ( -1 * j.balance)
+                                                    END as helper 
+                                                    FROM sole_proprietorship_journal as j
+                                                    JOIN sole_proprietorship_accounts as a
+                                                    on j.account_id = a.id
+                                                    where j.owner_id = %s 
+                                                    )
+                            GROUP by normal_balance
+                                                    """ , [self.request.user.id])
+            row = cursor.fetchall()
+        context["TotalDebit_TotalCredit"] = row
+        return context
 
 
 class JournalCreateView(OwnerCreateView):
@@ -228,46 +251,79 @@ class Dashboard(LoginRequiredMixin , View):
             total_transaction = Journal.objects.filter(owner=owner).count()
             total_accounts = Accounts.objects.filter(owner=owner).count()
             avg_transaction = Journal.objects.filter(owner=owner).aggregate(Avg("balance")) 
+            with connection.cursor() as cursor:
+                cursor.execute(""" 
+                                SELECT sum(helper) as balance,  account_type FROM (
+                                                        SELECT * ,
+                                                        CASE
+                                                            WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                            ELSE ( -1 * j.balance)
+                                                        END as helper 
+                                                        FROM sole_proprietorship_journal as j
+                                                        JOIN sole_proprietorship_accounts as a
+                                                        on j.account_id = a.id
+                                                        where j.owner_id = %s )
+                GROUP by account_type
+                ORDER by balance DESC
+                                                        """ , [request.user.id])
+                row = list(cursor)
+                query = cursor.execute("""SELECT date , account , helper FROM (
+                                                SELECT * ,
+                                                CASE
+                                                    WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                    ELSE ( -1 * j.balance)
+                                                END as helper 
+                                                FROM sole_proprietorship_journal as j
+                                                JOIN sole_proprietorship_accounts as a
+                                                on j.account_id = a.id
+                                                where j.owner_id = %s 
+                                )""" , [request.user.id] )
+                data = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative"])
+                # print(data)
+                # data.columns = query.keys()
+
+            accounts_type = [ account[1] for account in row]
+            accounts_balance = [account[0] for account in row]
+
+            # accounts = Accounts.objects.filter(owner=owner).all().values()
+            # journal = Journal.objects.filter(owner=owner).all().values()
 
 
-            accounts = Accounts.objects.filter(owner=owner).all().values()
-            journal = Journal.objects.filter(owner=owner).all().values()
-
-
-            data = prepare_data_frame(journal , accounts)
-            trial_balance = prepare_trial_balance(data)
-            net_income =  prepare_net_income(data)
+            # data = prepare_data_frame(journal , accounts)
+            # trial_balance = prepare_trial_balance(data)
+            # net_income =  prepare_net_income(data)
             try:
-                amount = net_income[1][1] - net_income[1][0]
+                amount = accounts_balance[accounts_type.index("Revenue")] - accounts_balance[accounts_type.index("Expenses")]
             except:
                 amount = 0
-            investment ,  drawings = prepare_equity_statement(data)
-            equity = investment + amount - drawings
+            # investment ,  drawings = prepare_equity_statement(data)
+            equity = accounts_balance[accounts_type.index("Investment")] + amount - accounts_balance[accounts_type.index("Drawings")]
 
-            assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
+            # assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
 
             # revenue vs expense
             labels = ['Revenues','expenses']
             try:
-                values = [net_income[1][1], net_income[1][0]]
+                values = [accounts_balance[accounts_type.index("Revenue")], accounts_balance[accounts_type.index("Expenses")]]
             except:
                 values = [0,0]
 
-            fig = go.Figure(data=[go.Pie(labels=labels, values=values )] )
+            fig = go.Figure(data=[go.Pie(labels=labels, values= values)] )
             fig.update_layout(title_text='Revenues vs expenses')
 
             revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
             # investment vs drawings
             labels2 = ['Investment','Drawings']
-            values2 = [investment, drawings ]
+            values2 = [accounts_balance[accounts_type.index("Investment")], accounts_balance[accounts_type.index("Drawings")] ]
             fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
             fig2.update_layout(title_text='Investment vs Drawings')
 
             investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
             # total accounts
-            q = data.groupby("account_type")["balance_negative"].sum()
-            q.sort_values(ascending=False , inplace=True)
-            fig3 = go.Figure([go.Bar(x=q.index , y=q.values)] )
+            # q = data.groupby("account_type")["balance_negative"].sum()
+            # q.sort_values(ascending=False , inplace=True)
+
+            fig3 = go.Figure([go.Bar(x=accounts_type , y=accounts_balance)] )
             fig3.update_layout(title_text='accounts type')
             accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
 
@@ -298,9 +354,28 @@ class Dashboard(LoginRequiredMixin , View):
 
 # from django.db import connection
 
-# def my_custom_sql(self):
-#     with connection.cursor() as cursor:
-#         cursor.execute("SELECT * FROM sole_proprietorship_journal " )
-#         row = cursor.fetchall()
+def my_custom_sql(request):
+    with connection.cursor() as cursor:
+        print(request.user.id)
+        # cursor.execute("SELECT * FROM sole_proprietorship_journal where owner_id = %s " , [request.user.id]  )
+        # row = cursor.fetchall()
+        cursor.execute(""" 
+                      SELECT sum(helper) as balance,  account_type FROM (
+                                                SELECT * ,
+                                                CASE
+                                                    WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                    ELSE ( -1 * j.balance)
+                                                END as helper 
+                                                FROM sole_proprietorship_journal as j
+                                                JOIN sole_proprietorship_accounts as a
+                                                on j.account_id = a.id
+                                                where j.owner_id = %s
+                                )
+GROUP by account_type
+ORDER by balance DESC
 
-#     return HttpResponse(row)
+                                                """ , [request.user.id])
+        row = list(cursor)
+    # row = Journal.objects.raw('SELECT * FROM sole_proprietorship_journal ' )
+
+    return HttpResponse(row)

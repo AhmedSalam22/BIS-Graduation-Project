@@ -22,7 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("" , include("home.urls")) , 
     path("projects" , include("projects.urls")),
-    path("sole_proprietorship" , include("sole_proprietorship.urls")) ,
+    path("sole_proprietorship/" , include("sole_proprietorship.urls")) ,
     path('^tellme/', include("tellme.urls")),
     path('cv/', include('cms.urls')) ,
     path('new_partner_admission/', include('new_partner_admission.urls')) ,
