@@ -253,110 +253,101 @@ class ExportJournal(LoginRequiredMixin , View):
 
 class Dashboard(LoginRequiredMixin , View):
     def get(self, request):
-        try:
-            owner =  request.user
-            total_transaction = Journal.objects.filter(owner=owner).count()
-            total_accounts = Accounts.objects.filter(owner=owner).count()
-            avg_transaction = Journal.objects.filter(owner=owner).aggregate(Avg("balance")) 
-            with connection.cursor() as cursor:
-                cursor.execute(""" 
-                                SELECT sum(helper) as balance,  account_type FROM (
-                                                        SELECT * ,
-                                                        CASE
-                                                            WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                            ELSE ( -1 * j.balance)
-                                                        END as helper 
-                                                        FROM sole_proprietorship_journal as j
-                                                        JOIN sole_proprietorship_accounts as a
-                                                        on j.account_id = a.id
-                                                        where j.owner_id = %s )
-                GROUP by account_type
-                ORDER by balance DESC
-                                                        """ , [request.user.id])
-                row = list(cursor)
-                query = cursor.execute("""SELECT date , account , helper FROM (
-                                                SELECT * ,
-                                                CASE
-                                                    WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                    ELSE ( -1 * j.balance)
-                                                END as helper 
-                                                FROM sole_proprietorship_journal as j
-                                                JOIN sole_proprietorship_accounts as a
-                                                on j.account_id = a.id
-                                                where j.owner_id = %s 
-                                )""" , [request.user.id] )
-                data = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative"])
-                # print(data)
-                # data.columns = query.keys()
+        owner =  request.user
+        total_transaction = Journal.objects.filter(owner=owner).count()
+        total_accounts = Accounts.objects.filter(owner=owner).count()
+        avg_transaction = Journal.objects.filter(owner=owner).aggregate(Avg("balance")) 
+        with connection.cursor() as cursor:
+            cursor.execute(""" 
+                            SELECT sum(helper) as balance,  account_type FROM (
+                                                    SELECT * ,
+                                                    CASE
+                                                        WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                        ELSE ( -1 * j.balance)
+                                                    END as helper 
+                                                    FROM sole_proprietorship_journal as j
+                                                    JOIN sole_proprietorship_accounts as a
+                                                    on j.account_id = a.id
+                                                    where j.owner_id = %s )
+            GROUP by account_type
+            ORDER by balance DESC
+                                                    """ , [request.user.id])
+            row = list(cursor)
+            query = cursor.execute("""SELECT date , account , helper FROM (
+                                            SELECT * ,
+                                            CASE
+                                                WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                ELSE ( -1 * j.balance)
+                                            END as helper 
+                                            FROM sole_proprietorship_journal as j
+                                            JOIN sole_proprietorship_accounts as a
+                                            on j.account_id = a.id
+                                            where j.owner_id = %s 
+                            )""" , [request.user.id] )
+            data = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative"])
+            # print(data)
+            # data.columns = query.keys()
 
-            accounts_type = [ account[1] for account in row]
-            accounts_balance = [account[0] for account in row]
+        accounts_type = [ account[1] for account in row]
+        accounts_balance = [account[0] for account in row]
 
-            # accounts = Accounts.objects.filter(owner=owner).all().values()
-            # journal = Journal.objects.filter(owner=owner).all().values()
-
-
-            # data = prepare_data_frame(journal , accounts)
-            # trial_balance = prepare_trial_balance(data)
-            # net_income =  prepare_net_income(data)
+        accounts = ['Assest' , 'Investment' , 'liabilities' , 'Revenue' , 'Expenses' ,'Drawings']
+        accounts_dic = {}
+        for account in accounts:
             try:
-                amount = accounts_balance[accounts_type.index("Revenue")] - accounts_balance[accounts_type.index("Expenses")]
-            except:
-                amount = 0
-            # investment ,  drawings = prepare_equity_statement(data)
-            equity = accounts_balance[accounts_type.index("Investment")] + amount - accounts_balance[accounts_type.index("Drawings")]
+                accounts_dic[account] = accounts_balance[accounts_type.index(account)]
+            except ValueError:
+                accounts_dic[account] = 0
+        # old method using pandas instead of SQL query
+        # accounts = Accounts.objects.filter(owner=owner).all().values()
+        # journal = Journal.objects.filter(owner=owner).all().values()
+        # data = prepare_data_frame(journal , accounts)
+        # trial_balance = prepare_trial_balance(data)
+        # net_income =  prepare_net_income(data)
+        amount = accounts_dic["Revenue"] - accounts_dic["Expenses"]
+        # investment ,  drawings = prepare_equity_statement(data)
+        equity = accounts_dic["Investment"] + amount - accounts_dic["Drawings"]
+        # assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
+        
+        # revenue vs expense
+        labels = ['Revenues','expenses']
+        values = [accounts_dic["Revenue"], accounts_dic["Expenses"]]
+        fig = go.Figure(data=[go.Pie(labels=labels, values= values)] )
+        fig.update_layout(title_text='Revenues vs expenses')
+        revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
+        # investment vs drawings
+        labels2 = ['Investment','Drawings']
+        values2 = [accounts_dic["Investment"], accounts_dic["Drawings"] ]
+        fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
+        fig2.update_layout(title_text='Investment vs Drawings')
+        investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
+        # total accounts
+        # q = data.groupby("account_type")["balance_negative"].sum()
+        # q.sort_values(ascending=False , inplace=True)
+        fig3 = go.Figure([go.Bar(x=accounts_type , y=accounts_balance)] )
+        fig3.update_layout(title_text='accounts type')
+        accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
+        #line chart 
+        account_form = AccountForm()
+        q2 = data.query("account == '{}' ".format(request.GET.get("account_name") , None))
+        line_fig = px.line(q2, x="date", y="balance_negative")
+        line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
 
-            # assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
-
-            # revenue vs expense
-            labels = ['Revenues','expenses']
-            try:
-                values = [accounts_balance[accounts_type.index("Revenue")], accounts_balance[accounts_type.index("Expenses")]]
-            except:
-                values = [0,0]
-
-            fig = go.Figure(data=[go.Pie(labels=labels, values= values)] )
-            fig.update_layout(title_text='Revenues vs expenses')
-
-            revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
-            # investment vs drawings
-            labels2 = ['Investment','Drawings']
-            values2 = [accounts_balance[accounts_type.index("Investment")], accounts_balance[accounts_type.index("Drawings")] ]
-            fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
-            fig2.update_layout(title_text='Investment vs Drawings')
-
-            investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
-            # total accounts
-            # q = data.groupby("account_type")["balance_negative"].sum()
-            # q.sort_values(ascending=False , inplace=True)
-
-            fig3 = go.Figure([go.Bar(x=accounts_type , y=accounts_balance)] )
-            fig3.update_layout(title_text='accounts type')
-            accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
-
-            #line chart 
-            account_form = AccountForm()
-            q2 = data.query("account == '{}' ".format(request.GET.get("account_name") , None))
-            line_fig = px.line(q2, x="date", y="balance_negative")
-            line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
-
-            ctx = {
-                "total_transaction" : total_transaction , 
-                "total_accounts" : total_accounts  , 
-                "avg_transaction" : avg_transaction , 
-                "revenues_expenses_fig" : revenues_expenses_fig , 
-                "investment_drwaings_fig" : investment_drwaings_fig , 
-                "equity" : equity  , 
-                "accounts_fig" : accounts_fig , 
-                "account_form" : account_form ,
-                "line_fig": line_fig
-            }
+        ctx = {
+            "total_transaction" : total_transaction , 
+            "total_accounts" : total_accounts  , 
+            "avg_transaction" : avg_transaction , 
+            "revenues_expenses_fig" : revenues_expenses_fig , 
+            "investment_drwaings_fig" : investment_drwaings_fig , 
+            "equity" : equity  , 
+            "accounts_fig" : accounts_fig , 
+            "account_form" : account_form ,
+            "line_fig": line_fig
+        }
 
 
-            return render(request , "sole_proprietorship/dashboard.html"  , ctx)
-        except Exception  as error:
-            return HttpResponse("<p><strong>You Should Complete all accounts first to get this feature -- {}</strong><p>".format(error))
-
+        return render(request , "sole_proprietorship/dashboard.html"  , ctx)
+     
 
 
 # from django.db import connection
