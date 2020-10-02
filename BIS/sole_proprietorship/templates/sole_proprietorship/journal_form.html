@@ -1,10 +1,20 @@
 {% extends "sole_proprietorship/index.html" %}
+{% block css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+{% block javascript_top %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
+
+<script>
+  $(document).ready(function() {
+      $('#id_account').select2();
+  });
+</script>
+{% endblock%}
+
 {% block content %}
 <div class="container-fluid">
-  <div class="row"></div>
-  <div class="row">
-    <div class="col-sm"></div>
-    <div class="col-sm">
       {% load crispy_forms_tags %}
       <form action="" method="post">
         {% csrf_token %}
@@ -12,10 +22,12 @@
         <input type="submit" value="Submit">
         <input type="submit" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">
       </form>
-    </div>
-    <div class="col-sm"></div>
-  </div>
 </div>
+
+
 {% endblock %}
 
 
+{% block js %}
+
+{% endblock %}
