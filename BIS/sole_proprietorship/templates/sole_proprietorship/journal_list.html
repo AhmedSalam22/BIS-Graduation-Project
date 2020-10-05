@@ -19,6 +19,11 @@
 
 {% endif %}
 <br>
+<form method="get">
+        {{ filter.form}}
+        <input type="submit" />
+</form>
+<br>
     <div class="row">
 
         <div class="col-6">
@@ -50,7 +55,7 @@
     </div>
 <br>
    <div class="container-fluid">
-    <h3 class="text-dark mb-4">journal</h3>
+    {% comment %} <h3 class="text-dark mb-4">journal</h3> {% endcomment %}
     <div class="card shadow">
         <div class="card-header py-3">
             <p class="text-primary m-0 font-weight-bold">journal</p>
@@ -71,9 +76,9 @@
                 <!-- <div class="col-md-6 text-nowrap">
                     <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label>Show&nbsp;<select class="form-control form-control-sm custom-select custom-select-sm"><option value="10" selected="">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>&nbsp;</label></div>
                 </div> -->
-                <div class="col-md-6">
+                {% comment %} <div class="col-md-6">
                     <div class="text-md-right dataTables_filter" id="dataTable_filter"><label><input type="search" class="form-control form-control-sm" aria-controls="dataTable" placeholder="Search"></label></div>
-                </div>
+                </div> {% endcomment %}
             </div>
             <div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
                 <table class="table my-0" id="dataTable">
@@ -126,11 +131,16 @@
                 <div class="col-md-6">
                     <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
                         <!-- <ul class="pagination"> -->
+                      
+
                             <div class="pagination">
+                            {% load sole_proprietorship_extras %}
+
+
                                 <span class="step-links">
                                     {% if page_obj.has_previous %}
-                                        <a href="?page=1">&laquo; first</a>
-                                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                                        <a href="?{% query_transform request page=1 %}">&laquo; first</a>
+                                        <a href="?{% query_transform request page=page_obj.previous_page_number %}">previous</a>
                                     {% endif %}
                             
                                     <span class="current">
@@ -138,8 +148,8 @@
                                     </span>
                             
                                     {% if page_obj.has_next %}
-                                        <a href="?page={{ page_obj.next_page_number }}">next</a>
-                                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                                        <a href="?{% query_transform request page=page_obj.next_page_number %}">next</a>
+                                        <a href="?{% query_transform request page=page_obj.paginator.num_pages %}">last &raquo;</a>
                                     {% endif %}
                                 </span>
                             </div>

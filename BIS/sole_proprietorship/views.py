@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm
+from .forms import JournalForm , JournalFilter
 import pandas as pd
 import numpy as np
 import csv
@@ -18,7 +18,7 @@ from .forms import AccountForm
 import plotly.express as px
 from easy_pdf.views import PDFTemplateView , PDFTemplateResponseMixin
 from django.db import connection
-
+from django_filters.views import FilterView
 
 
 
@@ -84,14 +84,24 @@ class AccountsDeleteView(OwnerDeleteView):
     model = Accounts
 
 
-class JournalListView(OwnerListView):
+class JournalListView( FilterView):
     paginate_by = 10
     model = Journal
     # By convention:
-    # template_name = "app_name/model_list.html"
+    template_name = "sole_proprietorship/journal_list.html"
+    filterset_class = JournalFilter
+
+    def get_queryset(self):
+        qs = super(JournalListView, self).get_queryset()
+        return qs.filter(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # context["filter"] = JournalFilter(data=self.request.GET , queryset = get_queryset() , user=self.request.user)
+        # context["journal_list"] = context["filter"].qs
+        # self.object_list  = context["filter"].qs
+
+
         with connection.cursor() as cursor:
             cursor.execute(""" 
                             SELECT sum(balance) , transaction_type FROM (
