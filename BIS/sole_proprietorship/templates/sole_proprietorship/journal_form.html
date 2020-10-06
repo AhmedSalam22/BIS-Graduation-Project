@@ -1,6 +1,32 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+
+<style>
+
+select {
+  width: 100%;
+}
+
+input {
+  width: 100%;
+}
+
+textarea {
+  width: 100%;
+}
+
+form {
+  width: 100%;
+}
+
+button {
+    width: 100%;
+    margin-top: 10px;
+
+}
+</style>
+
 {% endblock %}
 {% block javascript_top %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -14,20 +40,25 @@
 {% endblock%}
 
 {% block content %}
-<div class="container-fluid">
-      {% load crispy_forms_tags %}
-      <form action="" method="post">
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold">Journalize</p>
+    </div>
+    <div class="card-body">
+        <div >
+
+
+      <form action="" method="post" >
         {% csrf_token %}
-        {{ form|crispy }}
-        <input type="submit" value="Submit">
-        <input type="submit" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">
+        {{ form }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">Cancel</button>
+
       </form>
+</diV>
 </div>
-
-
+</div>
 {% endblock %}
 
 
-{% block js %}
-
-{% endblock %}
