@@ -40,29 +40,29 @@ INSTALLED_APPS = [
     
 
     # pip installed app
-    'crispy_forms',
-    'tellme',
+    # 'crispy_forms',
+    # 'tellme',
     'django_filters',
 
     # CMS
-    'django.contrib.sites',
-    'cms',
-    'menus',
-    'treebeard',
-    'sekizai' , 
+    # 'django.contrib.sites',
+    # 'cms',
+    # 'menus',
+    # 'treebeard',
+    # 'sekizai' , 
     # 'djangocms_admin_style',
-    'filer', #  provides file and image management
-    'easy_thumbnails', #create new versions of images in different sizes;
-    'mptt',
-    'djangocms_text_ckeditor' , #  the default text editor for django CMS.
-    'djangocms_link',
-    'djangocms_file',
-    'djangocms_picture',
-    'djangocms_video',
-    'djangocms_googlemap',
-    'djangocms_snippet',
-    'djangocms_style',
-    'djangocms_column',
+    # 'filer', #  provides file and image management
+    # 'easy_thumbnails', #create new versions of images in different sizes;
+    # 'mptt',
+    # 'djangocms_text_ckeditor' , #  the default text editor for django CMS.
+    # 'djangocms_link',
+    # 'djangocms_file',
+    # 'djangocms_picture',
+    # 'djangocms_video',
+    # 'djangocms_googlemap',
+    # 'djangocms_snippet',
+    # 'djangocms_style',
+    # 'djangocms_column',
 
     #Django app
     'django.contrib.admin',
@@ -82,12 +82,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # CMS
-    'django.middleware.locale.LocaleMiddleware',
-    'cms.middleware.user.CurrentUserMiddleware',
-    'cms.middleware.page.CurrentPageMiddleware',
-    'cms.middleware.toolbar.ToolbarMiddleware',
-    'cms.middleware.language.LanguageCookieMiddleware',
-    'cms.middleware.utils.ApphookReloadMiddleware',
+    # 'django.middleware.locale.LocaleMiddleware',
+    # 'cms.middleware.user.CurrentUserMiddleware',
+    # 'cms.middleware.page.CurrentPageMiddleware',
+    # 'cms.middleware.toolbar.ToolbarMiddleware',
+    # 'cms.middleware.language.LanguageCookieMiddleware',
+    # 'cms.middleware.utils.ApphookReloadMiddleware',
 ]
 
 ROOT_URLCONF = 'BIS.urls'
@@ -104,9 +104,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 # CMS
-                'sekizai.context_processors.sekizai' , 
-                'cms.context_processors.cms_settings',
-                'django.template.context_processors.i18n', 
+                # 'sekizai.context_processors.sekizai' , 
+                # 'cms.context_processors.cms_settings',
+                # 'django.template.context_processors.i18n', 
 
 
             ],
@@ -178,20 +178,20 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 
 # CMS
-SITE_ID = 1
-LANGUAGES = [
-    ('en', 'English'),
-    ('ar', "Arabic")
-]
-X_FRAME_OPTIONS = 'SAMEORIGIN'
+# SITE_ID = 1
+# LANGUAGES = [
+#     ('en', 'English'),
+#     ('ar', "Arabic")
+# ]
+# X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # 'easy_thumbnails'
-THUMBNAIL_HIGH_RESOLUTION = True
+# THUMBNAIL_HIGH_RESOLUTION = True
 
-THUMBNAIL_PROCESSORS = (
-    'easy_thumbnails.processors.colorspace',
-    'easy_thumbnails.processors.autocrop',
-    'filer.thumbnail_processors.scale_and_crop_with_subject_location',
-    'easy_thumbnails.processors.filters'
-)
+# THUMBNAIL_PROCESSORS = (
+#     'easy_thumbnails.processors.colorspace',
+#     'easy_thumbnails.processors.autocrop',
+#     'filer.thumbnail_processors.scale_and_crop_with_subject_location',
+#     'easy_thumbnails.processors.filters'
+# )
 

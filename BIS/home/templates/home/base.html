@@ -37,9 +37,9 @@
                     <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:login' %}?next={{ request.path }}"><i class="far fa-user-circle"></i><span>Login</span></a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="{% url 'home:register'%}?next={{ request.path }}"><i class="fas fa-user-circle"></i><span>Register</span></a></li>
                     {% endif %}
-                    <li type="button" id="feedback-btn" class="btn btn-primary vertical-left-aligned">
+                    {% comment %} <li type="button" id="feedback-btn" class="btn btn-primary vertical-left-aligned">
                         Feedback <span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
-                    </li>
+                    </li> {% endcomment %}
 
                 </ul>
 
@@ -91,7 +91,7 @@
     {% block js %} {% endblock %}
 
     <!-- tellme for feddback -->
-    {%  include 'tellme/js_inc.html' %}
+    {% comment %} {%  include 'tellme/js_inc.html' %} {% endcomment %}
 
 
 </body>
