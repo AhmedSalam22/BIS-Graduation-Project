@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm , JournalFilter
+from .forms import JournalForm , JournalFilter , AccountForm
 import pandas as pd
 import numpy as np
 import csv
@@ -14,11 +14,11 @@ from django.utils import timezone
 from django.db.models import Avg
 import plotly.graph_objects as go
 import plotly
-from .forms import AccountForm
 import plotly.express as px
-from easy_pdf.views import PDFTemplateView , PDFTemplateResponseMixin
-from django.db import connection
 from django_filters.views import FilterView
+from io import BytesIO
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 
 
@@ -87,7 +87,6 @@ class AccountsDeleteView(OwnerDeleteView):
 class JournalListView( FilterView):
     paginate_by = 10
     model = Journal
-    # By convention:
     template_name = "sole_proprietorship/journal_list.html"
     filterset_class = JournalFilter
 
@@ -97,11 +96,8 @@ class JournalListView( FilterView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # we don't this line since we use FilterView which do this automatically for you
         # context["filter"] = JournalFilter(data=self.request.GET , queryset = get_queryset() , user=self.request.user)
-        # context["journal_list"] = context["filter"].qs
-        # self.object_list  = context["filter"].qs
-
-
         with connection.cursor() as cursor:
             cursor.execute(""" 
                             SELECT sum(balance) , transaction_type FROM (
@@ -146,68 +142,13 @@ class JournalDeleteView(OwnerDeleteView):
     model = Journal
 
 class FinancialStatements(LoginRequiredMixin, View):
-    def get(self, request):
+    def financial_sataements_by_pandas(self):
         owner=self.request.user
         # Accounts.objects.filter(owner=owner)[0].journal_set.values()
         #Accounts.objects.filter(owner=owner).all().values()
 
         accounts = Accounts.objects.filter(owner=owner).all().values()
         journal = Journal.objects.filter(owner=owner).all().values()
-
-        try:
-            data = prepare_data_frame(journal , accounts)
-            trial_balance = prepare_trial_balance(data)
-            net_income =  prepare_net_income(data)
-            try:
-                amount = net_income[1][1] - net_income[1][0]
-            except:
-                amount = 0
-            investment ,  drawings = prepare_equity_statement(data)
-            equity = investment + amount - drawings
-
-            assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
-
-            # df_accounts.to_csv('accounts.csv',index=False)
-            # df_journal.to_csv('journal.csv',index=False)
-
-            ctx = {
-                "trial_balance": trial_balance[0].to_html(classes = "table table-hover table-borderless") , 
-                "debit_credit" : trial_balance[1] , 
-                "net_income" : net_income[0].to_html(classes = "table table-hover table-borderless") ,
-                "revenue_expenses": net_income[1] , 
-                "amount"  : amount , 
-                "investment" : investment , 
-                "drawings" : drawings ,
-                "equity": equity ,
-                "assest": assest.to_html(classes = "table table-hover table-borderless"), 
-                "total_assest" : total_assest[0] ,
-                "liabilities" : liabilities.to_html(classes = "table table-hover table-borderless") ,
-                "total_liabilities" : total_liabilities[0]
-
-
-
-
-            }
-            return render(request , "sole_proprietorship/financial_statements.html"  , ctx)
-        except Exception  as error:
-            return HttpResponse("<p><strong>You Should Complete all accounts first to get this feature -- {}</strong><p>".format(error))
-
-
-
-
-
-class FinancialStatementsPDF(PDFTemplateView):
-    template_name = 'sole_proprietorship/FS_report.html'
-
-    def get_context_data(self, *args, **kwargs):
-        owner=self.request.user
-        # Accounts.objects.filter(owner=owner)[0].journal_set.values()
-        #Accounts.objects.filter(owner=owner).all().values()
-
-        accounts = Accounts.objects.filter(owner=owner).all().values()
-        journal = Journal.objects.filter(owner=owner).all().values()
-
-
         data = prepare_data_frame(journal , accounts)
         trial_balance = prepare_trial_balance(data)
         net_income =  prepare_net_income(data)
@@ -220,28 +161,66 @@ class FinancialStatementsPDF(PDFTemplateView):
 
         assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
 
-        # df_accounts.to_csv('accounts.csv',index=False)
-        # df_journal.to_csv('journal.csv',index=False)
-
         ctx = {
-            "trial_balance": trial_balance[0].to_html(classes="table") , 
+            "trial_balance": trial_balance[0].to_html(classes = "table table-hover table-borderless") , 
             "debit_credit" : trial_balance[1] , 
-            "net_income" : net_income[0].to_html() ,
+            "net_income" : net_income[0].to_html(classes = "table table-hover table-borderless") ,
             "revenue_expenses": net_income[1] , 
             "amount"  : amount , 
             "investment" : investment , 
             "drawings" : drawings ,
             "equity": equity ,
-            "assest": assest.to_html(), 
+            "assest": assest.to_html(classes = "table table-hover table-borderless"), 
             "total_assest" : total_assest[0] ,
-            "liabilities" : liabilities.to_html() ,
+            "liabilities" : liabilities.to_html(classes = "table table-hover table-borderless") ,
             "total_liabilities" : total_liabilities[0]
-
-
-
-
         }
         return ctx
+
+    def financial_sataements_by_sql(self):
+            with connection.cursor() as cursor:
+                cursor.execute(""" 
+                SELECT   account_type , account  , normal_balance , sum(helper) as balance FROM (
+                                                        SELECT * ,
+                                                        CASE
+                                                            WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                            ELSE ( -1 * j.balance)
+                                                        END as helper 
+                                                        FROM sole_proprietorship_journal as j
+                                                        JOIN sole_proprietorship_accounts as a
+                                                        on j.account_id = a.id
+                                                        where j.owner_id = %s
+                                        )
+        GROUP by account_type , account
+        ORDER by balance DESC
+                                                        """ , [self.request.user.id])
+
+                # query result will be some thing like this ('Assest', 'Computer equipment','Debit', 7000.0)
+                query = list(cursor)
+            total_debit = sum([ var[3] for var in query if var[2] == "Debit"])
+            total_credit = sum([ var[3] for var in query if var[2] == "Credit"])
+
+            ctx = {
+                'data': query ,
+                'Total_Debit' :total_debit ,
+                'Total_Credit' : total_credit , 
+            }
+            # dic acumulation to get the blance for oue expanded account equation (Assest = Liabilities + revenues - Expenses + investment - Drawings )
+            for var in query:
+                ctx[var[0]] = ctx.get(var[0] , 0) + var[3]
+
+            ctx["net_income"] = ctx.get('Revenue' , 0) - ctx.get('Expenses' , 0)
+            ctx['equity'] = ctx.get('Investment' , 0)  + ctx["net_income"] - ctx.get('Drawings' , 0)
+            
+            return ctx
+
+    def get(self, request):
+        # ctx = self.financial_sataements_by_pandas()
+        ctx = self.financial_sataements_by_sql()
+
+        return render(request , "sole_proprietorship/financial_statements.html"  , ctx)
+      
+
 
 
 class ExportJournal(LoginRequiredMixin , View):
@@ -355,12 +334,10 @@ class Dashboard(LoginRequiredMixin , View):
             "line_fig": line_fig
         }
 
-
         return render(request , "sole_proprietorship/dashboard.html"  , ctx)
-     
 
 
-# from django.db import connection
+
 
 def my_custom_sql(request):
     with connection.cursor() as cursor:
@@ -368,7 +345,7 @@ def my_custom_sql(request):
         # cursor.execute("SELECT * FROM sole_proprietorship_journal where owner_id = %s " , [request.user.id]  )
         # row = cursor.fetchall()
         cursor.execute(""" 
-                      SELECT sum(helper) as balance,  account_type FROM (
+         SELECT   account_type , account  , normal_balance , sum(helper) as balance FROM (
                                                 SELECT * ,
                                                 CASE
                                                     WHEN j.transaction_type = a.normal_balance Then  j.balance
@@ -379,11 +356,36 @@ def my_custom_sql(request):
                                                 on j.account_id = a.id
                                                 where j.owner_id = %s
                                 )
-GROUP by account_type
+GROUP by account_type , account
 ORDER by balance DESC
+
+
 
                                                 """ , [request.user.id])
         row = list(cursor)
     # row = Journal.objects.raw('SELECT * FROM sole_proprietorship_journal ' )
-
     return HttpResponse(row)
+
+
+def render_to_pdf(template_src, context_dict={}):
+    """
+    src: https://github.com/divanov11/django-html-2-pdf/blob/master/htmltopdf/app/views.py
+
+    https://www.youtube.com/watch?v=5umK8mwmpWM
+    """
+    template = get_template(template_src)
+    html  = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+    if not pdf.err:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None
+
+
+#Opens up page as PDF
+class ViewPDF(FinancialStatements):
+    def get(self, request, *args, **kwargs):
+        # ctx = self.financial_sataements_by_pandas()
+        ctx = self.financial_sataements_by_sql()
+        pdf = render_to_pdf('sole_proprietorship/FS_report.html', ctx)
+        return HttpResponse(pdf, content_type='application/pdf')

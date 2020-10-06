@@ -23,7 +23,7 @@ urlpatterns = [
     path("financialstatements" ,views.FinancialStatements.as_view() , name="financialstatements" ) , 
     path("export_journal" , views.ExportJournal.as_view() , name = "export_journal") ,
     path("dashboard" , views.Dashboard.as_view() , name ="dashboard") ,
-    path("DownloadFS" , views.FinancialStatementsPDF.as_view() , name = "fsdonwload") , 
+    path("DownloadFS" , views.ViewPDF.as_view() , name = "fsdonwload") , 
     path('test' , views.my_custom_sql)
 ]
 

@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     # pip installed app
     'crispy_forms',
     'tellme',
-    'easy_pdf',
     'django_filters',
 
     # CMS

@@ -1,44 +1,205 @@
-{% extends "easy_pdf/base.html" %}
+<head>
+<style>
+    @page {
+        size: a4 portrait;
+        @frame header_frame {           /* Static Frame */
+            -pdf-frame-content: header_content;
+            left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+        }
+        @frame content_frame {          /* Content Frame */
+            left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+        }
+        @frame footer_frame {           /* Another static Frame */
+            -pdf-frame-content: footer_content;
+            left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+    }
 
-{% block content %}
-<h1>BIS - Ahmed Maher Salam</h1>
-        <p class="text-primary m-0 font-weight-bold">Trial Balance</p>
- 
-        {{ trial_balance|safe }}
-        {{ debit_credit }}
-  
-        <p class="text-primary m-0 font-weight-bold">Net income</p>
-   
-        {{ net_income|safe }}
-        {{ revenue_expenses }}
-  
-        <p class="text-primary m-0 font-weight-bold">Owner's equity statements</p>
-    
-            <pre>
-                | Owner's Equity Statement          |
-                |-----------------------------------|:-----------------:|------------------:|
-                | Owner's capital investment        |                       {{investment}}    
-                | Add net income/substract net loss |  {{amount}}                          
-                | Less: Drawings                    |  ({{drawings}})                      
-                | Owner's Equity is equal to        |                       {{ equity}}       
-            </pre>
-        </div>
+</style>
+</head>
+
+<body>
+    <!-- Content for Static Frame 'header_frame' -->
+    <div id="header_content">
+        <h3>Instructor: Dr Mona Ganna</h3>
+    	<h3>BIS: Ahmed Maher Salam</h3>
     </div>
-<div>
 
+    <!-- Content for Static Frame 'footer_frame' -->
+    <div id="footer_content">(c) - page <pdf:pagenumber>
+        of <pdf:pagecount>
+    </div>
 
-        <p class="text-primary m-0 font-weight-bold">Balance Sheet</p>
+    <!-- HTML Content -->
+
+<hr>
+<h3>Trial Balance</h3>
+<table>
+      
+  <tbody>
+  <tr>
+      <th></th>
+      <td><strong>Credit<strong></td>
+      <td><strong>Debit<strong></td>
+  </tr>
+    {% for account_type , account , normal_balance , balance in data %}
+        <tr>
+            <th>{{ account }}</th>
+                {% if normal_balance == "Debit" %}
+                    <td>{{ balance }}</td>
+                    <td></td>
+                {% else %}
+                    <td></td>
+                    <td>{{ balance }}</td>
+                {% endif %}
+        </tr>
+    {% endfor %}
+        <tr >
+            <th>Total</th>
+            <td>{{ Total_Debit }}</td>
+            <td>{{ Total_Credit }}</td>
+        </tr>
+</tbody>
+</table>
+
+ <hr>
+ <h3>Net income statement</h3>
+ <table >
  
-        <p>Assest</p>
-        {{ assest|safe }}
-        <div class="alert alert-primary" role="alert">
-            Assest Balance : {{ total_assest }}
-        </div>
-        <p>liabilities</p>
-        {{ liabilities|safe }}
-        liabilities Balance : {{ total_liabilities }}
- 
-        Owner's Equity: {{ equity }}
+  <tbody>
+   <tr>
+      <th></th>
+      <td><strong>Expenses<strong></td>
+      <td><strong>Revenue<strong></td>
+  </tr>
+    {% for account_type , account , normal_balance , balance in data %}
+        {% if account_type == "Expenses" or account_type == "Revenue" %}
+            <tr>
+                <th>{{ account }}</th>
+                    {% if account_type == "Expenses" %}
+                        <td>{{ balance }}</td>
+                        <td></td>
+                    {% elif account_type == "Revenue" %}
+                        <td></td>
+                        <td>{{ balance }}</td>
+                    {% endif %}
+            </tr>
+        {% endif %}
+    {% endfor %}
+        <tr>
+            <th>Total</th>
+            <td>{{ Expenses }}</td>
+            <td>{{ Revenue }}</td>
+        </tr>
+    {% if net_income > 0 %}
+        <tr>
+            <th><strong>Net Income:</strong></th>
+            <td></td>
+            <td>{{ net_income }}</td>
+
+        </tr>
+
+    {% else %}
+       <tr>
+            <th><strong>Net Loss:</strong></th>
+            <td></td>
+            <td>{{ net_income }}</td>
+
+        </tr>    
+    {% endif %}
+  </tbody>
+</table>
+  
 
 
-{% endblock %}
+<hr>
+        <h3 >Owner's equity statements</h3>
+    
+     <table >
+  <tbody>
+    <tr>
+        <th>Owner's capital investment <th>
+        <td><td>
+        <td>{{Investment}}<td>
+    </tr>
+      <tr>
+        <th>
+            {% if net_income > 0 %}
+                Add net income 
+            {% else %}
+                substract net loss
+            {% endif %}
+        <th>
+        <td>{{net_income}}<td>
+        <td><td>
+    </tr>
+       <tr>
+        <th>Less: Drawings  <th>
+        <td>({{Drawings}}) <td>
+        <td><td>
+    </tr>
+    <tr >
+        <th> Owner's Equity is equal to   <th>
+        <td> <td>
+        <td> {{ equity }}<td>
+    </tr>
+  </tbody>
+</table>
+ <hr>
+        <h3 >Financial Statement</h3>
+   
+    <table>
+  <tbody>
+  <tr>
+    <th></th>
+    <td></td>
+    <td><strong>Assest</strong></td>
+
+
+  </tr>
+    {% for account_type , account , normal_balance , balance in data %}
+        {% if account_type == "Assest" %}
+            <tr>
+                <th>{{ account }}</th>
+                                <td></td>
+
+                <td>{{ balance }}</td>
+            </tr>
+        {% endif %}
+
+    {% endfor %}
+     <tr >
+        <th> Total Assest    <th>
+        <td> <td>
+        <td> {{ Assest }}<td>
+    </tr>
+    <tr>
+    <th></th>
+    <td></td>
+
+    <td><strong>liabilities</strong></td>
+
+  </tr>
+    {% for account_type , account , normal_balance , balance in data %}
+        {% if account_type == "liabilities" %}
+            <tr>
+                <th>{{ account }}</th>
+                                <td></td>
+
+                <td>{{ balance }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+      <tr >
+        <th> Total liabilities   <th>
+        <td> <td>
+        <td> {{ liabilities }}<td>
+    </tr>
+        <tr >
+        <th> Owner's Equity   <th>
+        <td> <td>
+        <td> {{ equity }}<td>
+    </tr>
+  </tbody>
+</table>
+<hr>

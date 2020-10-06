@@ -8,11 +8,39 @@
         <p class="text-primary m-0 font-weight-bold">Trial Balance</p>
     </div>
     <div class="card-body">
-        <div class="mx-auto" style="width: 300px;">
-        {{ trial_balance|safe }}
+        <div >
+            <table border="1" class="dataframe table table-hover table-borderless">
+  <thead>
+    <tr >
+      <th></th>
+      <th>Credit</th>
+      <th>Debit</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for account_type , account , normal_balance , balance in data %}
+        <tr>
+            <th>{{ account }}</th>
+                {% if normal_balance == "Debit" %}
+                    <td>{{ balance }}</td>
+                    <td></td>
+                {% else %}
+                    <td></td>
+                    <td>{{ balance }}</td>
+                {% endif %}
+        </tr>
+    {% endfor %}
+        <tr class="alert alert-primary">
+            <th>Total</th>
+            <td>{{ Total_Debit }}</td>
+            <td>{{ Total_Credit }}</td>
+        </tr>
+  </tbody>
+</table>
+        {% comment %} {{ trial_balance|safe }}
             <div class="alert alert-primary" role="alert">
                 {{ debit_credit }}
-            </div>
+            </div> {% endcomment %}
         </div>
     </div>
 <div>
@@ -22,12 +50,56 @@
         <p class="text-primary m-0 font-weight-bold">Net income</p>
     </div>
     <div class="card-body">
-        <div class="mx-auto" style="width: 300px;">
+         <table border="1" class="dataframe table table-hover table-borderless">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Expenses</th>
+      <th>Revenues</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for account_type , account , normal_balance , balance in data %}
+        {% if account_type == "Expenses" or account_type == "Revenue" %}
+            <tr>
+                <th>{{ account }}</th>
+                    {% if account_type == "Expenses" %}
+                        <td>{{ balance }}</td>
+                        <td></td>
+                    {% elif account_type == "Revenue" %}
+                        <td></td>
+                        <td>{{ balance }}</td>
+                    {% endif %}
+            </tr>
+        {% endif %}
+    {% endfor %}
+        <tr class="alert alert-primary">
+            <th>Total</th>
+            <td>{{ Expenses }}</td>
+            <td>{{ Revenue }}</td>
+        </tr>
+  </tbody>
+</table>
+{% if net_income > 0 %}
+    <div class="card text-white bg-success shadow">
+        <div class="card-body">
+            <p class="m-0"><strong>Net Income:</strong> {{ net_income }}</p>
+        </div>
+    </div>
+{% else %}
+<div class="card text-white bg-danger shadow">
+    <div class="card-body">
+            <p class="m-0"><strong>Net Loss:</strong> {{ net_income }}</p>
+    </div>
+</div>
+{% endif %}
+
+        {% comment %} <div class="mx-auto" style="width: 300px;">
         {{ net_income|safe }}
         <div class="alert alert-primary" role="alert">
             {{ revenue_expenses }}
         </div>
-        </div>
+        </div> {% endcomment %}
     </div>
 <div>
 
@@ -37,16 +109,44 @@
         <p class="text-primary m-0 font-weight-bold">Owner's equity statements</p>
     </div>
     <div class="card-body">
-        <div class="mx-auto" >
-            <pre>
-                | Owner's Equity Statement          |
-                |-----------------------------------|:-----------------:|------------------:|
-                | Owner's capital investment        |                       {{investment}}    
-                | Add net income/substract net loss |  {{amount}}                          
-                | Less: Drawings                    |  ({{drawings}})                      
-                | Owner's Equity is equal to        |                       {{ equity}}       
-            </pre>
-        </div>
+     <table border="1" class="dataframe table table-hover table-borderless">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Owner's Equity Statement</th>
+      <th></th>
+
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+        <th>Owner's capital investment <th>
+        <td><td>
+        <td>{{Investment}}<td>
+    </tr>
+      <tr>
+        <th>
+            {% if net_income > 0 %}
+                Add net income 
+            {% else %}
+                substract net loss
+            {% endif %}
+        <th>
+        <td>{{net_income}}<td>
+        <td><td>
+    </tr>
+       <tr>
+        <th>Less: Drawings  <th>
+        <td>({{Drawings}}) <td>
+        <td><td>
+    </tr>
+    <tr class="alert alert-primary">
+        <th> Owner's Equity is equal to   <th>
+        <td> <td>
+        <td> {{ equity }}<td>
+    </tr>
+  </tbody>
+</table>
     </div>
 <div>
 
@@ -55,7 +155,72 @@
         <p class="text-primary m-0 font-weight-bold">Balance Sheet</p>
     </div>
     <div class="card-body">
-        <div class="mx-auto" style="width: 300px;">
+    <table border="1" class="dataframe table table-hover table-borderless">
+  <thead>
+    <tr >
+      <th></th>
+      <th><strong>Financial Statement</strong></th>
+      <th></th>
+    </tr>
+    <tr>
+        <th></th>
+        <th></th>
+        <th></th>
+
+     </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <th></th>
+    <th>Assest</th>
+    <th></th>
+
+  </tr>
+    {% for account_type , account , normal_balance , balance in data %}
+        {% if account_type == "Assest" %}
+            <tr>
+                <th>{{ account }}</th>
+                <td>{{ balance }}</td>
+                <td></td>
+            </tr>
+        {% endif %}
+
+    {% endfor %}
+     <tr class="alert alert-primary">
+        <th> Total Assest    <th>
+        <td> <td>
+        <td> {{ Assest }}<td>
+    </tr>
+    <tr>
+    <th></th>
+    <th>liabilities</th>
+    <th></th>
+
+  </tr>
+    {% for account_type , account , normal_balance , balance in data %}
+        {% if account_type == "liabilities" %}
+            <tr>
+                <th>{{ account }}</th>
+                <td>{{ balance }}</td>
+                <td></td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+      <tr class="alert alert-primary">
+        <th> Total liabilities   <th>
+        <td> <td>
+        <td> {{ liabilities }}<td>
+    </tr>
+        <tr class="alert alert-primary">
+        <th> Owner's Equity   <th>
+        <td> <td>
+        <td> {{ equity }}<td>
+    </tr>
+  </tbody>
+</table>
+
+    {% comment %} old way using pandas instead of sql {% endcomment %}
+        {% comment %} <div class="mx-auto" style="width: 300px;">
         <p>Assest</p>
         {{ assest|safe }}
         <div class="alert alert-primary" role="alert">
@@ -69,7 +234,7 @@
         <div class="alert alert-primary" role="alert">
             Owner's Equity: {{ equity }}
         </div>
-    </div>
+    </div> {% endcomment %}
 <div>
 
 {% endblock %}
