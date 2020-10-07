@@ -84,7 +84,7 @@ class AccountsDeleteView(OwnerDeleteView):
     model = Accounts
 
 
-class JournalListView( FilterView):
+class JournalListView( LoginRequiredMixin , FilterView):
     paginate_by = 10
     model = Journal
     template_name = "sole_proprietorship/journal_list.html"
@@ -100,18 +100,18 @@ class JournalListView( FilterView):
         # context["filter"] = JournalFilter(data=self.request.GET , queryset = get_queryset() , user=self.request.user)
         with connection.cursor() as cursor:
             cursor.execute(""" 
-                            SELECT sum(balance) , transaction_type FROM (
-                                                    SELECT * ,
-                                                    CASE
-                                                        WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                        ELSE ( -1 * j.balance)
-                                                    END as helper 
-                                                    FROM sole_proprietorship_journal as j
-                                                    JOIN sole_proprietorship_accounts as a
-                                                    on j.account_id = a.id
-                                                    where j.owner_id = %s 
-                                                    )
-                            GROUP by transaction_type
+                  SELECT   sum(helper) as balance ,  normal_balance  FROM (
+                                                        SELECT * ,
+                                                        CASE
+                                                            WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                            ELSE ( -1 * j.balance)
+                                                        END as helper 
+                                                        FROM sole_proprietorship_journal as j
+                                                        JOIN sole_proprietorship_accounts as a
+                                                        on j.account_id = a.id
+                                                        where j.owner_id = %s
+                                        )
+        GROUP by normal_balance 
                                                     """ , [self.request.user.id])
             row = list(cursor.fetchall())
             print(row)
