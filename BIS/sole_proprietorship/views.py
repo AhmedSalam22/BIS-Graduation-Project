@@ -262,7 +262,7 @@ class Dashboard(LoginRequiredMixin , View):
             ORDER by balance DESC
                                                     """ , [request.user.id])
             row = list(cursor)
-            query = cursor.execute("""SELECT date , account , helper FROM (
+            query = cursor.execute("""SELECT date , account , sum(helper) as Balance , account_id FROM (
                                             SELECT * ,
                                             CASE
                                                 WHEN j.transaction_type = a.normal_balance Then  j.balance
@@ -271,9 +271,10 @@ class Dashboard(LoginRequiredMixin , View):
                                             FROM sole_proprietorship_journal as j
                                             JOIN sole_proprietorship_accounts as a
                                             on j.account_id = a.id
-                                            where j.owner_id = %s 
-                            )""" , [request.user.id] )
-            data = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative"])
+                                            where j.owner_id = %s			
+                                                                                                        )
+                            GROUP by date , account """ , [request.user.id] )
+            data = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative" , "account_id"])
             # print(data)
             # data.columns = query.keys()
 
@@ -317,8 +318,8 @@ class Dashboard(LoginRequiredMixin , View):
         fig3.update_layout(title_text='accounts type')
         accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
         #line chart 
-        account_form = AccountForm()
-        q2 = data.query("account == '{}' ".format(request.GET.get("account_name") , None))
+        account_form = AccountForm(user=owner)
+        q2 = data.query("account_id == '{}' ".format(request.GET.get("account") , None))
         line_fig = px.line(q2, x="date", y="balance_negative")
         line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
 
@@ -331,7 +332,7 @@ class Dashboard(LoginRequiredMixin , View):
             "equity" : equity  , 
             "accounts_fig" : accounts_fig , 
             "account_form" : account_form ,
-            "line_fig": line_fig
+            "line_fig": line_fig , 
         }
 
         return render(request , "sole_proprietorship/dashboard.html"  , ctx)

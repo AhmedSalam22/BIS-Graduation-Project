@@ -75,6 +75,7 @@
 </div>
 <div class="row">
     <form method="GET" action="">
+        {% csrf_token %}   
         {{ account_form}}
     <input type="submit" , value="query line chart">
     </form>
