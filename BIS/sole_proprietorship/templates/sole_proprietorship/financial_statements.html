@@ -1,8 +1,11 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block content%}
 
-<div class="d-sm-flex justify-content-between align-items-center mb-4">
-    <h3 class="text-dark mb-0">Finacial Statements</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:fsdonwload' %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report</a></div>
+<div class="d-sm-flex  align-items-center mb-4">
+    <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:excelDownload' %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (xlsx)</a>
+   <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:fsdonwload' %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
+</div>
+ <h3 class="text-dark mb-0">Finacial Statements</h3>
 <div class="card shadow">
     <div class="card-header py-3">
         <p class="text-primary m-0 font-weight-bold">Trial Balance</p>

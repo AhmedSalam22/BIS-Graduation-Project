@@ -9,7 +9,6 @@ from .forms import JournalForm , JournalFilter , AccountForm
 import pandas as pd
 import numpy as np
 import csv
-from django.http import HttpResponse
 from django.utils import timezone
 from django.db.models import Avg
 import plotly.graph_objects as go
@@ -19,6 +18,7 @@ from django_filters.views import FilterView
 from io import BytesIO
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+import xlsxwriter
 
 
 
@@ -177,42 +177,47 @@ class FinancialStatements(LoginRequiredMixin, View):
         }
         return ctx
 
+        
+    def get_data(self):
+        with connection.cursor() as cursor:
+            cursor.execute(""" 
+            SELECT   account_type , account  , normal_balance , sum(helper) as balance FROM (
+                                                    SELECT * ,
+                                                    CASE
+                                                        WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                        ELSE ( -1 * j.balance)
+                                                    END as helper 
+                                                    FROM sole_proprietorship_journal as j
+                                                    JOIN sole_proprietorship_accounts as a
+                                                    on j.account_id = a.id
+                                                    where j.owner_id = %s
+                                    )
+    GROUP by account_type , account
+    ORDER by balance DESC
+                                                    """ , [self.request.user.id])
+
+            # query result will be some thing like this ('Assest', 'Computer equipment','Debit', 7000.0)
+            query = list(cursor)
+        return query
+
     def financial_sataements_by_sql(self):
-            with connection.cursor() as cursor:
-                cursor.execute(""" 
-                SELECT   account_type , account  , normal_balance , sum(helper) as balance FROM (
-                                                        SELECT * ,
-                                                        CASE
-                                                            WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                            ELSE ( -1 * j.balance)
-                                                        END as helper 
-                                                        FROM sole_proprietorship_journal as j
-                                                        JOIN sole_proprietorship_accounts as a
-                                                        on j.account_id = a.id
-                                                        where j.owner_id = %s
-                                        )
-        GROUP by account_type , account
-        ORDER by balance DESC
-                                                        """ , [self.request.user.id])
+        query = self.get_data()
+        total_debit = sum([ var[3] for var in query if var[2] == "Debit"])
+        total_credit = sum([ var[3] for var in query if var[2] == "Credit"])
 
-                # query result will be some thing like this ('Assest', 'Computer equipment','Debit', 7000.0)
-                query = list(cursor)
-            total_debit = sum([ var[3] for var in query if var[2] == "Debit"])
-            total_credit = sum([ var[3] for var in query if var[2] == "Credit"])
+        ctx = {
+            'data': query ,
+            'Total_Debit' :total_debit ,
+            'Total_Credit' : total_credit , 
+        }
+        # dic acumulation to get the blance for oue expanded account equation (Assest = Liabilities + revenues - Expenses + investment - Drawings )
+        for var in query:
+            ctx[var[0]] = ctx.get(var[0] , 0) + var[3]
 
-            ctx = {
-                'data': query ,
-                'Total_Debit' :total_debit ,
-                'Total_Credit' : total_credit , 
-            }
-            # dic acumulation to get the blance for oue expanded account equation (Assest = Liabilities + revenues - Expenses + investment - Drawings )
-            for var in query:
-                ctx[var[0]] = ctx.get(var[0] , 0) + var[3]
-
-            ctx["net_income"] = ctx.get('Revenue' , 0) - ctx.get('Expenses' , 0)
-            ctx['equity'] = ctx.get('Investment' , 0)  + ctx["net_income"] - ctx.get('Drawings' , 0)
-            
-            return ctx
+        ctx["net_income"] = ctx.get('Revenue' , 0) - ctx.get('Expenses' , 0)
+        ctx['equity'] = ctx.get('Investment' , 0)  + ctx["net_income"] - ctx.get('Drawings' , 0)
+        
+        return ctx
 
     def get(self, request):
         # ctx = self.financial_sataements_by_pandas()
@@ -390,3 +395,123 @@ class ViewPDF(FinancialStatements):
         ctx = self.financial_sataements_by_sql()
         pdf = render_to_pdf('sole_proprietorship/FS_report.html', ctx)
         return HttpResponse(pdf, content_type='application/pdf')
+
+
+
+
+class ExportFainacialStatementsToExcel(FinancialStatements):
+    def get(self , request):
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = f'attachment; filename="Faniacial_statments{timezone.now()}.xlsx"'
+
+        workbook = xlsxwriter.Workbook(response)
+        worksheet = workbook.add_worksheet()
+        bold = workbook.add_format({'bold': True})
+        worksheet.set_column('A:A', 20)
+        worksheet.set_column('B:B', 20)
+        worksheet.set_column('C:C', 20)
+
+        # Add a bold format to use to highlight cells.
+        bold = workbook.add_format({'bold': True})
+
+        
+        worksheet.write('A1', 'Business Information System', bold)
+        worksheet.write('A2', 'Instructor Dr.Mona Ganna', bold)
+        worksheet.write('A3', 'Student: Ahmed Maher Fouzy Mohamed Salam', bold)
+        worksheet.write('A5' , "Trial Balance" , bold)
+        worksheet.write('B6' , "Debit" , bold)
+        worksheet.write('C6' , "Credit" , bold)
+
+        
+        data = self.financial_sataements_by_sql()
+        row = 6
+        # Trial Balance
+        for  account_type , account , normal_balance , balance in data["data"]:
+            worksheet.write(row , 0 , account)
+            if normal_balance == "Debit":
+                worksheet.write(row , 1 , balance)
+            else:
+                worksheet.write(row , 2 , balance)
+
+            row += 1
+        worksheet.write(row , 0 , "Total")
+        worksheet.write_formula(row , 1 , f"=sum(B7:B{row})")
+        worksheet.write_formula(row , 2 , f"=sum(C7:C{row})")
+        
+        #Net income statement
+        row += 2
+        worksheet.write(row , 0  , "Net income statement" , bold)
+        row += 1
+        worksheet.write(row , 1  , "Expenses" , bold)
+        worksheet.write(row , 2 ,  "Revenue" , bold)
+
+        row += 1 
+        for account_type , account , normal_balance , balance in data["data"]:
+            if account_type == "Expenses" or account_type == "Revenue":
+                worksheet.write(row , 0 , account)
+                if account_type == "Expenses":
+                    worksheet.write(row , 1 , balance)
+                else:
+                    worksheet.write(row , 2 , balance)
+                row += 1
+
+        worksheet.write(row , 0 , "Total")
+        worksheet.write(row , 1 , data.get("Expenses" , 0))
+        worksheet.write(row , 2 , data.get("Revenue" , 0))
+        worksheet.write(row + 1 , 0 , "Net Loss" if data.get("Expenses" , 0) > data.get("Revenue" , 0) else "Net Income")
+        worksheet.write(row + 1 , 2 ,  data.get("net_income" , 0) )
+        # Owner's equity statements
+        row += 3
+        worksheet.write(row , 0 , "Owner's equity statements" , bold)
+        worksheet.write(row +1 , 0 , "Owner's capital investment")
+        worksheet.write(row +1 , 2 ,  data.get("Investment", 0))
+
+        worksheet.write(row +2 , 0 , "Add net income" if data.get("net_income", 0) else "Subtract net loss")
+        worksheet.write(row +2 , 1 , data.get("net_income", 0))
+
+        worksheet.write(row +3 , 0 , "Less: Drawings")
+        worksheet.write(row +3 , 1 , data.get("Drawings" , 0))
+
+        worksheet.write(row +4 , 0 , "Owner's Equity")
+        worksheet.write(row +4 , 2 , data.get("equity" , 0))
+
+        row += 2
+        #Finacial Statments
+    
+        row += 6
+        worksheet.write(row , 0 , "Financial Statement" , bold)
+        worksheet.write(row +1, 1 , "Assest" , bold)
+        row += 1
+        for account_type , account , normal_balance , balance in data["data"]:
+            if account_type == "Assest":
+                worksheet.write(row , 0 , account)
+                worksheet.write(row , 2 , balance)
+                row += 1
+
+        worksheet.write(row , 0 , "Total Assest" )
+        worksheet.write(row , 2 , data.get("Assest" , 0) )
+
+        worksheet.write(row +1, 1 , "liabilities" , bold)
+        row += 2
+        for account_type , account , normal_balance , balance in data["data"]:
+            if account_type == "liabilities":
+                worksheet.write(row , 0 , account)
+                worksheet.write(row , 2 , balance)
+                row += 1
+        worksheet.write(row , 0 , "Total liabilities" )
+        worksheet.write(row , 2 , data.get("liabilities" , 0) )
+
+        worksheet.write(row  + 1 , 1 , "Owner's Equity" )
+        worksheet.write(row  + 2 , 0 , "Owner's Equity" )
+
+        worksheet.write(row  + 2 , 2 , data.get("equity" , 0) )
+
+        
+        worksheet.write(row  + 3 , 0 , "Total Liabilities and Owner's Equity" , bold )
+        worksheet.write(row  + 3 , 2 , data.get("equity" , 0) + data.get("liabilities" ,0) )
+
+
+        workbook.close()
+      
+
+        return response

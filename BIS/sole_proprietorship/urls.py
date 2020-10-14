@@ -24,7 +24,7 @@ urlpatterns = [
     path("export_journal" , views.ExportJournal.as_view() , name = "export_journal") ,
     path("dashboard" , views.Dashboard.as_view() , name ="dashboard") ,
     path("DownloadFS" , views.ViewPDF.as_view() , name = "fsdonwload") , 
-    path('test' , views.my_custom_sql)
+    path('DownloadXLSX' , views.ExportFainacialStatementsToExcel.as_view() ,name="excelDownload")
 ]
 
 # We use reverse_lazy in urls.py to delay looking up the view until all the paths are defined
