@@ -1,0 +1,24 @@
+{% extends "sole_proprietorship/index.html" %}
+{% block content %}
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold">Import Accounts</p>
+    </div>
+    <div class="card-body">
+        <div >
+
+ <form action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+      
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">Cancel</button>
+
+</form>
+</diV>
+</div>
+</div>
+
+
+{% endblock %}

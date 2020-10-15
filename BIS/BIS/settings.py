@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     # 'crispy_forms',
     # 'tellme',
     'django_filters',
-
     # CMS
     # 'django.contrib.sites',
     # 'cms',
@@ -176,6 +175,7 @@ MEDIA_URL = '/media/'
 # Path where media is stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 # CMS
 # SITE_ID = 1

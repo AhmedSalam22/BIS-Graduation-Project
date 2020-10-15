@@ -29,3 +29,8 @@ class JournalFilter( django_filters.FilterSet):
     def __init__(self,   **kwargs):
         super().__init__(**kwargs)
         self.form.fields["account"].queryset = Accounts.objects.filter(owner=self.request.user)
+
+
+
+class UploadFileForm(forms.Form):
+    file = forms.FileField()

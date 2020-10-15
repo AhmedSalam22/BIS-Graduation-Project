@@ -1,11 +1,12 @@
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import connection
-from django.http import HttpResponse
+from django.http import HttpResponse , HttpResponseRedirect
+from django.urls import reverse
 from django.shortcuts import render
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm , JournalFilter , AccountForm
+from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm
 import pandas as pd
 import numpy as np
 import csv
@@ -515,3 +516,22 @@ class ExportFainacialStatementsToExcel(FinancialStatements):
       
 
         return response
+
+class AccountsImport(LoginRequiredMixin , View):
+    def get(self , request):
+        return render(request , "sole_proprietorship/import_accounts.html" , {"form":UploadFileForm()})
+    
+    def post(self , request):
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = form.cleaned_data['file']
+            df = pd.read_excel(file)
+            for dic in df.to_dict('records'):
+                account = Accounts(owner=request.user , 
+                                    account=dic["account"] ,
+                                    normal_balance = dic["normal_balance"] , 
+                                    account_type = dic["account_type"] 
+                                     )
+                account.save()
+
+        return HttpResponseRedirect(reverse("sole_proprietorship:all"))
