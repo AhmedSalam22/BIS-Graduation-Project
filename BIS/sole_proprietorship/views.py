@@ -20,6 +20,7 @@ from io import BytesIO
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 import xlsxwriter
+from pivottablejs import pivot_ui
 
 
 
@@ -535,3 +536,35 @@ class AccountsImport(LoginRequiredMixin , View):
                 account.save()
 
         return HttpResponseRedirect(reverse("sole_proprietorship:all"))
+
+
+
+class PivotTable(LoginRequiredMixin , View):
+    
+    def get(self , request):
+        with connection.cursor() as cursor:
+
+            query = cursor.execute("""SELECT date , account , sum(helper) as Balance , account_id FROM (
+                                            SELECT * ,
+                                            CASE
+                                                WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                ELSE ( -1 * j.balance)
+                                            END as helper 
+                                            FROM sole_proprietorship_journal as j
+                                            JOIN sole_proprietorship_accounts as a
+                                            on j.account_id = a.id
+                                            where j.owner_id = %s			
+                                                                                                        )
+                            GROUP by date , account """ , [request.user.id] )
+            df = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative" , "account_id"])
+        # owner=request.user
+        # accounts = Accounts.objects.filter(owner=owner).all().values()
+        # journal = Journal.objects.filter(owner=owner).all().values()
+        # df = prepare_data_frame(journal , accounts)
+        pivot = pivot_ui(df)
+        with open(pivot.src) as t:
+            r = t.read()
+        ctx = {
+            "result": r
+        }
+        return render(request , "sole_proprietorship/test.html" , ctx)
