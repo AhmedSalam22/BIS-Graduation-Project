@@ -26,7 +26,7 @@ urlpatterns = [
     path("DownloadFS" , views.ViewPDF.as_view() , name = "fsdonwload") , 
     path('DownloadXLSX' , views.ExportFainacialStatementsToExcel.as_view() ,name="excelDownload"),
     path('accounts/import' , views.AccountsImport.as_view() , name="ImportAccounts" ) ,
-    path('test' , views.PivotTable.as_view()  , name="pivottable")
+    path('pivotTable' , views.PivotTable.as_view()  , name="pivottable")
 
 
 ]

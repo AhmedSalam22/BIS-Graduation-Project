@@ -544,7 +544,7 @@ class PivotTable(LoginRequiredMixin , View):
     def get(self , request):
         with connection.cursor() as cursor:
 
-            query = cursor.execute("""SELECT date , account , sum(helper) as Balance , account_id FROM (
+            query = cursor.execute("""SELECT date , account , sum(helper) as Balance , normal_balance , transaction_type , account_type FROM (
                                             SELECT * ,
                                             CASE
                                                 WHEN j.transaction_type = a.normal_balance Then  j.balance
@@ -556,7 +556,7 @@ class PivotTable(LoginRequiredMixin , View):
                                             where j.owner_id = %s			
                                                                                                         )
                             GROUP by date , account """ , [request.user.id] )
-            df = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative" , "account_id"])
+            df = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "Balance" , "normal_balance" , "transaction_type" , "account_type"])
         # owner=request.user
         # accounts = Accounts.objects.filter(owner=owner).all().values()
         # journal = Journal.objects.filter(owner=owner).all().values()
