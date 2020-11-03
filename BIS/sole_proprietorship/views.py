@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.shortcuts import render
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm
+from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form
 import pandas as pd
 import numpy as np
 import csv
@@ -21,7 +21,8 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import xlsxwriter
 from pivottablejs import pivot_ui
-
+from extra_views import FormSetView
+from django.forms import formset_factory
 
 
 
@@ -127,14 +128,83 @@ class JournalListView( LoginRequiredMixin , FilterView):
         return context
 
 
-class JournalCreateView(OwnerCreateView):
-    model = Journal
+class JournalCreateView(LoginRequiredMixin , FormSetView):
+    # model = Journal
     fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+    form_class = None
+
+    template_name = 'sole_proprietorship/journal_form.html'
+    # هنا انا بغير بعد الدوال عن طريق مفهوم الوراثة علشان اقدر افلتر الفورم لكل مستخدم
+    def get(self, request, *args, **kwargs):
+        """
+        Handles GET requests and instantiates a blank version of the formset.
+        """
+        
+        formset = self.construct_formset(request) #overriding
+        return self.render_to_response(self.get_context_data(formset=formset))
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests, instantiating a formset instance with the passed
+        POST variables and then checked for validity.
+        """
+        formset = self.construct_formset(request)
+        if formset.is_valid():
+            return self.formset_valid(formset)
+        else:
+            return self.formset_invalid(formset)
+
+
+    def construct_formset(self , request):
+        """
+        Returns an instance of the formset
+        """
+        formset_class = self.get_formset(request) #overriding
+        if hasattr(self, "get_extra_form_kwargs"):
+            klass = type(self).__name__
+            raise DeprecationWarning(
+                "Calling {0}.get_extra_form_kwargs is no longer supported. "
+                "Set `form_kwargs` in {0}.formset_kwargs or override "
+                "{0}.get_formset_kwargs() directly.".format(klass)
+            )
+        return formset_class(**self.get_formset_kwargs())
+
+    def get_form_class(self , request):
+        """
+        Returns the form class to use with the formset in this view
+        """
+        self.form_class = create_form(request.user) #overriding
+        print("asda:" , request.user)
+        return self.form_class
+
+    def get_formset(self , request):
+        """
+        Returns the formset class from the formset factory
+        """
+        return formset_factory(self.get_form_class(request), **self.get_factory_kwargs()) #overriding
+   
+   
+
     # لكى يستطيع ان يتعامل مع الحسابات التى يمتلكها فقط
-    def get_form(self, form_class=JournalForm):
-        form = super(OwnerCreateView,self).get_form(form_class) #instantiate using parent
-        form.fields['account'].queryset = Accounts.objects.filter(owner=self.request.user)
-        return form
+    # def get_form(self, form_class=JournalForm):
+    #     print("sdfsdfdsfsf")
+    #     form = super(OwnerCreateView,self).get_form(form_class) #instantiate using parent
+    #     form.fields['account'].queryset = Accounts.objects.filter(owner=self.request.user)
+    #     return form
+
+    # print(super(JournalCreateView , self).get_form(**kwargs))
+    def formset_valid(self, formset):
+        # do whatever you'd like to do with the valid formset
+        for form in formset:
+            object = form.save(commit=False)
+            object.owner = self.request.user
+            object.save()
+        return super(JournalCreateView, self).formset_valid(formset)
+    # def form_valid(self, form):
+    #     object = form.save(commit=False)
+    #     object.owner = self.request.user
+    #     object.save()
+    #     return super(OwnerCreateView, self).form_valid(form)
 
 class JournalUpdateView(OwnerUpdateView):
     model = Journal

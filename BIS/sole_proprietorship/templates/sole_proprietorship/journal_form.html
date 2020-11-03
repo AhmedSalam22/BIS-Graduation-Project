@@ -1,7 +1,7 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
-
+{% comment %} 
 <style>
 
 select {
@@ -25,7 +25,7 @@ button {
     margin-top: 10px;
 
 }
-</style>
+</style> {% endcomment %}
 
 {% endblock %}
 {% block javascript_top %}
@@ -34,20 +34,45 @@ button {
 
 <script>
   $(document).ready(function() {
-      $('#id_account').select2();
+         $('.select2').select2();
+  });
+   $(document).change(function() {
+         $('.select2').select2();
   });
 </script>
 {% endblock%}
 
 {% block content %}
-
 <div class="card shadow">
-    <div class="card-header py-3">
+   <div class="card-header py-3">
         <p class="text-primary m-0 font-weight-bold">Journalize</p>
     </div>
     <div class="card-body">
         <div >
 
+<form method="post">{% csrf_token %}
+
+        <div class="row">
+            <div class="form-group col-lg-12">             
+                {{ formset.management_form }}                                          
+                {% for form in formset %}
+                <div class="link-formset">
+                    {{ form }}
+                </div>
+                {% endfor %}
+                <hr>
+                <button class="user-sent btn btn-primary" type="submit" value="Save">Save</button>
+            </div>
+        </div>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script> 
+    <script>
+        $('.link-formset').formset({
+            addText: '<i class="fa fa-plus"></i> Add Transation',
+            deleteText: '<i class="far fa-trash-alt"></i>Remove'
+        });
+    </script>
+</form> 
+{% comment %} 
 
       <form action="" method="post" >
         {% csrf_token %}
@@ -55,7 +80,7 @@ button {
         <button type="submit" class="btn btn-primary">Submit</button>
         <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">Cancel</button>
 
-      </form>
+      </form> {% endcomment %}
 </diV>
 </div>
 </div>

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # 'crispy_forms',
     # 'tellme',
     'django_filters',
+    'extra_views',
     # CMS
     # 'django.contrib.sites',
     # 'cms',
