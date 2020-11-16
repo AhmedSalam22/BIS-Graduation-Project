@@ -41,7 +41,6 @@ INSTALLED_APPS = [
 
     # pip installed app
     # 'crispy_forms',
-    # 'tellme',
     'django_filters',
     'extra_views',
     # CMS
@@ -114,9 +113,9 @@ TEMPLATES = [
     },
 ]
 
-CMS_TEMPLATES = [
-    ('home/CV.html', 'CV'),
-]
+# CMS_TEMPLATES = [
+#     ('home/CV.html', 'CV'),
+# ]
 
 WSGI_APPLICATION = 'BIS.wsgi.application'
 

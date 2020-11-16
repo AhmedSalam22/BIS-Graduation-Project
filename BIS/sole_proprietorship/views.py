@@ -21,8 +21,8 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import xlsxwriter
 from pivottablejs import pivot_ui
-from extra_views import FormSetView
-from django.forms import formset_factory
+from home.formsetview import MyFormSetView
+from django.contrib import messages
 
 
 
@@ -69,10 +69,8 @@ def prepare_finacial_statement(df):
 
 class AccountsListView(OwnerListView):
     paginate_by = 10
-
     model = Accounts
-    # By convention:
-    # template_name = "app_name/model_list.html"
+
 
 
 class AccountsCreateView(OwnerCreateView):
@@ -128,46 +126,10 @@ class JournalListView( LoginRequiredMixin , FilterView):
         return context
 
 
-class JournalCreateView(LoginRequiredMixin , FormSetView):
-    # model = Journal
+class JournalCreateView(LoginRequiredMixin , MyFormSetView):
     fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
-    form_class = None
-
     template_name = 'sole_proprietorship/journal_form.html'
-    # هنا انا بغير بعد الدوال عن طريق مفهوم الوراثة علشان اقدر افلتر الفورم لكل مستخدم
-    def get(self, request, *args, **kwargs):
-        """
-        Handles GET requests and instantiates a blank version of the formset.
-        """
-        
-        formset = self.construct_formset(request) #overriding
-        return self.render_to_response(self.get_context_data(formset=formset))
-
-    def post(self, request, *args, **kwargs):
-        """
-        Handles POST requests, instantiating a formset instance with the passed
-        POST variables and then checked for validity.
-        """
-        formset = self.construct_formset(request)
-        if formset.is_valid():
-            return self.formset_valid(formset)
-        else:
-            return self.formset_invalid(formset)
-
-
-    def construct_formset(self , request):
-        """
-        Returns an instance of the formset
-        """
-        formset_class = self.get_formset(request) #overriding
-        if hasattr(self, "get_extra_form_kwargs"):
-            klass = type(self).__name__
-            raise DeprecationWarning(
-                "Calling {0}.get_extra_form_kwargs is no longer supported. "
-                "Set `form_kwargs` in {0}.formset_kwargs or override "
-                "{0}.get_formset_kwargs() directly.".format(klass)
-            )
-        return formset_class(**self.get_formset_kwargs())
+    form_class = None
 
     def get_form_class(self , request):
         """
@@ -176,14 +138,6 @@ class JournalCreateView(LoginRequiredMixin , FormSetView):
         self.form_class = create_form(request.user) #overriding
         print("asda:" , request.user)
         return self.form_class
-
-    def get_formset(self , request):
-        """
-        Returns the formset class from the formset factory
-        """
-        return formset_factory(self.get_form_class(request), **self.get_factory_kwargs()) #overriding
-   
-   
 
     # لكى يستطيع ان يتعامل مع الحسابات التى يمتلكها فقط
     # def get_form(self, form_class=JournalForm):
@@ -195,6 +149,7 @@ class JournalCreateView(LoginRequiredMixin , FormSetView):
     # print(super(JournalCreateView , self).get_form(**kwargs))
     def formset_valid(self, formset):
         # do whatever you'd like to do with the valid formset
+        messages.success(self.request, 'Your Transaction Was Created Succesffuly')
         for form in formset:
             object = form.save(commit=False)
             object.owner = self.request.user
@@ -212,6 +167,10 @@ class JournalUpdateView(OwnerUpdateView):
 
 class JournalDeleteView(OwnerDeleteView):
     model = Journal
+
+
+
+
 
 class FinancialStatements(LoginRequiredMixin, View):
     def financial_sataements_by_pandas(self):
@@ -604,7 +563,7 @@ class AccountsImport(LoginRequiredMixin , View):
                                     account_type = dic["account_type"] 
                                      )
                 account.save()
-
+        messages.success(request, 'Your Chat of Accounts Imported Successfuly')
         return HttpResponseRedirect(reverse("sole_proprietorship:all"))
 
 
