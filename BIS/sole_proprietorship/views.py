@@ -68,7 +68,7 @@ def prepare_finacial_statement(df):
 
 
 class AccountsListView(OwnerListView):
-    paginate_by = 10
+    # paginate_by = 10
     model = Accounts
 
 

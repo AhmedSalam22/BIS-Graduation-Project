@@ -8,9 +8,6 @@
     
     <link rel="stylesheet" href="{% static 'home/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'home/css/styles.min.css' %}">
-    <!-- tellme for feedback -->
-    {% comment %} <link href="{% static 'tellme/feedback.min.css' %}" rel="stylesheet"> {% endcomment %}
-
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
     {% block css %} {% endblock %}
@@ -82,16 +79,19 @@
                     <div class="text-center my-auto copyright"><span>Copyright © BIS 2020-Ahmed Maher Fouzy Mohamed Salam</span></div>
                 </div>
             </footer>
+
         </div><a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a></div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+
+
+    <script src="{% static 'home/js/jquery.min.js'%}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+    {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script> {% endcomment %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
     <script src="{% static 'home/js/script.min.js'%}"></script>
-    {% block js %} {% endblock %}
+    {% block footer %} {% endblock %}
 
-    <!-- tellme for feddback -->
-    {% comment %} {%  include 'tellme/js_inc.html' %} {% endcomment %}
+
 
 
 </body>
