@@ -37,10 +37,12 @@ INSTALLED_APPS = [
     'sole_proprietorship',
     'new_partner_admission', 
     'result' , 
+    'Customers_Sales',
     
 
     # pip installed app
     # 'crispy_forms',
+    'phonenumber_field',
     'django_filters',
     'extra_views',
     # CMS
