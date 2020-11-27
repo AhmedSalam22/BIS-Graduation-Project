@@ -38,13 +38,12 @@ INSTALLED_APPS = [
     'new_partner_admission', 
     'result' , 
     'Customers_Sales',
-    
-
     # pip installed app
-    # 'crispy_forms',
+    'crispy_forms',
     'phonenumber_field',
     'django_filters',
     'extra_views',
+    'ckeditor',
     # CMS
     # 'django.contrib.sites',
     # 'cms',
