@@ -21,13 +21,30 @@
                 <div></div>
                 <p class="text-center"><i class="fa fa-table" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
                 <p class="text-center" style="color:#fff;"><br><strong>Accounts</strong></p>
-                <a href="{% url 'sole_proprietorship:all' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+                <div class="dropdown">
+                    <div class="text-center" data-toggle="dropdown" aria-expanded="false">
+                      <button type="button" class="btn btn-light">Find out more</button>
+                    </div>
+                    <div class="dropdown-menu" role="menu">
+                    <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:all' %}">View Accounts</a>
+                    <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:accounts_create' %}">Create Account</a>
+                    </div>
+                </div>
             </div>
             <div class="col-md-3" style="background-color:#6633ff;">
                 <div></div>
                 <p class="text-center"><i class="fa fa-table" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
                 <p class="text-center" style="color:#fff;"><br><strong>Journal</strong></p>
-                <a href="{% url 'sole_proprietorship:journal_all' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+                <div class="dropdown">
+                        <div class="text-center" data-toggle="dropdown" aria-expanded="false">
+                        <button type="button" class="btn btn-light">Find out more</button>
+                        </div>
+                        <div class="dropdown-menu" role="menu">
+                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:journal_all' %}">View Journal entries</a>
+                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:journal_create' %}">Create transactions</a>
+                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:export_journal' %}">Export Journal to CSV</a>
+                        </div>
+                </div>
             </div>
             <div class="col-md-3" style="background-color:#3399ff;">
                 <div></div>
@@ -39,7 +56,15 @@
                 <div></div>
                 <p class="text-center"><i class="far fa-list-alt" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
                 <p class="text-center" style="color:#fff;"><br><strong>Financial Statements</strong><br></p>
-                <a href="{% url 'sole_proprietorship:financialstatements' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+                 <div class="dropdown">
+                    <div class="text-center" data-toggle="dropdown" aria-expanded="false">
+                      <button type="button" class="btn btn-light">Find out more</button>
+                    </div>
+                    <div class="dropdown-menu" role="menu">
+                    <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:financialstatements' %}">View Financial Statements</a>
+                    <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:fsdonwload' %}">Export Finacial Statements to PDF</a>
+                    <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:excelDownload' %}">Export Finacial Statements to Excel</a></div>
+                </div>
             </div>
             <div class="col-md-3" style="background-color:#3399ff;">
                 <div></div>

@@ -1,0 +1,52 @@
+{% extends "home/base.html" %}
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold">Create Customer</p>
+    </div>
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="general-tab" data-toggle="tab" href="#General" role="tab" aria-controls="General" aria-selected="true">General</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="address-tab" data-toggle="tab" href="#Address" role="tab" aria-controls="Address" aria-selected="false">Address</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Contact</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="note-tab" data-toggle="tab" href="#note" role="tab" aria-controls="note" aria-selected="false">Note</a>
+  </li>
+</ul>
+
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data">
+      <div class="tab-content" id="myTabContent">
+
+          {% csrf_token %}
+          <div class="tab-pane fade show active" id="General" role="tabpanel" aria-labelledby="general-tab">  {{ forms.customer_form|crispy }}</div>
+          <div class="tab-pane fade" id="Address" role="tabpanel" aria-labelledby="address-tab">{{ forms.customer_address_form|crispy }}</div>
+          <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+          {{ forms.customer_email_form }}
+          {{ forms.customer_telepone_form }}
+          </div>
+          <!-- to add RichTextField you set this--> 
+          {{  forms.cutomer_note_form.media }} 
+          <div class="tab-pane fade" id="note" role="tabpanel" aria-labelledby="note-tab">{{ forms.cutomer_note_form|crispy }}</div>
+          <br>
+          <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+
+      </div>
+    </div>
+  </div>
+
+                
+              
+                
+                
+{% endblock %}
+   

@@ -23,7 +23,7 @@ urlpatterns = [
     path("" , include("home.urls")) , 
     path("projects" , include("projects.urls")),
     path("sole_proprietorship/" , include("sole_proprietorship.urls")) ,
-    path("Customers_Sales/" , include("Customers_Sales.urls")) ,
+    path("customers_sales/" , include("Customers_Sales.urls")) ,
 
     # path('cv/', include('cms.urls')) ,
     path('new_partner_admission/', include('new_partner_admission.urls')) ,

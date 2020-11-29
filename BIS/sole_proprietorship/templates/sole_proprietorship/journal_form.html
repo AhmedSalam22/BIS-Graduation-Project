@@ -53,7 +53,11 @@ button {
 <form method="post">{% csrf_token %}
 
         <div class="row">
-            <div class="form-group col-lg-12">             
+            <div class="form-group col-lg-12">  
+            {% comment %} الفورم ده بس علشان ال update
+            ملوش علاقة بال fromset
+             {% endcomment %}
+            {{ form }}           
                 {{ formset.management_form }}                                          
                 {% for form in formset %}
                 <div class="link-formset">

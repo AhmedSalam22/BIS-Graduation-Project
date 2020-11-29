@@ -89,8 +89,7 @@
                             <th>balance</th>
                             <th>transaction type</th>
                             <th>comment</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
+                            <th>Action</th>
 
                         </tr>
                     </thead>
@@ -108,8 +107,14 @@
 
 
                                   {% if journal.owner == user %}
-                                  <td><a href="{% url 'sole_proprietorship:journal_update' journal.id %}">Edit</a> </td>
-                                  <td><a href="{% url 'sole_proprietorship:journal_delete' journal.id %}">Delete</a></td>
+                                  <td>
+                                    <a href="{% url 'sole_proprietorship:journal_update' journal.id %}">
+                                        <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    </a> 
+                                    <a href="{% url 'sole_proprietorship:journal_delete' journal.id %}">
+                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    </a>
+                                  </td>
                                   {% endif %}
                             </tr>
                             {% endfor %}

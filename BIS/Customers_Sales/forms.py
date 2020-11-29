@@ -10,7 +10,8 @@ class CustomerForm(forms.ModelForm):
           'account_number', 
           'prospect', 
           'inactive' , 
-          'customer_type']
+          'customer_type'] 
+   
         
 
 class CustomerAddressForm(forms.ModelForm):
@@ -28,3 +29,15 @@ class CustomerNoteForm(forms.ModelForm):
     class Meta:
         model = CustomerNote
         fields = ['note']
+
+
+class CustomerEmailForm(forms.ModelForm):
+    class Meta:
+        model = CustomerEmail
+        fields = ['email']
+
+
+class TelephoneForm(forms.ModelForm):
+    class Meta:
+        model = Telephone
+        fields = ['phone_number']

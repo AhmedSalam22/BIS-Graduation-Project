@@ -295,7 +295,7 @@ class Telephone (CustomerCommonFields):
     phone_number = PhoneNumberField(blank=True , region="EG")
 
     def __str__(self):
-        return self.phone_number
+        return f"{self.phone_number}"
 
 
 

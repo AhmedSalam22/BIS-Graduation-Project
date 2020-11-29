@@ -37,8 +37,7 @@
                             <th>Account</th>
                             <th>Normal Balance</th>
                             <th>Account Type</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
+                            <th>Action</th>
 
                         </tr>
                     </thead>
@@ -51,8 +50,14 @@
                             <td><strong>{{ accounts.normal_balance}}</strong></td>
                             <td><strong>{{ accounts.account_type}}</strong></td>
                                   {% if accounts.owner == user %}
-                                  <td><a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">Edit</a> </td>
-                                  <td><a href="{% url 'sole_proprietorship:accounts_delete' accounts.id %}">Delete</a></td>
+                                  <td>
+                                    <a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">
+                                        <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    </a> 
+                                     <a href="{% url 'sole_proprietorship:accounts_delete' accounts.id %}">
+                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                     </a>
+                                  </td>
                                   {% endif %}
                             </tr>
                             {% endfor %}
