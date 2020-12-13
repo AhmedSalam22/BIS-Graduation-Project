@@ -34,10 +34,10 @@ INSTALLED_APPS = [
     # my_app
     'home',
     'projects',
-    'sole_proprietorship',
+    'sole_proprietorship.apps.SoleProprietorshipConfig',
     'new_partner_admission', 
     'result' , 
-    'Customers_Sales',
+    'Customers_Sales.apps.CustomersSalesConfig',
     # pip installed app
     'crispy_forms',
     'phonenumber_field',

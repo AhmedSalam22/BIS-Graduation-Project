@@ -3,7 +3,6 @@ from .models import Journal  , Accounts
 from django import forms
 import django_filters
 
-
 def create_form(user):
     """Returns a new model form which uses the correct queryset for user
     https://stackoverflow.com/questions/20276302/passing-arguments-to-modelform-through-formset
@@ -21,6 +20,7 @@ def create_form(user):
             super(JournalFormUser, self).__init__(*args, **kwargs)
             self.fields['account'].queryset = Accounts.objects.filter(owner = user)
             self.fields['account'].widget.attrs.update({'class': 'select2'})
+            self.fields['date'].widget = forms.SelectDateWidget()
 
 
     return JournalFormUser

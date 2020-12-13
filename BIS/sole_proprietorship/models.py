@@ -4,6 +4,9 @@ from django.conf import settings
 
 # Create your models here.
 class Accounts(models.Model):
+    class Meta:
+        verbose_name = 'Account'
+        verbose_name_plural = 'Accounts'
     # account , Type , Normal Balance 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     account = models.CharField(max_length = 250)
@@ -49,4 +52,4 @@ class Journal(models.Model):
     comment = models.CharField(max_length=1500 , null= True , blank=True)
 
     def __str__(self):
-        return "{}".format(self.account)
+        return f"{self.account}"
