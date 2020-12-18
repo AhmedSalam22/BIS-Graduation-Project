@@ -32,7 +32,9 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # my_app
-    'home',
+    'home.apps.HomeConfig',
+    'home.apps.AdminConfig',
+
     'projects',
     'sole_proprietorship.apps.SoleProprietorshipConfig',
     'new_partner_admission', 
@@ -65,7 +67,7 @@ INSTALLED_APPS = [
     # 'djangocms_column',
 
     #Django app
-    'django.contrib.admin',
+    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
