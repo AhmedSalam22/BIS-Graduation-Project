@@ -136,7 +136,6 @@ class JournalCreateView(LoginRequiredMixin , MyFormSetView):
         Returns the form class to use with the formset in this view
         """
         self.form_class = create_form(request.user) #overriding
-        print("asda:" , request.user)
         return self.form_class
 
     # لكى يستطيع ان يتعامل مع الحسابات التى يمتلكها فقط
@@ -149,11 +148,24 @@ class JournalCreateView(LoginRequiredMixin , MyFormSetView):
     # print(super(JournalCreateView , self).get_form(**kwargs))
     def formset_valid(self, formset):
         # do whatever you'd like to do with the valid formset
-        messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+        totalDebit = 0.0
+        totalCredit = 0.0
         for form in formset:
             object = form.save(commit=False)
-            object.owner = self.request.user
-            object.save()
+            if object.transaction_type == "Debit":
+                totalDebit += object.balance
+            else:
+                totalCredit +=  object.balance
+
+        if totalDebit == totalCredit:
+            messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+            for form in formset:
+                object = form.save(commit=False)
+                object.owner = self.request.user
+                object.save()
+        else:
+            messages.error(self.request, f'Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}, so your Transaction not saved')
+
         return super(JournalCreateView, self).formset_valid(formset)
     # def form_valid(self, form):
     #     object = form.save(commit=False)

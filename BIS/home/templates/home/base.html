@@ -8,6 +8,7 @@
     
     <link rel="stylesheet" href="{% static 'home/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'home/css/styles.min.css' %}">
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
     {% block css %} {% endblock %}
@@ -62,11 +63,19 @@
                 <div class="container">
 
                     {% if messages %}
-                        {% for message in messages %}
-                        <div class="alert alert-success" role="alert">
-                            {{ message }}
+                    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="false">
+                        <div class="toast-header">
+                            {% comment %} <img src="..." class="rounded me-2" alt="..."> {% endcomment %}
+                            <strong class="me-auto">AYABA-Notification System</strong>
+                            <button class="close" type="button"  data-bs-dismiss="toast" aria-label="Close"><i class="fa fa-times" aria-hidden="true"></i></button>
                         </div>
-                        {% endfor %}
+                        <div class="toast-body">
+                             {% for message in messages %}                                 
+                                {{ message }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                      
                     {% endif %}
                     {% block breadcrumb %}{% endblock %}
                   
@@ -84,11 +93,19 @@
 
 
 
+
     <script src="{% static 'home/js/jquery.min.js'%}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
-    {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script> {% endcomment %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
-    <script src="{% static 'home/js/script.min.js'%}"></script>
+    <script>
+            $(document).ready(function() {
+                $(".toast").toast('show');
+                $(".close").click(function() {
+                   $(".toast").toast('hide');
+                 });
+
+            });
+    </script>
     {% block footer %} {% endblock %}
 
 
