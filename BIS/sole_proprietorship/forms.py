@@ -20,7 +20,7 @@ def create_form(user):
             super(JournalFormUser, self).__init__(*args, **kwargs)
             self.fields['account'].queryset = Accounts.objects.filter(owner = user)
             self.fields['account'].widget.attrs.update({'class': 'select2'})
-            self.fields['date'].widget = forms.SelectDateWidget()
+            self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
 
 
     return JournalFormUser
