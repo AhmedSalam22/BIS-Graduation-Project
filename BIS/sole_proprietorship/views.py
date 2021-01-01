@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.shortcuts import render
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form
+from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form , ReportingPeriodConfigForm
 import pandas as pd
 import numpy as np
 import csv
@@ -609,3 +609,34 @@ class PivotTable(LoginRequiredMixin , View):
             "result": r
         }
         return render(request , "sole_proprietorship/test.html" , ctx)
+
+
+
+class ReportingPeriodConfigView(LoginRequiredMixin , View):
+    template_name = "sole_proprietorship/reporting_period_form.html"
+
+    def get(self , request):
+        owner = request.user
+        data = {
+            "start_date":None,
+            "end_date":None
+        }
+        if hasattr(owner, 'fs_reporting_period'):
+            data["start_date"] = owner.fs_reporting_period.start_date
+            data["end_date"] = owner.fs_reporting_period.end_date
+        form = ReportingPeriodConfigForm(initial=data)
+
+        ctx = {
+            "form":form
+        }
+        return render(request , self.template_name , ctx)
+    
+    def post(self, request):
+        form = ReportingPeriodConfigForm(request.POST)
+        if form.is_valid():
+            f = form.save(commit=False)
+            f.owner = request.user
+            f.save()
+            messages.success(request, 'Reporting Period Config Has been set correctly')
+
+        return HttpResponseRedirect(reverse("sole_proprietorship:home"))

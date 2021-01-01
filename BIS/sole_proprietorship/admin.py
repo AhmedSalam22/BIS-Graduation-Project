@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Journal , Accounts
+from .models import Journal , Accounts , ReportingPeriodConfig
 
 
 
@@ -45,10 +45,16 @@ class JournalAdmin(admin.ModelAdmin):
 
     actions_on_bottom = True
 
+class ReportingPeriodConfigAdmin(admin.ModelAdmin):
+    list_display = ['owner' , 'start_date' , 'end_date']
+    list_editable = ['start_date' , 'end_date']
+    fields = ('owner' , ( 'start_date', 'end_date'))
+
+
 # Register your models here.
 admin.site.register(Accounts , AccountsAdmin)
 admin.site.register(Journal , JournalAdmin)
-
+admin.site.register(ReportingPeriodConfig , ReportingPeriodConfigAdmin)
 # Customize Django Admin
 admin.site.site_header = "AYBA -Automate Your Business Activity- by Ahmed Maher"
 admin.site.site_title = "AYBA"

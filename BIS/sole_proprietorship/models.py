@@ -53,3 +53,18 @@ class Journal(models.Model):
 
     def __str__(self):
         return f"{self.account}"
+
+
+class ReportingPeriodConfig(models.Model):
+    owner = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name= "fs_reporting_period",
+    )
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def __str__(self):
+        return f"{self.owner}: from {self.start_date} to {self.end_date}"
+    

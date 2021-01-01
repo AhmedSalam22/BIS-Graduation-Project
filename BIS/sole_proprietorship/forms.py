@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Journal  , Accounts
+from .models import Journal  , Accounts , ReportingPeriodConfig
 from django import forms
 import django_filters
 
@@ -60,3 +60,21 @@ class JournalFilter( django_filters.FilterSet):
 
 class UploadFileForm(forms.Form):
     file = forms.FileField()
+
+
+class ReportingPeriodConfigForm(forms.ModelForm):
+    class Meta:
+        model = ReportingPeriodConfig
+        fields = ['start_date' , 'end_date']
+        widgets = {
+                'start_date': forms.widgets.DateInput(attrs={'type': 'date'}),
+                'end_date': forms.widgets.DateInput(attrs={'type': 'date'}),
+            }
+
+    # def __init__(self,   **kwargs):
+    #     super().__init__(**kwargs)
+    #     self.fields['start_date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
+    #     self.fields['end_date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
+
+
+    
