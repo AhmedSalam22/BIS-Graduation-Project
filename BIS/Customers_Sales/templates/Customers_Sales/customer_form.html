@@ -23,6 +23,7 @@
 </ul>
 
     <div class="card-body">
+      {% load crispy_forms_tags %}  
       <form method="post" enctype="multipart/form-data">
       <div class="tab-content" id="myTabContent">
 
@@ -30,8 +31,8 @@
           <div class="tab-pane fade show active" id="General" role="tabpanel" aria-labelledby="general-tab">  {{ forms.customer_form|crispy }}</div>
           <div class="tab-pane fade" id="Address" role="tabpanel" aria-labelledby="address-tab">{{ forms.customer_address_form|crispy }}</div>
           <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-          {{ forms.customer_email_form }}
-          {{ forms.customer_telepone_form }}
+          {{ forms.customer_email_form|crispy }}
+          {{ forms.customer_telepone_form|crispy }}
           </div>
           <!-- to add RichTextField you set this--> 
           {{  forms.cutomer_note_form.media }} 

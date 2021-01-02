@@ -3,10 +3,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import connection
 from django.http import HttpResponse , HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import render
+from django.shortcuts import render , redirect
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form , ReportingPeriodConfigForm
+from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form , ReportingPeriodConfigForm , JournalFormSet
 import pandas as pd
 import numpy as np
 import csv
@@ -67,6 +67,15 @@ def prepare_finacial_statement(df):
     return assest , total_assest , liabilities ,total_liabilities
 
 
+class ConfigRequiredMixin:
+     def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'fs_reporting_period'):
+            messages.info(request , "it's look its is your first time.Please Complete the Reporting setting first before continue")
+            return redirect(reverse("sole_proprietorship:ReportingPeriodConfig"))
+        return super().dispatch(request, *args, **kwargs)
+
+
+
 class AccountsListView(OwnerListView):
     # paginate_by = 10
     model = Accounts
@@ -125,53 +134,90 @@ class JournalListView( LoginRequiredMixin , FilterView):
 
         return context
 
-
-class JournalCreateView(LoginRequiredMixin , MyFormSetView):
-    fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+    
+class JournalCreateView(LoginRequiredMixin , View):
     template_name = 'sole_proprietorship/journal_form.html'
-    form_class = None
+    success_url = None
 
-    def get_form_class(self , request):
-        """
-        Returns the form class to use with the formset in this view
-        """
-        self.form_class = create_form(request.user) #overriding
-        return self.form_class
+    def get(self , request , *args, **kwargs):
+        JournalFormSetForm = JournalFormSet(form_kwargs={'user': request.user} ,
+                                            queryset=Journal.objects.none())
+        return render(request, self.template_name , {"formset": JournalFormSetForm} )
 
-    # لكى يستطيع ان يتعامل مع الحسابات التى يمتلكها فقط
-    # def get_form(self, form_class=JournalForm):
-    #     print("sdfsdfdsfsf")
-    #     form = super(OwnerCreateView,self).get_form(form_class) #instantiate using parent
-    #     form.fields['account'].queryset = Accounts.objects.filter(owner=self.request.user)
-    #     return form
-
-    # print(super(JournalCreateView , self).get_form(**kwargs))
-    def formset_valid(self, formset):
+    
+    def post(self , request , *args , **kwargs):
+        formset = JournalFormSet(request.POST , form_kwargs={'user': request.user} , queryset=Journal.objects.none())
         # do whatever you'd like to do with the valid formset
-        totalDebit = 0.0
-        totalCredit = 0.0
-        for form in formset:
-            object = form.save(commit=False)
-            if object.transaction_type == "Debit":
-                totalDebit += object.balance
-            else:
-                totalCredit +=  object.balance
-
-        if totalDebit == totalCredit:
-            messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+        if formset.is_valid():
+            totalDebit = 0.0
+            totalCredit = 0.0
             for form in formset:
                 object = form.save(commit=False)
-                object.owner = self.request.user
-                object.save()
-        else:
-            messages.error(self.request, f'Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}, so your Transaction not saved')
+                if object.transaction_type == "Debit":
+                    totalDebit += object.balance
+                else:
+                    totalCredit +=  object.balance
 
-        return super(JournalCreateView, self).formset_valid(formset)
-    # def form_valid(self, form):
-    #     object = form.save(commit=False)
-    #     object.owner = self.request.user
-    #     object.save()
-    #     return super(OwnerCreateView, self).form_valid(form)
+            if totalDebit == totalCredit:
+                messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+                for form in formset:
+                    object = form.save(commit=False)
+                    object.owner = self.request.user
+                    object.save()
+            else:
+                messages.error(self.request, f'Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}, so your Transaction not saved')        
+            return redirect(self.success_url)
+        return render(request, self.template_name , {"formset": formset} )
+# an old way to create multipe form using external liabrary
+# class JournalCreateView(LoginRequiredMixin , MyFormSetView):
+#     fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+#     template_name = 'sole_proprietorship/journal_form.html'
+#     form_class = None
+   
+                      
+#     def get_form_class(self , request):
+#         """
+#         Returns the form class to use with the formset in this view
+#         """
+#         self.form_class = create_form(request.user) #overriding
+#         return self.form_class
+    
+    
+
+#     # لكى يستطيع ان يتعامل مع الحسابات التى يمتلكها فقط
+#     # def get_form(self, form_class=JournalForm):
+#     #     print("sdfsdfdsfsf")
+#     #     form = super(OwnerCreateView,self).get_form(form_class) #instantiate using parent
+#     #     form.fields['account'].queryset = Accounts.objects.filter(owner=self.request.user)
+#     #     return form
+
+#     # print(super(JournalCreateView , self).get_form(**kwargs))
+#     def formset_valid(self, formset):
+#         # do whatever you'd like to do with the valid formset
+#         totalDebit = 0.0
+#         totalCredit = 0.0
+#         for form in formset:
+#             object = form.save(commit=False)
+#             if object.transaction_type == "Debit":
+#                 totalDebit += object.balance
+#             else:
+#                 totalCredit +=  object.balance
+
+#         if totalDebit == totalCredit:
+#             messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+#             for form in formset:
+#                 object = form.save(commit=False)
+#                 object.owner = self.request.user
+#                 object.save()
+#         else:
+#             messages.error(self.request, f'Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}, so your Transaction not saved')
+
+#         return super(JournalCreateView, self).formset_valid(formset)
+#     # def form_valid(self, form):
+#     #     object = form.save(commit=False)
+#     #     object.owner = self.request.user
+#     #     object.save()
+#     #     return super(OwnerCreateView, self).form_valid(form)
 
 class JournalUpdateView(OwnerUpdateView):
     model = Journal
@@ -181,10 +227,7 @@ class JournalDeleteView(OwnerDeleteView):
     model = Journal
 
 
-
-
-
-class FinancialStatements(LoginRequiredMixin, View):
+class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
     def financial_sataements_by_pandas(self):
         owner=self.request.user
         # Accounts.objects.filter(owner=owner)[0].journal_set.values()
@@ -575,7 +618,7 @@ class AccountsImport(LoginRequiredMixin , View):
                                     account_type = dic["account_type"] 
                                      )
                 account.save()
-        messages.success(request, 'Your Chat of Accounts Imported Successfuly')
+            messages.success(request, 'Your Chat of Accounts Imported Successfuly')
         return HttpResponseRedirect(reverse("sole_proprietorship:all"))
 
 

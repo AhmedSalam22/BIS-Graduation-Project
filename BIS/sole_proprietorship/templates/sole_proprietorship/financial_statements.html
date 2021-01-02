@@ -1,6 +1,12 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block content%}
-
+<div class="d-flex align-items-center p-3 my-3 text-white  rounded shadow-sm" style="background-color:#4e73df">
+    <img class="me-3" src="/docs/5.0/assets/brand/bootstrap-logo-white.svg" alt="" width="48" height="38">
+    <div class="lh-1">
+      <h1 class="h6 mb-0 text-white lh-1">Bootstrap</h1>
+      <small>Since 2011</small>
+    </div>
+</div>
 <div class="d-sm-flex  align-items-center mb-4">
     <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:excelDownload' %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (xlsx)</a>
    <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:fsdonwload' %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>

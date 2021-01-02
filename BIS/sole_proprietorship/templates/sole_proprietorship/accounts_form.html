@@ -9,9 +9,10 @@
     </div>
     <div class="card-body">
         <div >
+          {% load crispy_forms_tags %}  
           <form action="" method="post">
           {% csrf_token %}
-          {{ form }}
+          {{ form|crispy }}
           <button type="submit" class="btn btn-primary">Submit</button>
           <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:all' %}';return false;">Cancel</button>
         </form>

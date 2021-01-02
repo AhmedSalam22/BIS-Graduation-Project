@@ -2,6 +2,37 @@ from django.forms import ModelForm
 from .models import Journal  , Accounts , ReportingPeriodConfig
 from django import forms
 import django_filters
+from django.utils import timezone
+from django.forms import modelformset_factory 
+from django.forms import BaseFormSet
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout , Row , Column
+
+class JournalFormSetForm(ModelForm):
+    class Meta:
+        model = Journal
+        fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+        widgets = {
+            "comment":forms.Textarea(attrs={"placeholder":"Type Comment about specific transaction" , "rows":"2"})
+        }
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.user = user
+        self.fields['account'].queryset = Accounts.objects.filter(owner = user)
+        self.fields['account'].widget.attrs.update({'class': 'select2'})
+        self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
+        self.fields["date"].initial = timezone.localdate()
+      
+
+
+JournalFormSet = modelformset_factory(Journal ,
+                                     fields=['account', 'date' , 'balance' , "transaction_type" , "comment"] ,
+                                     form=JournalFormSetForm,
+                                     min_num=2 , 
+                                     extra= 0,
+                                     validate_min= True )
 
 def create_form(user):
     """Returns a new model form which uses the correct queryset for user
@@ -30,10 +61,6 @@ class JournalForm(ModelForm):
         model = Journal
         fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
 
-    # def __init__(self,    **kwargs ):
-    #     # experiment = kwargs.pop('experiment')
-    #     super().__init__(**kwargs)
-    #     self.fields["account"].queryset = Accounts.objects.filter(owner=1)
 
 class AccountForm(ModelForm):
     class Meta:

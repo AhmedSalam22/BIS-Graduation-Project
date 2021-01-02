@@ -49,7 +49,7 @@ class Journal(models.Model):
         ],
         default= "Debit",
     )
-    comment = models.CharField(max_length=1500 , null= True , blank=True)
+    comment = models.CharField(max_length=1500 , null= True , blank=True )
 
     def __str__(self):
         return f"{self.account}"

@@ -1,32 +1,9 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
-{% comment %} 
 <style>
 
-select {
-  width: 100%;
-}
-
-input {
-  width: 100%;
-}
-
-textarea {
-  width: 100%;
-}
-
-form {
-  width: 100%;
-}
-
-button {
-    width: 100%;
-    margin-top: 10px;
-
-}
-</style> {% endcomment %}
-
+</style>
 {% endblock %}
 {% block javascript_top %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -48,46 +25,44 @@ button {
         <p class="text-primary m-0 font-weight-bold">Journalize</p>
     </div>
     <div class="card-body">
-        <div >
-
-<form method="post">{% csrf_token %}
-
-        <div class="row">
-            <div class="form-group col-lg-12">  
+{% load crispy_forms_tags %}
+    <form method="post"  >
+      {% csrf_token %}
+      {% if formset.non_form_errors %}
+          <div>{{ formset.non_form_errors }}</div>
+      {% endif %}
             {% comment %} الفورم ده بس علشان ال update
             ملوش علاقة بال fromset
              {% endcomment %}
-            {{ form }}           
+             {% if form %}
+                    {{ form }}
+              {% endif %}    
+              {{formset.media}}      
                 {{ formset.management_form }}                                          
                 {% for form in formset %}
-                <div class="link-formset">
-                    {{ form }}
-                </div>
+                  <div class="link-formset">
+                  {% for field in form %}
+                   <div class="form-group col-md-6 mb-0">
+                        {{ field|as_crispy_field }}
+                    </div>
+                  {% endfor%}
+                  </div>
                 {% endfor %}
                 <hr>
-                <button class="user-sent btn btn-primary" type="submit" value="Save">Save</button>
-            </div>
-        </div>    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script> 
+                <button class="btn btn-primary" type="submit" value="Save">Save</button>
+            
+   
+</form> 
+
+</diV>
+</div>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script> 
     <script>
         $('.link-formset').formset({
             addText: '<i class="fa fa-plus"></i> Add Transation',
             deleteText: '<i class="far fa-trash-alt"></i>Remove'
         });
     </script>
-</form> 
-{% comment %} 
-
-      <form action="" method="post" >
-        {% csrf_token %}
-        {{ form }}
-        <button type="submit" class="btn btn-primary">Submit</button>
-        <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">Cancel</button>
-
-      </form> {% endcomment %}
-</diV>
-</div>
-</div>
 {% endblock %}
 
 

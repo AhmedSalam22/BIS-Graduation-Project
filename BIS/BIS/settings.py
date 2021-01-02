@@ -198,3 +198,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 #     'easy_thumbnails.processors.filters'
 # )
 
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
