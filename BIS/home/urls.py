@@ -6,5 +6,6 @@ app_name = "home"
 urlpatterns = [
     path("" , TemplateView.as_view(template_name = "home/index.html") , name="home") , 
     path('accounts/', include('django.contrib.auth.urls')),
-    path('register' , views.Register.as_view() , name="register")
+    path('register' , views.Register.as_view() , name="register"),
+    path('ajax/validate_username',  views.validate_username , name="validate_username"),
 ]

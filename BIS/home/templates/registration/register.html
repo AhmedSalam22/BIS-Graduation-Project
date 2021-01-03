@@ -27,31 +27,43 @@
                             </div>
     
 
+                            {% load crispy_forms_tags %}
 
                             <form class="user" method="POST">
                                 {% csrf_token %}
                                 <div class="form-group row">
-                                    {% if form.errors %}
-                                        {% for field in form %}
+                                    {% comment %} {% if form.errors %} {% endcomment %}
+                                        {% comment %} {% for field in form %}
                                             {% for error in field.errors %}
                                                 <div class="alert alert-danger">
                                                     <strong>{{ error|escape }}</strong>
                                                 </div>
                                             {% endfor %}
-                                        {% endfor %}
+                                        {% endfor %} {% endcomment %}
                                         {% for error in form.non_field_errors %}
                                             <div class="alert alert-danger">
                                                 <strong>{{ error|escape }}</strong>
                                             </div>
                                         {% endfor %}
-                                    {% endif %}
-                                    <div class="col-sm-12"><input class="form-control form-control-user" type="text" id="exampleFirstName" placeholder="User Name" name="username"></div>
-                                    <!-- <div class="col-sm-6"><input class="form-control form-control-user" type="text" id="exampleFirstName" placeholder="Last Name" name="last_name"></div> -->
-                                </div>
-                                <div class="form-group"><input class="form-control form-control-user" type="email" id="exampleInputEmail" aria-describedby="emailHelp" placeholder="Email Address" name="email"></div>
+                                    {% comment %} {% endif %} {% endcomment %}
+                                    <div class="form-group row">
+                                        <div class="col-sm-6 mb-3 mb-sm-0">
+                                            {{ form.username|as_crispy_field }}
+                                        </div>
+                                        <div class="col-sm-6 mb-3 mb-sm-0">
+                                            {{ form.email|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-6 mb-3 mb-sm-0">
+                                             {{ form.password1|as_crispy_field }}
+                                        </div>
+                                        <div class="col-sm-6 mb-3 mb-sm-0">
+                                             {{ form.password2|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                   
                                 <div class="form-group row">
-                                    <div class="col-sm-6 mb-3 mb-sm-0"><input class="form-control form-control-user" type="password" id="examplePasswordInput" placeholder="Password" name="password1"></div>
-                                    <div class="col-sm-6"><input class="form-control form-control-user" type="password" id="exampleRepeatPasswordInput" placeholder="Repeat Password" name="password2"></div>
                                 </div><button class="btn btn-primary btn-block text-white btn-user" type="submit">Register Account</button>
                                 <hr><a class="btn btn-primary btn-block text-white btn-google btn-user" role="button"><i class="fab fa-google"></i>&nbsp; Register with Google</a><a class="btn btn-primary btn-block text-white btn-facebook btn-user" role="button"><i class="fab fa-facebook-f"></i>&nbsp; Register with Facebook</a>
                                 <hr>
@@ -69,6 +81,42 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
     <script src="{% static 'home/js/script.min.js'%}"></script>
+    <script>
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value
+        $('#id_username').change(function(){
+           let username = $(this).val();
+           $.ajaxSetup({
+               beforeSend: function (xhr , settings){
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                // Only send the token to relative URLs i.e. locally.
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                     }
+               }
+           });
+
+           $.ajax({
+               type: "POST",
+               url: '{% url "home:validate_username" %}',
+               data : {"username": username},
+               dataType: "json",
+               success: function(data){
+                   if (data.is_taken){
+                       console.log("taken already");
+                       $('#id_username').after(function(){
+                           return `<p id="error_1_id_username" class="invalid-feedback"><strong>A user with that username already exists.</strong></p>`
+                       });
+                        $( "#id_username" ).removeClass( "is-valid" )
+                       $("#id_username").addClass("is-invalid");
+                   } else {
+                       $('#error_1_id_username').empty();
+                       $( "#id_username" ).removeClass( "is-invalid" )
+                        $("#id_username").addClass("is-valid");
+
+                   }
+               }
+           });
+        });
+    </script>
 </body>
 
 </html>
