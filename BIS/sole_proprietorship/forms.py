@@ -7,6 +7,9 @@ from django.forms import modelformset_factory
 from django.forms import BaseFormSet
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column
+from django.utils.translation import gettext as _
+
+
 
 class JournalFormSetForm(ModelForm):
     class Meta:
@@ -98,10 +101,27 @@ class ReportingPeriodConfigForm(forms.ModelForm):
                 'end_date': forms.widgets.DateInput(attrs={'type': 'date'}),
             }
 
-    # def __init__(self,   **kwargs):
-    #     super().__init__(**kwargs)
-    #     self.fields['start_date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
-    #     self.fields['end_date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
+class AccountsForm(ModelForm):
+    class Meta:
+        model = Accounts
+        fields = '__all__'
+        exclude = ["owner"]
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+
+    def clean(self , *args, **kwargs):
+        user = self.user
+        account = self.cleaned_data.get("account")
+
+        if Accounts.objects.filter(owner__username__iexact=user, account__iexact=account).exists():
+            raise forms.ValidationError(_("this account is already exist"),
+                        code="duplicate",
+                        params={"value": account}
+        )
+
 
 
     

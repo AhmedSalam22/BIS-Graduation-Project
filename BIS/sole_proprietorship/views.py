@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.shortcuts import render , redirect
 from .models import Journal , Accounts
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form , ReportingPeriodConfigForm , JournalFormSet
+from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form , ReportingPeriodConfigForm , JournalFormSet, AccountsForm
 import pandas as pd
 import numpy as np
 import csv
@@ -83,8 +83,15 @@ class AccountsListView(OwnerListView):
 
 
 class AccountsCreateView(OwnerCreateView):
-    model = Accounts
-    fields = ['account', 'normal_balance' , 'account_type']
+    template_name = 'sole_proprietorship/accounts_form.html'
+    form_class = AccountsForm
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user # pass the 'user' in kwargs
+        return kwargs 
+
+
 
 class AccountsUpdateView(OwnerUpdateView):
     model = Accounts
@@ -308,6 +315,8 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
     def get(self, request):
         # ctx = self.financial_sataements_by_pandas()
         ctx = self.financial_sataements_by_sql()
+        ctx['start_date'] = request.user.fs_reporting_period.start_date
+        ctx['end_date'] = request.user.fs_reporting_period.end_date
 
         return render(request , "sole_proprietorship/financial_statements.html"  , ctx)
       

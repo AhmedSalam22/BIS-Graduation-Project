@@ -1,12 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
 
 # Create your models here.
 class Accounts(models.Model):
     class Meta:
         verbose_name = 'Account'
         verbose_name_plural = 'Accounts'
+        constraints = [
+            models.UniqueConstraint(fields=['account', 'owner'], name='unique_account')
+        ]
     # account , Type , Normal Balance 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     account = models.CharField(max_length = 250)
@@ -32,6 +37,10 @@ class Accounts(models.Model):
         default = "Assest"
     )
 
+
+
+
+
     def __str__(self):
         return self.account
 
@@ -51,6 +60,7 @@ class Journal(models.Model):
     )
     comment = models.CharField(max_length=1500 , null= True , blank=True )
 
+ 
     def __str__(self):
         return f"{self.account}"
 

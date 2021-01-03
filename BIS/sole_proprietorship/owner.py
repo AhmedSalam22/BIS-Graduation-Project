@@ -3,6 +3,8 @@ from django.views.generic import CreateView, UpdateView, DeleteView, ListView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import JournalForm
 from .models import Accounts
+from django.contrib import messages
+
 class OwnerListView(LoginRequiredMixin,ListView):
     """
     Sub-class the ListView to pass the request to the form.
@@ -22,6 +24,7 @@ class OwnerCreateView(LoginRequiredMixin, CreateView):
         object = form.save(commit=False)
         object.owner = self.request.user
         object.save()
+        # messages.success(self.request, 'Your Transaction Was Created Succesffuly')
         return super(OwnerCreateView, self).form_valid(form)
 
 class OwnerUpdateView(LoginRequiredMixin, UpdateView):
