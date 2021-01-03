@@ -23,6 +23,7 @@ import xlsxwriter
 from pivottablejs import pivot_ui
 from home.formsetview import MyFormSetView
 from django.contrib import messages
+from django.db.models import Q
 
 
 
@@ -283,11 +284,15 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
                                                     FROM sole_proprietorship_journal as j
                                                     JOIN sole_proprietorship_accounts as a
                                                     on j.account_id = a.id
-                                                    where j.owner_id = %s
+                                                    where j.owner_id = %s AND j.date >= %s AND j.date <= %s
                                     )
     GROUP by account_type , account
     ORDER by balance DESC
-                                                    """ , [self.request.user.id])
+                                                    """ , [self.request.user.id ,
+                                                           self.request.user.fs_reporting_period.start_date ,
+                                                           self.request.user.fs_reporting_period.end_date
+                                                           
+                                                            ])
 
             # query result will be some thing like this ('Assest', 'Computer equipment','Debit', 7000.0)
             query = list(cursor)
@@ -340,12 +345,14 @@ class ExportJournal(LoginRequiredMixin , View):
 
         return response
 
-class Dashboard(LoginRequiredMixin , View):
+class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
     def get(self, request):
         owner =  request.user
-        total_transaction = Journal.objects.filter(owner=owner).count()
+        query = Q(owner=owner,date__gte=request.user.fs_reporting_period.start_date)
+        query.add(Q(date__lte=request.user.fs_reporting_period.end_date), Q.AND)
+        total_transaction = Journal.objects.filter(query).count()
         total_accounts = Accounts.objects.filter(owner=owner).count()
-        avg_transaction = Journal.objects.filter(owner=owner).aggregate(Avg("balance")) 
+        avg_transaction = Journal.objects.filter(query).aggregate(Avg("balance")) 
         with connection.cursor() as cursor:
             cursor.execute(""" 
                             SELECT sum(helper) as balance,  account_type FROM (
@@ -357,10 +364,13 @@ class Dashboard(LoginRequiredMixin , View):
                                                     FROM sole_proprietorship_journal as j
                                                     JOIN sole_proprietorship_accounts as a
                                                     on j.account_id = a.id
-                                                    where j.owner_id = %s )
+                                                    where j.owner_id = %s AND j.date >= %s AND j.date <= %s )
             GROUP by account_type
             ORDER by balance DESC
-                                                    """ , [request.user.id])
+                                                    """ , [request.user.id,
+                                                        request.user.fs_reporting_period.start_date ,
+                                                        request.user.fs_reporting_period.end_date   
+                                                    ])
             row = list(cursor)
             query = cursor.execute("""SELECT date , account , sum(helper) as Balance , account_id FROM (
                                             SELECT * ,
@@ -371,9 +381,12 @@ class Dashboard(LoginRequiredMixin , View):
                                             FROM sole_proprietorship_journal as j
                                             JOIN sole_proprietorship_accounts as a
                                             on j.account_id = a.id
-                                            where j.owner_id = %s			
+                                            where j.owner_id = %s AND j.date >= %s AND j.date <= %s		
                                                                                                         )
-                            GROUP by date , account """ , [request.user.id] )
+                            GROUP by date , account """ , [request.user.id,
+                                                        request.user.fs_reporting_period.start_date ,
+                                                        request.user.fs_reporting_period.end_date 
+                            ] )
             data = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative" , "account_id"])
             # print(data)
             # data.columns = query.keys()
@@ -433,6 +446,8 @@ class Dashboard(LoginRequiredMixin , View):
             "accounts_fig" : accounts_fig , 
             "account_form" : account_form ,
             "line_fig": line_fig , 
+            "start_date": request.user.fs_reporting_period.start_date,
+            "end_date": request.user.fs_reporting_period.end_date,
         }
 
         return render(request , "sole_proprietorship/dashboard.html"  , ctx)

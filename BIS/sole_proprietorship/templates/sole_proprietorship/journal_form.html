@@ -40,12 +40,9 @@
               {{formset.media}}      
                 {{ formset.management_form }}                                          
                 {% for form in formset %}
-                  <div class="link-formset">
-                  {% for field in form %}
-                   <div class="form-group col-md-6 mb-0">
-                        {{ field|as_crispy_field }}
-                    </div>
-                  {% endfor%}
+                    <div class="link-formset">
+                      {{ form|crispy }}
+
                   </div>
                 {% endfor %}
                 <hr>
