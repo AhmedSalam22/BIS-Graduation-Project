@@ -273,8 +273,13 @@ class Customer(models.Model):
     inactive = models.BooleanField()
     customer_type = models.ForeignKey(CustomerType , on_delete=models.CASCADE , blank=True , null=True)
 
+    @property
+    def full_name(self):
+        """Returns the customer's full name."""
+        return '%s %s %s' % (self.first_name, self.middle_name , self.last_name)
+
     def __str__(self):
-        return f"{self.first_name} {self.middle_name} {self.last_name}"
+        return self.full_name
 
 class CustomerCommonFields(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

@@ -26,7 +26,6 @@ from django.contrib import messages
 from django.db.models import Q
 
 
-
 def prepare_data_frame( journal  ,  accounts):
     accounts = pd.DataFrame(accounts)
     journal  = pd.DataFrame(journal)
