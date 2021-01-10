@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.forms import modelformset_factory 
 from django.forms import BaseFormSet
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout , Row , Column
+from crispy_forms.layout import Layout , Row , Column , Submit , Div
 from django.utils.translation import gettext as _
 
 
@@ -27,15 +27,29 @@ class JournalFormSetForm(ModelForm):
         self.fields['account'].widget.attrs.update({'class': 'select2'})
         self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
         self.fields["date"].initial = timezone.localdate()
-      
+          
 
 
 JournalFormSet = modelformset_factory(Journal ,
                                      fields=['account', 'date' , 'balance' , "transaction_type" , "comment"] ,
                                      form=JournalFormSetForm,
-                                     min_num=2 , 
+                                     min_num = 2,
                                      extra= 0,
                                      validate_min= True )
+                                     
+class JournalFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout = Layout(
+           Div(
+                Row('account', 'date' , 'balance' , 'transaction_type' , 'comment'), 
+                css_class='link-formset')
+           
+        )
+        self.render_required_fields = True
+        self.form_tag = False
+        # self.template = 'bootstrap/table_inline_formset.html'
+
 
 def create_form(user):
     """Returns a new model form which uses the correct queryset for user

@@ -141,7 +141,7 @@ class JournalListView( LoginRequiredMixin , FilterView):
 
         return context
 
-    
+from .forms import JournalFormSetHelper
 class JournalCreateView(LoginRequiredMixin , View):
     template_name = 'sole_proprietorship/journal_form.html'
     success_url = None
@@ -149,11 +149,14 @@ class JournalCreateView(LoginRequiredMixin , View):
     def get(self , request , *args, **kwargs):
         JournalFormSetForm = JournalFormSet(form_kwargs={'user': request.user} ,
                                             queryset=Journal.objects.none())
-        return render(request, self.template_name , {"formset": JournalFormSetForm} )
+        helper = JournalFormSetHelper()
+        return render(request, self.template_name , {"formset": JournalFormSetForm , "helper":helper} )
 
     
     def post(self , request , *args , **kwargs):
-        formset = JournalFormSet(request.POST , form_kwargs={'user': request.user} , queryset=Journal.objects.none())
+        formset = JournalFormSet(request.POST , form_kwargs={'user': request.user})
+        helper = JournalFormSetHelper()
+
         # do whatever you'd like to do with the valid formset
         if formset.is_valid():
             totalDebit = 0.0
@@ -174,7 +177,7 @@ class JournalCreateView(LoginRequiredMixin , View):
             else:
                 messages.error(self.request, f'Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}, so your Transaction not saved')        
             return redirect(self.success_url)
-        return render(request, self.template_name , {"formset": formset} )
+        return render(request, self.template_name , {"formset": formset, "helper":helper} )
 # an old way to create multipe form using external liabrary
 # class JournalCreateView(LoginRequiredMixin , MyFormSetView):
 #     fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]

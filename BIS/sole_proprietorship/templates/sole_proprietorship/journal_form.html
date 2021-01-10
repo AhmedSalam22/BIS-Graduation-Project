@@ -28,22 +28,20 @@
 {% load crispy_forms_tags %}
     <form method="post"  >
       {% csrf_token %}
-      {% if formset.non_form_errors %}
+      {% comment %} {% if formset.non_form_errors %}
           <div>{{ formset.non_form_errors }}</div>
-      {% endif %}
+      {% endif %} {% endcomment %}
             {% comment %} الفورم ده بس علشان ال update
             ملوش علاقة بال fromset
              {% endcomment %}
              {% if form %}
                     {{ form }}
               {% endif %}    
-              {{formset.media}}      
-                {{ formset.management_form }}                                          
+                {{ formset.management_form|crispy  }}  
+                                
                 {% for form in formset %}
-                    <div class="link-formset">
-                      {{ form|crispy }}
-
-                  </div>
+                    {% comment %} {{ form|crispy }} {% endcomment %}
+                        {% crispy form helper %}
                 {% endfor %}
                 <hr>
                 <button class="btn btn-primary" type="submit" value="Save">Save</button>
