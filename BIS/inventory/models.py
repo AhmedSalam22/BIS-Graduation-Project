@@ -23,6 +23,21 @@ class Inventory(models.Model):
     def __str__(self):
         return self.item_name
 
+class PurchaseInventory(models.Model):
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    # a unique identifyer for youe purchase tansaction
+    num = models.IntegerField()
+    purchase_date = models.DateTimeField()
+    due_date = models.DateField(
+        help_text="optional if you want to specify it by yourself",
+        null = True ,
+        blank = True,
+    )
+
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    # we will add in the future the address for the supplier and the ship address
+
+
 class InventoryPrice(models.Model):
     """
     Create InventoryPrice table in db.
@@ -48,6 +63,7 @@ class InventoryPrice(models.Model):
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     cost_per_unit = models.PositiveIntegerField()
     number_of_unit = models.PositiveIntegerField()
+    purchase_inventory = models.ForeignKey(PurchaseInventory, on_delete=models.CASCADE)
 
     @property
     def total_cost(self):
@@ -58,7 +74,7 @@ class InventoryPrice(models.Model):
         return f"{self.inventory.item_name}:{self.cost_per_unit}/unit"
 
 
-class PaymentTerm(models.Model):
+class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):
         ON_DEMAND = 1 , _("Cash On Demand")
         DAYS = 2, _("Due in number of days")
@@ -72,8 +88,10 @@ class PaymentTerm(models.Model):
         help_text="Specify name for this setting"
         )
     terms = models.IntegerField(choices=Term.choices)
-    days = models.PositiveSmallIntegerField(
-        help_text="discount in days",
+    num_of_days_due = models.PositiveSmallIntegerField(
+        help_text="in case of you want to specifynumber of days due"
+    )
+    discount_in_days = models.PositiveSmallIntegerField(
         validators=[MaxValueValidator(32)] ,
         null = True,
         blank = True
@@ -82,21 +100,7 @@ class PaymentTerm(models.Model):
         help_text="Enter discount like this 5%>>will be  5 not 0.05",
   
     )
-    due_date = models.DateField(
-        null = True ,
-        blank = True,
-    )
 
     
     def __str__(self):
         return self.config
-    
-    
-
-class PurchaseInventory(models.Model):
-    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    # a unique identifyer for youe purchase tansaction
-    num = models.IntegerField()
-    date = models.DateTimeField()
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
-    # we will add in the future the address for the supplier and the ship address

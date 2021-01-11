@@ -1,0 +1,41 @@
+{% extends 'home/base.html' %}
+{% block content %}
+<div class="container">
+    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-dark mb-0">Payment or Sales Term</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:create_term'%}"><i class="fa fa-plus fa-sm text-white-50"></i>&nbsp;Create New Term</a>
+    </div>
+    <div class="row">
+    {% if paymentsalesterm_list %}
+        {% for term in paymentsalesterm_list %}
+         <div class="col-auto col-sm-12 col-md-12 col-lg-4 col-xl-4">
+            <div class="card shadow border-left-primary py-2">
+                <div class="card-body">
+                    <div class="row align-items-center no-gutters">
+                        <div class="col mr-2">
+                            <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>{{ term.config }}</span></div>
+                            <p><div class="text-dark font-weight-bold h7 mb-0"><span>terms:</span></div>{{ term.get_terms_display  }} <p>
+                            <p><div class="text-dark font-weight-bold h7 mb-0"><span>number of days due:</span></div>{{ term.num_of_days_due  }} <p>
+                            <p><div class="text-dark font-weight-bold h7 mb-0"><span>discount in days:</span></div>{{ term.discount_in_days  }} <p>
+                            <p><div class="text-dark font-weight-bold h7 mb-0"><span>discount percentage:</span></div>{{ term.discount_percentage  }} <p>
+                                            
+                        
+
+                        </div>    
+                    </div>
+                    <a href="{% url 'inventory:update_term' term.id %}">
+                        <button type="button" class="btn btn-primary"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                    </a> 
+                    <a href="{% url 'inventory:delete_term' term.id %}">
+                    <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>There is nothing in database yet.</p>
+    {% endif %}
+    </div>
+</div>
+{% include 'home/pagination.html' %}
+{% endblock %}

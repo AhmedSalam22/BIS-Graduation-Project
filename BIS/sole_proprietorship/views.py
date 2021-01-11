@@ -24,6 +24,7 @@ from pivottablejs import pivot_ui
 from home.formsetview import MyFormSetView
 from django.contrib import messages
 from django.db.models import Q
+from .forms import JournalFormSetHelper
 
 
 def prepare_data_frame( journal  ,  accounts):
@@ -103,6 +104,7 @@ class AccountsDeleteView(OwnerDeleteView):
 
 class JournalListView( LoginRequiredMixin , FilterView):
     paginate_by = 10
+    ordering = ["-date"]
     model = Journal
     template_name = "sole_proprietorship/journal_list.html"
     filterset_class = JournalFilter
@@ -141,7 +143,6 @@ class JournalListView( LoginRequiredMixin , FilterView):
 
         return context
 
-from .forms import JournalFormSetHelper
 class JournalCreateView(LoginRequiredMixin , View):
     template_name = 'sole_proprietorship/journal_form.html'
     success_url = None
