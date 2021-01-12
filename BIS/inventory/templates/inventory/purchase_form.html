@@ -1,0 +1,14 @@
+{% extends 'home/form.html' %}
+{% block javascript_top %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+{% endblock %}
+{% block cardheader %} Purchases {% endblock %}
+{% block formblock %}
+    {% load crispy_forms_tags %}
+    {% crispy purchase_inventory_form %}
+    {{ formset.management_form|crispy  }} 
+    {% crispy inventory_price_formset inventory_price_formset_helper %}
+{% endblock %}
+{% block footer %}
+    {% include "home/formset.html" %}
+{% endblock %}

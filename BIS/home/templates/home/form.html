@@ -12,7 +12,10 @@
           {% load crispy_forms_tags %}  
           <form action="" method="post">
           {% csrf_token %}
-          {{ form|crispy }}
+          {% block formblock %}
+            {{ form|crispy }}
+          {% endblock %}
+          <hr>
           <button type="submit" class="btn btn-primary">Submit</button>
           <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{{ request.META.HTTP_REFERER}}';return false;">Cancel</button>
         </form>

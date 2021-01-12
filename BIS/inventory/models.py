@@ -4,7 +4,41 @@ from django.contrib.auth import get_user_model
 from suppliers.models import Supplier
 from django.utils.translation import gettext as _
 from  django.core.validators import MaxValueValidator
+
+
 # Create your models here.
+class PaymentSalesTerm(models.Model):
+    class Term(models.IntegerChoices):
+        ON_DEMAND = 1 , _("Cash On Demand")
+        DAYS = 2, _("Due in number of days")
+        END_OF_MONTH = 3,_("Due at the end of month")
+        NEXT_MONTH = 4,_("Due on the next Month")
+        OTHER = 5, _("let me specify the due date DD-MM-YYY")
+
+
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    config = models.CharField(
+        max_length=100,
+        help_text="Specify name for this setting"
+        )
+    terms = models.IntegerField(choices=Term.choices , default=Term.DAYS , blank=False)
+    num_of_days_due = models.PositiveSmallIntegerField(
+        help_text="in case of you want to specifynumber of days due"
+    )
+    discount_in_days = models.PositiveSmallIntegerField(
+        validators=[MaxValueValidator(32)] ,
+        null = True,
+        blank = True
+    )
+    discount_percentage = models.FloatField(
+        help_text="Enter discount like this 5%>>will be  5 not 0.05",
+  
+    )
+
+    
+    def __str__(self):
+        return self.config
+
 class Inventory(models.Model):
     """
     Create Inventory table in db.
@@ -35,6 +69,7 @@ class PurchaseInventory(models.Model):
     )
 
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
     # we will add in the future the address for the supplier and the ship address
 
 
@@ -74,33 +109,3 @@ class InventoryPrice(models.Model):
         return f"{self.inventory.item_name}:{self.cost_per_unit}/unit"
 
 
-class PaymentSalesTerm(models.Model):
-    class Term(models.IntegerChoices):
-        ON_DEMAND = 1 , _("Cash On Demand")
-        DAYS = 2, _("Due in number of days")
-        END_OF_MONTH = 3,_("Due at the end of month")
-        NEXT_MONTH = 4,_("Due on the next Month")
-        OTHER = 5, _("let me specify the due date DD-MM-YYY")
-
-    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    config = models.CharField(
-        max_length=100,
-        help_text="Specify name for this setting"
-        )
-    terms = models.IntegerField(choices=Term.choices)
-    num_of_days_due = models.PositiveSmallIntegerField(
-        help_text="in case of you want to specifynumber of days due"
-    )
-    discount_in_days = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(32)] ,
-        null = True,
-        blank = True
-    )
-    discount_percentage = models.FloatField(
-        help_text="Enter discount like this 5%>>will be  5 not 0.05",
-  
-    )
-
-    
-    def __str__(self):
-        return self.config

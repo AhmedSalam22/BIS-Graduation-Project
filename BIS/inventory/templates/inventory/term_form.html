@@ -1,2 +1,6 @@
 {% extends 'home/form.html' %}
 {% block cardheader %} Payment or Sales Term {% endblock %}
+{% block formblock %}
+    {% load crispy_forms_tags %}
+    {% crispy form %}
+{% endblock %}

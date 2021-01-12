@@ -1,0 +1,8 @@
+{% load static %}
+<script src="{% static 'home/js/jquery.formset.min.js' %}"></script> 
+<script>
+    $('.link-formset').formset({
+        addText: '<i class="fa fa-plus"></i> Add Transation',
+        deleteText: '<i class="far fa-trash-alt"></i>Remove'
+    });
+</script>
