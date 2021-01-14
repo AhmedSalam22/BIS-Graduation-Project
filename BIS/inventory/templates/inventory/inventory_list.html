@@ -1,0 +1,66 @@
+{% extends 'home/base.html' %}
+{% load static %}
+{% block css %} 
+    <link rel="stylesheet" href="{% static 'home/shopping_grid/Shopping-Grid.css'%}">
+{% endblock %}
+
+{% block content %}
+ <div class="shopping-grid">
+    <div class="container">
+    <h3 class="" align="center">Inventory items</h3>
+    {% if inventory_list %}    
+        <div class="row">
+        {% for inventory in inventory_list %}
+            {% if forloop.counter0|divisibleby:"4" %}
+                </div><br><div class="row">
+            {% endif %}
+                <div class="col-md-3 col-sm-6">
+            <div class="product-grid7">
+                <div class="product-image7">
+                    <a href="{% url "inventory:detail_inventory" inventory.id %}">
+                        {% if inventory.imgs.all.0.img.url %}
+                            <img class="pic-1" src="{{inventory.imgs.all.0.img.url}}" >
+                        {% else %}
+                            <img class="pic-1" src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png">
+                        {% endif %}
+                        {% if inventory.imgs.all.1.img.url and inventory.imgs.all.0.img.url %}
+                            <img class="pic-2" src="{{inventory.imgs.all.1.img.url}}">
+                        {% else %}
+                            <img class="pic-2" src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png">
+
+                        {% endif %}
+                    </a>
+                    <ul class="social">
+                        <li><a href="" class="fa fa-search"></a></li>
+                        <li><a href="" class="fa fa-shopping-bag"></a></li>
+                        <li><a href="" class="fa fa-shopping-cart"></a></li>
+                    </ul>
+                    <span class="product-new-label">New</span>
+                </div>
+                <div class="product-content">
+                    <h3 class="title"><a href="{% url "inventory:detail_inventory" inventory.id %}">{{ inventory.item_name }}</a></h3>
+                    <ul class="rating">
+                        <li class="fa fa-star"></li>
+                        <li class="fa fa-star"></li>
+                        <li class="fa fa-star"></li>
+                        <li class="fa fa-star"></li>
+                        <li class="fa fa-star"></li>
+                    </ul>
+                    <div class="price">$15.00
+                        <span>$20.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+         
+        {% endfor %}
+    {% else %}
+        <p>There is no inventory item in the database yet.</p>
+    {% endif %}
+  
+      
+        </div>
+    </div>
+</div>
+{% include 'home/pagination.html' %}
+{% endblock %}

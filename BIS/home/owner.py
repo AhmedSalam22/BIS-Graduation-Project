@@ -43,3 +43,13 @@ class OwnerDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         qs = super(OwnerDeleteView, self).get_queryset()
         return qs.filter(owner=self.request.user)
+
+
+class OwnerDetailView(LoginRequiredMixin, DetailView):
+    """
+    Sub-class the DetailView to see only what you have in db and prevent see other user's data
+    """
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(owner=self.request.user)

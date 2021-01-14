@@ -1,0 +1,120 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'home/Image-Tab-Gallery-Horizontal/Image-Tab-Gallery-Horizontal.css' %}">
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header" style="background-color:white;">
+        <div class="container-fluid top-container">
+            <div class="row">
+                <div class="col-12 col-md-6 col-xl-4 offset-xl-2">
+                    <div class="img-container"><img class="rounded" id="expandedImg" style="width:100%" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-3.jpg">
+                        <div id="imgtext"></div>
+                    </div>
+                    <div class="row img-row" style="padding-right: 10px;padding-left: 10px;">
+                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-1.jpg" onclick="myFunction(this);" alt="image 1"></div>
+                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-2.jpg" onclick="myFunction(this);" alt="image 2"></div>
+                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-3.jpg" onclick="myFunction(this);" alt="image 3"></div>
+                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-4.jpg" onclick="myFunction(this);" alt="image 4"></div>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-6 col-xl-4 offset-xl-0">
+                    <h1>{{ inventory.item_name }}</h1>
+                      <ul class="rating">
+                        <li class="fa fa-star" style="color:orange"></li>
+                        <li class="fa fa-star" style="color:orange"></li>
+                        <li class="fa fa-star" style="color:orange"></li>
+                        <li class="fa fa-star" style="color:orange"></li>
+                        <li class="fa fa-star" style="color:orange"></li>
+                    </ul>
+                    {% comment %} <img src="/5-star-rating.svg" width="120px" style="padding-bottom: 5px;"> {% endcomment %}
+                    <h2>Last unit cost: ${{ last_unit.cost_per_unit }}  <span style="font-size: 15px;">at {{ last_unit.purchase_inventory.purchase_date }}</span></h2>
+                    <p style="font-size: 20px;">{{ inventory.description }}</p>
+                    {% comment %} <p style="font-size: 20px;"><a href="https://1.envato.market/c/2052893/629767/10168">Click here</a> for thousands of top-notch T-SHIRT MOCKUPS to put your design on.</p>
+                    <ul>
+                        <li>Fit type: men, women, kids<br></li>
+                        <li>Sizes: XS to 4XL<br></li>
+                        <li>Machine wash cold, dry low heat<br></li>
+                        <li>Double-needle sleeve and bottom hem<br></li>
+                        <li>Lightweight<br></li>
+                        <li>Classic fit<br></li>
+                    </ul> {% endcomment %}
+                </div>
+            </div>
+        </div>
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" id="item-1-1-tab" data-toggle="tab" role="tab" aria-controls="item-1-1" aria-selected="true" href="#item-1-1">First Item</a></li>
+            <li class="nav-item"><a class="nav-link" id="item-1-2-tab" data-toggle="tab" role="tab" aria-controls="item-1-2" aria-selected="false" href="#item-1-2">Second Item</a></li>
+            <li class="nav-item"><a class="nav-link" id="item-1-3-tab" data-toggle="tab" role="tab" aria-controls="item-1-3" aria-selected="false" href="#item-1-3">Third Item</a></li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div id="nav-tabContent" class="tab-content">
+            <div id="item-1-1" class="tab-pane fade show active" role="tabpanel" aria-labelledby="item-1-1-tab">
+                <div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
+                <table class="table my-0" id="mydataTable">
+                    <thead>
+                        <tr>
+                            <th>Purchase Date</th>
+                            <th>Supplier</th>
+                            <th>Cost per unit</th>
+                            <th>Number of units</th>
+                            <th>Total Cost</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                       
+                            {% if prices %}
+                            {% for price in prices %}
+                            <tr>
+                            <td><strong>{{ price.purchase_inventory.purchase_date }}</strong></td>
+                            <td><strong>{{ price.purchase_inventory.supplier }}</strong></td>
+                            <td><strong>{{ price.cost_per_unit}}</strong></td>
+                            <td><strong>{{ price.number_of_unit}}</strong></td>
+                            <td><strong>{{ price.total_cost}}</strong></td>
+
+                                  {% if accounts.owner == user %}
+                                  <td>
+                                    <a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">
+                                        <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    </a> 
+                                     <a href="{% url 'sole_proprietorship:accounts_delete' accounts.id %}">
+                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                     </a>
+                                  </td>
+                                  {% endif %}
+                            </tr>
+                            {% endfor %}
+                          {% else %}
+                            <p>There are no data in the database.</p>
+                          {% endif %}
+
+                    </tbody>
+                    <tfoot>
+                        
+                         
+                       
+                    </tfoot>
+                </table>
+            </div>
+            </div>
+            <div id="item-1-2" class="tab-pane fade" role="tabpanel" aria-labelledby="item-1-2-tab">
+                <h4>Second Item Title</h4>
+                <p>Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus.</p><button class="btn btn-primary" type="button">Button</button>
+            </div>
+            <div id="item-1-3" class="tab-pane fade" role="tabpanel" aria-labelledby="item-1-3-tab">
+                <h4>Third Item Title</h4>
+                <p>Nullam id dolor id nibh ultricies vehicula ut id elit. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus.</p><button class="btn btn-primary" type="button">Button</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block footer %}
+    <script src="{% static 'home/Image-Tab-Gallery-Horizontal/Image-Tab-Gallery-Horizontal.js'%}"></script>
+    {% include "home/dataTableFooter.html" %}
+
+{% endblock %}

@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from suppliers.models import Supplier
 from django.utils.translation import gettext as _
 from  django.core.validators import MaxValueValidator
-
+from django.utils import timezone
 
 # Create your models here.
 class PaymentSalesTerm(models.Model):
@@ -56,6 +56,35 @@ class Inventory(models.Model):
 
     def __str__(self):
         return self.item_name
+
+
+def inventory_imag_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    return 'inventory/inventory_imgs/user_{0}/{3}/{2}{1}'.format(instance.inventory.owner,
+     filename ,
+     timezone.now() , 
+     instance.inventory.item_name
+      )
+
+class InventoryImag(models.Model):
+    """
+    this is table hold images for the inventory item each inventory can has many image
+    """
+    class Meta:
+        verbose_name = 'Inventory Image'
+        verbose_name_plural = 'Inventory Images'
+
+    inventory  = models.ForeignKey(Inventory , on_delete=models.CASCADE , related_name="imgs" )
+    img = models.ImageField(upload_to=inventory_imag_directory_path,
+                                null=True,
+                                blank=True,
+                                editable=True,
+                                help_text="Inventory image")
+    
+    def __str__(self):
+        return f"img:{self.inventory.item_name}"
+
+
 
 class PurchaseInventory(models.Model):
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
