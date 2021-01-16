@@ -159,12 +159,11 @@ class JournalCreateView(LoginRequiredMixin , View):
 
         # do whatever you'd like to do with the valid formset
         if formset.is_valid():
-            for form in formset:              
-                for form in formset:
-                    object = form.save(commit=False)
-                    object.owner = self.request.user
-                    object.save()
-                    messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+            for form in formset:
+                object = form.save(commit=False)
+                object.owner = self.request.user
+                object.save()
+                messages.success(self.request, 'Your Transaction Was Created Succesffuly')
             return redirect(self.success_url)
         return render(request, self.template_name , {"formset": formset, "helper":helper} )
 # an old way to create multipe form using external liabrary
