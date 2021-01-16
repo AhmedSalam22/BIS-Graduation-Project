@@ -148,8 +148,7 @@ class JournalCreateView(LoginRequiredMixin , View):
     success_url = None
 
     def get(self , request , *args, **kwargs):
-        JournalFormSetForm = JournalFormSet(form_kwargs={'user': request.user} ,
-                                            queryset=Journal.objects.none())
+        JournalFormSetForm = JournalFormSet(form_kwargs={'user': request.user} )
         helper = JournalFormSetHelper()
         return render(request, self.template_name , {"formset": JournalFormSetForm , "helper":helper} )
 
@@ -160,23 +159,12 @@ class JournalCreateView(LoginRequiredMixin , View):
 
         # do whatever you'd like to do with the valid formset
         if formset.is_valid():
-            totalDebit = 0.0
-            totalCredit = 0.0
-            for form in formset:
-                object = form.save(commit=False)
-                if object.transaction_type == "Debit":
-                    totalDebit += object.balance
-                else:
-                    totalCredit +=  object.balance
-
-            if totalDebit == totalCredit:
-                messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+            for form in formset:              
                 for form in formset:
                     object = form.save(commit=False)
                     object.owner = self.request.user
                     object.save()
-            else:
-                messages.error(self.request, f'Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}, so your Transaction not saved')        
+                    messages.success(self.request, 'Your Transaction Was Created Succesffuly')
             return redirect(self.success_url)
         return render(request, self.template_name , {"formset": formset, "helper":helper} )
 # an old way to create multipe form using external liabrary

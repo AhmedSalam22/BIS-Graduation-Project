@@ -3,13 +3,12 @@ from .models import Journal  , Accounts , ReportingPeriodConfig
 from django import forms
 import django_filters
 from django.utils import timezone
-from django.forms import modelformset_factory 
+from django.forms import formset_factory 
 from django.forms import BaseFormSet
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column , Submit , Div
 from django.utils.translation import gettext as _
-
-
+from django.core.exceptions import ValidationError
 
 class JournalFormSetForm(ModelForm):
     class Meta:
@@ -28,11 +27,23 @@ class JournalFormSetForm(ModelForm):
         self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
         self.fields["date"].initial = timezone.localdate()
           
+class BaseJournalFormSet(BaseFormSet):
+    def clean(self):
+        """Checks that total debit is equal to total credit"""
+        totalDebit = 0.0
+        totalCredit = 0.0
+        for form in self.forms:
+            transaction_type = form.cleaned_data.get('transaction_type')
+            if transaction_type == "Debit":
+                totalDebit += form.cleaned_data.get('balance')
+            else:
+                totalCredit += form.cleaned_data.get('balance')
+        
+        if totalDebit != totalCredit:
+            raise ValidationError(_(f"Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}"))
 
-
-JournalFormSet = modelformset_factory(Journal ,
-                                     fields=['account', 'date' , 'balance' , "transaction_type" , "comment"] ,
-                                     form=JournalFormSetForm,
+JournalFormSet = formset_factory(JournalFormSetForm ,
+                                     formset= BaseJournalFormSet,
                                      min_num = 2,
                                      extra= 0,
                                      validate_min= True )

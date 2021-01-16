@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_filters',
     'extra_views',
     'ckeditor',
+    'django_extensions',
     # CMS
     # 'django.contrib.sites',
     # 'cms',

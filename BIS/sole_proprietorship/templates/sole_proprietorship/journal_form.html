@@ -28,9 +28,9 @@
 {% load crispy_forms_tags %}
     <form method="post"  >
       {% csrf_token %}
-      {% comment %} {% if formset.non_form_errors %}
-          <div>{{ formset.non_form_errors }}</div>
-      {% endif %} {% endcomment %}
+      {% if formset.non_form_errors %}
+          <div class="alert alert-block alert-danger">{{ formset.non_form_errors }}</div>
+      {% endif %} 
             {% comment %} الفورم ده بس علشان ال update
             ملوش علاقة بال fromset
              {% endcomment %}
