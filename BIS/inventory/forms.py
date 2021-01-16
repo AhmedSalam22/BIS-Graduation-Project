@@ -9,13 +9,14 @@ from django.forms import formset_factory
 class PaymentSalesTermForm(forms.ModelForm):
     class Meta:
         model = PaymentSalesTerm
-        fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage']
+        fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' , "general_ledeger_account"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'config', 
+            'general_ledeger_account',
             Row( 
                 Column(InlineRadios('terms') , css_class="col-4"),
                 Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage') )
@@ -26,7 +27,7 @@ class PaymentSalesTermForm(forms.ModelForm):
 class PurchaseInventoryForm(forms.ModelForm):
     class Meta:
         model = PurchaseInventory
-        fields = ['supplier' , 'num' , 'purchase_date' ,'term', 'due_date']
+        fields = ['supplier' , 'num' , 'purchase_date' ,'term', 'due_date' , 'frieght_in']
         widgets = {
             'purchase_date': forms.widgets.DateInput(attrs={'type': 'date'}),
             'due_date': forms.widgets.DateInput(attrs={'type': 'date'}),
@@ -41,7 +42,7 @@ class PurchaseInventoryForm(forms.ModelForm):
         self.helper.layout = Layout( 
             Row( 
                 Column('supplier'),
-                Column('num' , 'purchase_date' , 'term' ,'due_date') )
+                Column('num' , 'purchase_date' , 'term' ,'due_date' , 'frieght_in') )
         )
         self.helper.form_tag = False
     

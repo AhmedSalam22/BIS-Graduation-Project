@@ -4,7 +4,7 @@ from inventory.models import PaymentSalesTerm , Inventory
 from django.views.generic import View , TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset , InventoryPriceFormsetHelper
-
+from sole_proprietorship.models import Journal
 # Create your views here.
 class CreateTermView(OwnerCreateView):
     form_class  = PaymentSalesTermForm
@@ -31,21 +31,67 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
     template_name = "inventory/purchase_form.html"
     success_url = None
     inventory_price_formset_helper = InventoryPriceFormsetHelper()
-    ctx = None
 
+    def save_journal_transaction(self , owner , purchase_inventory_form , inventory_price_form):
+        """"
+        Purchase Inventory transaction:
+        transaction1:Inventory Debit by                      xxxx
+        transaction2:     Cash or Accounts payable Credit by       xxx
+        """
+        
+        transaction1 = Journal(owner=owner,
+                account = inventory_price_form.inventory.general_ledeger_account,
+                date = purchase_inventory_form.purchase_date ,
+                balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
+                transaction_type="Debit" , 
+                comment=f"purchase inventory {inventory_price_form.inventory}, number of units purchased{inventory_price_form.number_of_unit}")
+        transaction1.save()
+        transaction2 = Journal(owner=owner,
+                    account = purchase_inventory_form.term.general_ledeger_account,
+                    date = purchase_inventory_form.purchase_date ,
+                    balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
+                    transaction_type="Credit" , 
+                    comment=f"purchase {inventory_price_form.inventory}")
+        transaction2.save()
+
+    def freight_in_cost(self,owner, purchase_inventory_form , inventory_price_form):
+        """
+        for now if there is freight in cost we will use the account in the term wheter
+        it's CASH or Accounts Payable
+        """
+        transaction1 = Journal(owner=owner,
+                account = inventory_price_form.inventory.general_ledeger_account,
+                date = purchase_inventory_form.purchase_date ,
+                balance= purchase_inventory_form.frieght_in ,
+                transaction_type="Debit" , 
+                comment=f"freight in cost {inventory_price_form.inventory}")
+        transaction1.save()
+        transaction2 = Journal(owner=owner,
+                    account = purchase_inventory_form.term.general_ledeger_account,
+                    date = purchase_inventory_form.purchase_date ,
+                    balance=  purchase_inventory_form.frieght_in ,
+                    transaction_type="Credit" , 
+                    comment=f"freight in cost {inventory_price_form.inventory}")
+        transaction2.save()
+
+        
     def get(self , request , *args, **kwargs):
         owner = self.request.user
         purchase_inventory_form = PurchaseInventoryForm(owner)
         inventory_price_formset = InventoryPriceFormset(form_kwargs={'owner': owner})
 
-        self.ctx = {
+        ctx = {
             "purchase_inventory_form":purchase_inventory_form,
             "inventory_price_formset":inventory_price_formset,
             "inventory_price_formset_helper": self.inventory_price_formset_helper,
         }
-        return render(request , self.template_name , self.ctx )
+        return render(request , self.template_name , ctx )
 
     def post(self , request , *args , **kwargs):
+        """
+            save the form data if is vaild
+            fright-in charge will charge of first inventory form in formset
+        """
         owner = self.request.user
         purchase_inventory_form = PurchaseInventoryForm(data=request.POST , owner=owner)
         inventory_price_formset = InventoryPriceFormset(request.POST , form_kwargs={'owner': owner})
@@ -53,15 +99,36 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
             form1 = purchase_inventory_form.save(commit=False)
             form1.owner = owner
             form1.save()
-            print(dir(form1))
+            # print("form1")
+            # print(dir(form1))
+            counter = 1
             for form in inventory_price_formset:
                 form2 = form.save(commit=False)
                 form2.purchase_inventory = form1
                 form2.save()
+                # print(dir(form2))
+                # print(form2.inventory.general_ledeger_account)
+                # print(form1.purchase_date)
+                # print(form2.number_of_unit)
+                # print(form2.cost_per_unit)
+                self.save_journal_transaction(owner=owner,
+                    purchase_inventory_form=form1,
+                    inventory_price_form = form2
+                    )
+                # fright in charge only in first invenory form in formset
+                if counter == 1 and  form1.frieght_in > 0:
+                    self.freight_in_cost(owner = owner, 
+                        purchase_inventory_form = form1,
+                        inventory_price_form = form2)
+                counter +=1
 
             return redirect(self.success_url)
-
-        return render(request , self.template_name , self.ctx )
+        ctx = {
+                    "purchase_inventory_form":purchase_inventory_form,
+                    "inventory_price_formset":inventory_price_formset,
+                    "inventory_price_formset_helper": self.inventory_price_formset_helper,
+                }
+        return render(request , self.template_name , ctx )
 
 class ListInventoryView(OwnerListView):
     model = Inventory

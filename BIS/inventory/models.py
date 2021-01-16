@@ -9,6 +9,7 @@ from django.utils import timezone
 # Create your models here.
 class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):
+        CASH = 0 , _("Pay CASH")
         ON_DEMAND = 1 , _("Cash On Demand")
         DAYS = 2, _("Due in number of days")
         END_OF_MONTH = 3,_("Due at the end of month")
@@ -21,7 +22,7 @@ class PaymentSalesTerm(models.Model):
         max_length=100,
         help_text="Specify name for this setting"
         )
-    terms = models.IntegerField(choices=Term.choices , default=Term.DAYS , blank=False)
+    terms = models.IntegerField(choices=Term.choices , default=Term.CASH , blank=False)
     num_of_days_due = models.PositiveSmallIntegerField(
         help_text="in case of you want to specifynumber of days due"
     )
@@ -34,8 +35,8 @@ class PaymentSalesTerm(models.Model):
         help_text="Enter discount like this 5%>>will be  5 not 0.05",
   
     )
+    general_ledeger_account = models.ForeignKey(Accounts,on_delete=models.CASCADE)
 
-    
     def __str__(self):
         return self.config
 
@@ -87,6 +88,10 @@ class InventoryImag(models.Model):
 
 
 class PurchaseInventory(models.Model):
+    """
+    Note freight in cost which inccure when you purchase your inventory will charge only on the first
+    form inventory in formset
+    """
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     # a unique identifyer for youe purchase tansaction
     num = models.IntegerField()
@@ -99,6 +104,7 @@ class PurchaseInventory(models.Model):
 
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
+    frieght_in = models.FloatField(default=0)
     # we will add in the future the address for the supplier and the ship address
 
 
@@ -125,7 +131,7 @@ class InventoryPrice(models.Model):
     the choice and keep our Transaction clean when we track the cost
     """
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE)
-    cost_per_unit = models.PositiveIntegerField()
+    cost_per_unit = models.FloatField()
     number_of_unit = models.PositiveIntegerField()
     purchase_inventory = models.ForeignKey(PurchaseInventory, on_delete=models.CASCADE)
 
