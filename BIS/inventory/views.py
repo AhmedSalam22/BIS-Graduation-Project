@@ -1,10 +1,12 @@
-from django.shortcuts import render , redirect
+from django.shortcuts import render , redirect , get_object_or_404 
+from django.urls import reverse_lazy
 from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerUpdateView , OwnerDetailView
-from inventory.models import PaymentSalesTerm , Inventory
+from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice
 from django.views.generic import View , TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from inventory.forms import PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset , InventoryPriceFormsetHelper
+from inventory.forms import PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset , InventoryPriceFormsetHelper , InventoryReturnForm
 from sole_proprietorship.models import Journal
+from django.utils import timezone
 # Create your views here.
 class CreateTermView(OwnerCreateView):
     form_class  = PaymentSalesTermForm
@@ -155,3 +157,56 @@ class DetailInventoryView(OwnerDetailView):
 
 class HomeView(TemplateView):
     template_name = "inventory/index.html"
+
+
+class CreatePurchaseReturnView(LoginRequiredMixin ,View):
+    template_name = "inventory/purchase_return_form.html"
+    success_url = "inventory:detail_inventory"
+
+    def save_journal_transaction(self , owner , inventory_return):
+        """
+         A/P or CASH Debit by xxx
+            Inventory Credit by     xxx
+        """
+        date = inventory_return.date
+        balance = inventory_return.num_returned * inventory_return.inventory_price.cost_per_unit
+        transaction1 = Journal(owner=owner,
+                account = inventory_return.inventory_price.inventory.general_ledeger_account,
+                date = date ,
+                balance= balance,
+                transaction_type="Credit" , 
+                comment=f"return inventory")
+        transaction1.save()
+        transaction2 = Journal(owner=owner,
+                    account = inventory_return.inventory_price.purchase_inventory.term.general_ledeger_account,
+                    date = date ,
+                    balance=  balance ,
+                    transaction_type="Debit" , 
+                    comment=f"return {inventory_return.num_returned} from {inventory_return.inventory_price.inventory} to {inventory_return.inventory_price.purchase_inventory.supplier}")
+        transaction2.save()
+      
+     
+
+
+    def get(self,request,*args, **kwargs):
+        form = InventoryReturnForm()
+        return render(request , self.template_name , {"form": form} )
+
+    def post(self, request, pk , *args, **kwargs):
+        owner = request.user
+        query = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
+        form = InventoryReturnForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.inventory_price = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
+            obj.save()
+            self.save_journal_transaction(owner=owner, inventory_return= obj)
+            return redirect(reverse_lazy(self.success_url , args=[
+                query.inventory.pk
+            ]))
+        return render(request , self.template_name , {"form": form} )
+
+    
+
+
+        

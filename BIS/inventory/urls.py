@@ -11,6 +11,7 @@ urlpatterns = [
     path('create_purchase' , views.CreatePurchaseInventoryView.as_view(success_url=reverse_lazy('inventory:list_term')) , name="create_purchase" ),
     path('list_inventory' , views.ListInventoryView.as_view() , name="list_inventory") , 
     path('detail_inventory/<int:pk>' , views.DetailInventoryView.as_view() , name="detail_inventory" ),
+    path('create_purchase_return/<int:pk>' , views.CreatePurchaseReturnView.as_view() , name="create_purchase_return"),
 
 
 ]

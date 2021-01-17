@@ -144,3 +144,13 @@ class InventoryPrice(models.Model):
         return f"{self.inventory.item_name}:{self.cost_per_unit}/unit"
 
 
+class InventoryReturn(models.Model):
+    """
+        Purchase Return Model
+    """
+    inventory_price = models.ForeignKey(InventoryPrice, on_delete=models.CASCADE)
+    date = models.DateField()
+    num_returned = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"return {self.num_returned} of {self.inventory_price.inventory.item_name}"

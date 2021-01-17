@@ -1,10 +1,11 @@
 from django import forms
-from inventory.models import PurchaseInventory , PaymentSalesTerm , InventoryPrice , Inventory
+from inventory.models import PurchaseInventory , PaymentSalesTerm , InventoryPrice , Inventory, InventoryReturn
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
 from crispy_forms.bootstrap import InlineRadios
 from suppliers.models import Supplier
 from django.forms import formset_factory
+from django.utils import timezone
 
 class PaymentSalesTermForm(forms.ModelForm):
     class Meta:
@@ -66,3 +67,16 @@ class InventoryPriceFormsetHelper(FormHelper):
 
 
 InventoryPriceFormset = formset_factory(InventoryPriceForm)
+
+class InventoryReturnForm(forms.ModelForm):
+    class Meta:
+        model = InventoryReturn
+        fields = ["date" , "num_returned"]
+        widgets = {
+            'date': forms.widgets.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["date"].initial = timezone.localdate()
+        
