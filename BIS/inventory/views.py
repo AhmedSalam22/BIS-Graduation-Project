@@ -1,7 +1,7 @@
 from django.shortcuts import render , redirect , get_object_or_404 
 from django.urls import reverse_lazy
 from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerUpdateView , OwnerDetailView
-from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice
+from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice , PurchaseInventory
 from django.views.generic import View , TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset , InventoryPriceFormsetHelper , InventoryReturnForm
@@ -205,6 +205,12 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
                 query.inventory.pk
             ]))
         return render(request , self.template_name , {"form": form} )
+
+    
+class ListPurchaseInventoryView(OwnerListView):
+    model = PurchaseInventory
+    template_name = "inventory/purchase_list.html"
+    paginate_by = 30
 
     
 

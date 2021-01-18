@@ -5,7 +5,7 @@ from suppliers.models import Supplier
 from django.utils.translation import gettext as _
 from  django.core.validators import MaxValueValidator
 from django.utils import timezone
-
+from django.db.models import Sum , ExpressionWrapper , F , FloatField
 # Create your models here.
 class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):
@@ -105,6 +105,39 @@ class PurchaseInventory(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
     frieght_in = models.FloatField(default=0)
+
+    @property
+    def num_cost_of_returned_inventory(self) -> tuple:
+        """
+        return a tuble of  total number of returned and it's cost
+        # take into account if we return inventory so we accumulate this cost
+        # for now we do it on reqular python insted of db for simplicity by in 
+        # future should do in database level for speed and performance
+        """
+        cost_of_returned_inventory = 0
+        total_returned = 0
+        for inventory_price in self.inventoryprice_set.all():
+            cost_per_unit = inventory_price.cost_per_unit
+            for inventory_return in inventory_price.inventoryreturn_set.all():
+                total_cost = inventory_return.num_returned * cost_per_unit
+                total_returned += inventory_return.num_returned
+                cost_of_returned_inventory += total_cost
+        return total_returned , cost_of_returned_inventory
+
+    @property
+    def total_amount(self):
+        """amount of purchase whether on account or paid cash"""
+        # reurn dict for total amount of purchases
+        query = self.inventoryprice_set.annotate(
+                    total_cost=ExpressionWrapper(
+                        F("cost_per_unit")*F("number_of_unit"), output_field=FloatField()
+                        )).aggregate(total_amount=Sum("total_cost"))
+
+        
+        return query.get("total_amount" , 0)
+
+
+    
     # we will add in the future the address for the supplier and the ship address
 
 
@@ -139,7 +172,6 @@ class InventoryPrice(models.Model):
     def total_cost(self):
         return self.cost_per_unit * self.number_of_unit
 
-    
     def __str__(self):
         return f"{self.inventory.item_name}:{self.cost_per_unit}/unit"
 
