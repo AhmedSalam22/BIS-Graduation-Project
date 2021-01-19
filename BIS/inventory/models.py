@@ -6,6 +6,8 @@ from django.utils.translation import gettext as _
 from  django.core.validators import MaxValueValidator
 from django.utils import timezone
 from django.db.models import Sum , ExpressionWrapper , F , FloatField
+import calendar
+from django.core.exceptions import ValidationError
 # Create your models here.
 class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):
@@ -24,7 +26,7 @@ class PaymentSalesTerm(models.Model):
         )
     terms = models.IntegerField(choices=Term.choices , default=Term.CASH , blank=False)
     num_of_days_due = models.PositiveSmallIntegerField(
-        help_text="in case of you want to specifynumber of days due"
+        help_text="in case of you want to specify number of days due"
     )
     discount_in_days = models.PositiveSmallIntegerField(
         validators=[MaxValueValidator(32)] ,
@@ -87,6 +89,9 @@ class InventoryImag(models.Model):
 
 
 
+# class PurchaseManager(models.Manager):
+    
+
 class PurchaseInventory(models.Model):
     """
     Note freight in cost which inccure when you purchase your inventory will charge only on the first
@@ -105,6 +110,54 @@ class PurchaseInventory(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
     frieght_in = models.FloatField(default=0)
+
+    def check_status(self):
+        """
+        Check if this invoice PAID or UNPAID
+        """
+        if self.term.terms == 0:
+            return "PAID"
+        else:
+            return  "UNPAID"
+
+    
+    def check_due_date(self):
+        """
+        retrun due date if user don't specify it's directly and used terms instead
+        """
+        if self.due_date:
+            return self.due_date
+        else:
+            # Due in number of days
+            if self.term.terms == PaymentSalesTerm.Term.DAYS.value:
+                return self.purchase_date + timezone.timedelta(days=self.term.num_of_days_due)
+            elif self.term.terms == PaymentSalesTerm.Term.END_OF_MONTH.value:
+                return timezone.datetime(
+                    year = self.purchase_date.year , 
+                    month = self.purchase_date.month , 
+                    day = calendar.monthrange(
+                            year= self.purchase_date.year ,
+                            month = self.purchase_date.month
+                    )[1]
+                )
+            # we mean by next month ex purchase date was feb-02-2021 so due date march-02-2021
+            elif self.term.terms == PaymentSalesTerm.Term.NEXT_MONTH.value:
+                if self.purchase_date.month == 12:
+                    return timezone.datetime(
+                            year = self.purchase_date.year + 1 , 
+                            month = 1 , 
+                            day = self.purchase_date.day
+                )
+                else:
+                    return timezone.datetime(
+                        year = self.purchase_date.year , 
+                        month = self.purchase_date.month + 1, 
+                        day = self.purchase_date.day
+                    )
+
+
+
+
 
     @property
     def num_cost_of_returned_inventory(self) -> tuple:
@@ -125,7 +178,7 @@ class PurchaseInventory(models.Model):
         return total_returned , cost_of_returned_inventory
 
     @property
-    def total_amount(self):
+    def total_amount(self) -> float:
         """amount of purchase whether on account or paid cash"""
         # reurn dict for total amount of purchases
         query = self.inventoryprice_set.annotate(
@@ -183,6 +236,7 @@ class InventoryReturn(models.Model):
     inventory_price = models.ForeignKey(InventoryPrice, on_delete=models.CASCADE)
     date = models.DateField()
     num_returned = models.PositiveIntegerField()
+
 
     def __str__(self):
         return f"return {self.num_returned} of {self.inventory_price.inventory.item_name}"

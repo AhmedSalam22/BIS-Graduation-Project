@@ -1,0 +1,64 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block content %}
+   <div class="container-fluid">
+    <h3 class="text-dark mb-4">purchases</h3>
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <p class="text-primary m-0 font-weight-bold">All purchases history</p>
+        </div>
+        <div class="card-body">
+          
+            
+            <a href="{% url 'sole_proprietorship:accounts_create' %}">
+              <button class="btn btn-primary">Dashboard</button>
+            </a> 
+          
+
+        </div>
+        <div class="card-body">
+            <div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
+                <table class="table my-0" id="mydataTable">
+                    <thead>
+                        <tr>
+                            <th>Purchase Date</th>
+                            <th>Supplier</th>
+                            <th>Term</th>
+                            <th>Total amount of purchase</th>
+                            <th>returned amount , cost</th>
+                            <th>Options</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                       
+                            {% if purchaseinventory_list %}
+                            {% for purchase in purchaseinventory_list %}
+                            <tr>
+                                <td><strong>{{ purchase.purchase_date }}</strong></td>
+                                <td><strong>{{ purchase.supplier}}</strong></td>
+                                <td>
+                                    <strong>
+                                        <a href="{% url "inventory:list_term"%}" target="blank">{{ purchase.term}}</a>
+                                    </strong>
+                                </td>
+                                <td><strong>{{ purchase.total_amount }}</strong></td>
+                                <td><strong>{{ purchase.num_cost_of_returned_inventory }}</strong></td>
+                                <td><a href="{% url "inventory:detail_purchase" purchase.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a><td/>
+                            </tr>
+                            {% endfor %}
+                          {% else %}
+                            <p>There are no accounts in the database.</p>
+                          {% endif %}
+
+                    </tbody>
+                    <tfoot>
+                    </tfoot>
+                </table>
+            </div>
+            {% include 'home/pagination.html' %}
+        </div>
+    </div>
+{% endblock %}
+

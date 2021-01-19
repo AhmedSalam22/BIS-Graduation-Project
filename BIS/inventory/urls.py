@@ -12,6 +12,8 @@ urlpatterns = [
     path('list_inventory' , views.ListInventoryView.as_view() , name="list_inventory") , 
     path('detail_inventory/<int:pk>' , views.DetailInventoryView.as_view() , name="detail_inventory" ),
     path('create_purchase_return/<int:pk>' , views.CreatePurchaseReturnView.as_view() , name="create_purchase_return"),
+    path('list_purchase' , views.ListPurchaseInventoryView.as_view() , name="list_purchase") ,
+    path('detail_purchase/<int:pk>' , views.DetailPurchaseInventoryView.as_view() , name="detail_purchase") , 
 
 
 ]

@@ -7,6 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset , InventoryPriceFormsetHelper , InventoryReturnForm
 from sole_proprietorship.models import Journal
 from django.utils import timezone
+from django.contrib import messages
+from django.db.models import Sum
 # Create your views here.
 class CreateTermView(OwnerCreateView):
     form_class  = PaymentSalesTermForm
@@ -185,8 +187,23 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
                     comment=f"return {inventory_return.num_returned} from {inventory_return.inventory_price.inventory} to {inventory_return.inventory_price.purchase_inventory.supplier}")
         transaction2.save()
       
-     
+    def vaildate_return(self , request,   obj):
+        """
+        # num of returned unit can't be greater than num units purchased
+        a custom vaildation as we can't do that in the level of model of form using clean method
+        as the failed inventory_price we don't render it and save it's manually
+        """
+        if obj.inventory_price.inventoryreturn_set.exists():
+            agg_data =obj.inventory_price.inventoryreturn_set.aggregate(total_num_returned=Sum("num_returned"))
+            avilable = obj.inventory_price.number_of_unit - agg_data.get("total_num_returned", 0)
+            if obj.num_returned > avilable:
+                messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase take into our account previous returned: {avilable}")
+                return False
 
+        else:
+            if obj.num_returned > obj.inventory_price.number_of_unit:
+                messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase {obj.inventory_price.number_of_unit}")
+                return False
 
     def get(self,request,*args, **kwargs):
         form = InventoryReturnForm()
@@ -199,6 +216,8 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.inventory_price = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
+            if self.vaildate_return(request , obj) == False:
+                return render(request , self.template_name , {"form": form} )
             obj.save()
             self.save_journal_transaction(owner=owner, inventory_return= obj)
             return redirect(reverse_lazy(self.success_url , args=[
@@ -211,7 +230,12 @@ class ListPurchaseInventoryView(OwnerListView):
     model = PurchaseInventory
     template_name = "inventory/purchase_list.html"
     paginate_by = 30
+    ordering = ["-purchase_date"]
 
+
+class DetailPurchaseInventoryView(OwnerDetailView):
+    model = PurchaseInventory
+    template_name = "inventory/purchase_detail.html"
     
 
 
