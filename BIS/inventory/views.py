@@ -238,5 +238,21 @@ class DetailPurchaseInventoryView(OwnerDetailView):
     template_name = "inventory/purchase_detail.html"
     
 
+class PurchasesDashboard(LoginRequiredMixin , View):
+    template_name = "inventory/purchases_dashboard.html"
+    def get(self , request , *args, **kwargs):
+        owner = request.user
+        ctx = {
+            "total_purchases_amount" : PurchaseInventory.purchases.total_purchases_amount(owner) , 
+            "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
+            "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
+            "std_cost_per_unit": PurchaseInventory.purchases.std_cost_per_unit(owner) , 
+            "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(owner) , 
+            "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(owner) , 
+            "total_units_returned": PurchaseInventory.purchases.total_units_returned(owner) , 
+            "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(owner) , 
 
+        }
+
+        return render(request , self.template_name , ctx)
         

@@ -5,7 +5,7 @@ from suppliers.models import Supplier
 from django.utils.translation import gettext as _
 from  django.core.validators import MaxValueValidator
 from django.utils import timezone
-from django.db.models import Sum , ExpressionWrapper , F , FloatField
+from django.db.models import Sum , ExpressionWrapper , F , FloatField , Max , Min , Avg , StdDev
 import calendar
 from django.core.exceptions import ValidationError
 # Create your models here.
@@ -89,8 +89,63 @@ class InventoryImag(models.Model):
 
 
 
-# class PurchaseManager(models.Manager):
-    
+class PurchaseManager(models.Manager):
+    def avg_cost_per_unit(self , owner):
+        """
+        avg cost per unit
+        """
+        data = self.filter(owner=owner).aggregate(Avg("inventoryprice__cost_per_unit"))
+        return data.get("inventoryprice__cost_per_unit__avg" , 0)
+
+    def std_cost_per_unit(self, owner):
+        """
+        return the stander deviation (change upward ow donward) for cost per unit
+        """
+        query = self.filter(owner=owner).aggregate(StdDev("inventoryprice__cost_per_unit"))
+        return query.get("inventoryprice__cost_per_unit__stddev" , 0)
+
+    def max_cost_per_unit(self , owner):
+        query = self.filter(owner=owner).aggregate(Max("inventoryprice__cost_per_unit"))
+        return query.get("PurchaseInventory.objects.filter(owner=2" , 0)
+
+    def min_cost_per_unit(self , owner):
+        query = self.filter(owner=owner).aggregate(Min("inventoryprice__cost_per_unit"))
+        return query.get("inventoryprice__cost_per_unit__min" , 0)
+
+    def total_units_purchased(self , owner):
+        """
+        sum of of total unit purchased we don't take into account(returned cost this will be different method)
+        args: 
+            owner
+        return 
+            the sum of unit's purchases 
+        """
+        data = self.filter(owner=owner).aggregate(Sum("inventoryprice__number_of_unit"))
+        return data.get("inventoryprice__number_of_unit__sum" , 0)
+
+    def total_purchases_amount(self , owner):
+        """
+         sum of total purchases amount (freight in or returned purchased not included)
+        """
+        query = self.filter(owner=owner).annotate(
+                    total_cost=ExpressionWrapper(
+                        F("inventoryprice__cost_per_unit")*F("inventoryprice__number_of_unit"), output_field=FloatField()
+                        )).aggregate(Sum("total_cost"))
+        return  query.get("total_cost__sum" , 0)
+
+    def total_units_returned(self , owner):
+        query = self.filter(owner=owner).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
+        return query.get("inventoryprice__inventoryreturn__num_returned__sum" , 0)
+
+
+    def total_cost_of_units_returned(self , owner):
+        query = self.filter(owner=2).annotate(
+                        total_cost=ExpressionWrapper(
+                        F("inventoryprice__cost_per_unit")*F("inventoryprice__inventoryreturn__num_returned"), output_field=FloatField()
+                        )).aggregate(Sum("total_cost"))
+        return query.get("total_cost__sum" , 0)
+
+
 
 class PurchaseInventory(models.Model):
     """
@@ -110,6 +165,9 @@ class PurchaseInventory(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
     frieght_in = models.FloatField(default=0)
+
+    objects = models.Manager() # the default_managers
+    purchases = PurchaseManager()
 
     def check_status(self):
         """
