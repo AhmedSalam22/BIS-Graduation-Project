@@ -1,48 +1,51 @@
 {% extends "home/base.html" %}
 {% load static %}
 {% block css %}
-    <link rel="stylesheet" href="{% static 'home/Image-Tab-Gallery-Horizontal/Image-Tab-Gallery-Horizontal.css' %}">
+
+    <link rel="stylesheet" href="{% static 'home/Gallery/fonts/ionicons.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'home/Gallery/Model-Gallery-And-Profile.css' %}">
 {% endblock %}
+
 {% block content %}
+
 <div class="card">
-    <div class="card-header" style="background-color:white;">
-        <div class="container-fluid top-container">
+    <div class="card-body" style="background-color:white;">
+         <section id="model-details"><i class="icon ion-android-microphone"></i>
+        <div class="container">
             <div class="row">
-                <div class="col-12 col-md-6 col-xl-4 offset-xl-2">
-                    <div class="img-container"><img class="rounded" id="expandedImg" style="width:100%" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-3.jpg">
-                        <div id="imgtext"></div>
-                    </div>
-                    <div class="row img-row" style="padding-right: 10px;padding-left: 10px;">
-                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-1.jpg" onclick="myFunction(this);" alt="image 1"></div>
-                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-2.jpg" onclick="myFunction(this);" alt="image 2"></div>
-                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-3.jpg" onclick="myFunction(this);" alt="image 3"></div>
-                        <div class="col column"><img class="img-thumbnail img-fluid" src="https://bestjquery.com/tutorial/product-grid/demo8/images/img-4.jpg" onclick="myFunction(this);" alt="image 4"></div>
-                    </div>
-                </div>
-                <div class="col-sm-12 col-md-6 col-xl-4 offset-xl-0">
-                    <h1>{{ inventory.item_name }}</h1>
-                      <ul class="rating">
-                        <li class="fa fa-star" style="color:orange"></li>
-                        <li class="fa fa-star" style="color:orange"></li>
-                        <li class="fa fa-star" style="color:orange"></li>
-                        <li class="fa fa-star" style="color:orange"></li>
-                        <li class="fa fa-star" style="color:orange"></li>
+                <div class="col col-md-4">    
+                    <ul id="imageGallery">
+                        {% for obj in inventory.imgs.all %}
+                        <li data-thumb="{{obj.img.url}}" data-src="{{obj.img.url}}">
+                            <img class="img-fluid" src="{{obj.img.url}}"/>
+                        </li>
+                        {% endfor %}
                     </ul>
-                    {% comment %} <img src="/5-star-rating.svg" width="120px" style="padding-bottom: 5px;"> {% endcomment %}
-                    <h2>Last unit cost: ${{ last_unit.cost_per_unit }}  <span style="font-size: 15px;">at {{ last_unit.purchase_inventory.purchase_date }}</span></h2>
-                    <p style="font-size: 20px;">{{ inventory.description }}</p>
-                    {% comment %} <p style="font-size: 20px;"><a href="https://1.envato.market/c/2052893/629767/10168">Click here</a> for thousands of top-notch T-SHIRT MOCKUPS to put your design on.</p>
-                    <ul>
-                        <li>Fit type: men, women, kids<br></li>
-                        <li>Sizes: XS to 4XL<br></li>
-                        <li>Machine wash cold, dry low heat<br></li>
-                        <li>Double-needle sleeve and bottom hem<br></li>
-                        <li>Lightweight<br></li>
-                        <li>Classic fit<br></li>
-                    </ul> {% endcomment %}
                 </div>
+                <div class="col-12 col-md-5"> <div class="profile-block escort-bio">
+                                <h3 class="profile-block-title font-alt">{{ inventory.item_name }}</h3>
+                                <div id="bio-content" class="bio-container">
+                                
+                            <p>{{ inventory.description }}</p>
+                                
+                                
+                            </div></div></div>
+                <div class="col-12 col-md-3"> <div class="profile-block">
+                                <h3>Data Analysis</h3>
+
+                                <ul>
+                                    <li><span class="font-400">Last unit cost: </span><span class="profile-right">{{ last_unit.cost_per_unit }}</span> </li>
+                                    <li><span class="font-400">last unit Date: </span><span>{{ last_unit.purchase_inventory.purchase_date }}</span> </li>
+                                    <li><span class="font-400">Unit's available for sale: </span><span class="profile-right"></span> </li>
+                                    <li><span class="font-400">total cost for unit's available for sale: </span><span class="profile-right"></span> </li>
+
+                                </ul>
+                               
+                            </div></div>
             </div>
         </div>
+    </section>
         <ul class="nav nav-tabs card-header-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" id="item-1-1-tab" data-toggle="tab" role="tab" aria-controls="item-1-1" aria-selected="true" href="#item-1-1">Purchase History</a></li>
             <li class="nav-item"><a class="nav-link" id="item-1-2-tab" data-toggle="tab" role="tab" aria-controls="item-1-2" aria-selected="false" href="#item-1-2">Purchase Return</a></li>
@@ -148,7 +151,8 @@
 
 {% endblock %}
 {% block footer %}
-    <script src="{% static 'home/Image-Tab-Gallery-Horizontal/Image-Tab-Gallery-Horizontal.js'%}"></script>
-    {% include "home/dataTableFooter.html" %}
+    {% comment %} {% include "home/dataTableFooter.html" %} {% endcomment %}
+
+    <script src="{% static 'home/Gallery/Model-Gallery-And-Profile.js'%}"></script>
 
 {% endblock %}
