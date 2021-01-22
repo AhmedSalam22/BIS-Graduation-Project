@@ -24,7 +24,8 @@
                             <h5 class="text-primary p-0 m-0 pb-2"><strong>STATUS:</strong></h5>
                                 {% if purchaseinventory.check_status == "UNPAID" %}
                                     <div class="progress h-25">
-                                        <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">0%</div>
+                                    {% widthratio purchaseinventory.total_amount_paid purchaseinventory.net_purchase 100 as percentage  %}
+                                        <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: {{percentage}}%;">{{percentage}}%</div>
                                     </div>
                                     <h5 class="text-primary p-0 m-0 pb-2 pt-2 mt-2 text-center bg-danger" style="color:floralwhite!important"><strong>UNPAID</strong><br></h5>
                                 {% else %}
@@ -46,11 +47,11 @@
                             <tbody>
                                 <tr>
                                     <td>Date of Purchase:</td>
-                                    <td class="p-0 m-0 p-1">{{ purchaseinventory.purchase_date }}</td>
+                                    <td class="p-0 m-0 p-1"><strong>{{ purchaseinventory.purchase_date }}</strong></td>
                                 </tr>
                                 <tr>
                                     <td>Term of purchase:</td>
-                                    <td class="p-0 m-0 p-1">{{ purchaseinventory.term }}</td>
+                                    <td class="p-0 m-0 p-1"><strong>{{ purchaseinventory.term }}</strong></td>
                                 </tr>
                                 <tr>
                                     <td>freight in cost:</td>
@@ -58,16 +59,20 @@
                                 </tr>
                                 <tr>
                                     <td>Total Purchase amount:</td>
-                                    <td class="p-0 m-0 p-1">{{ purchaseinventory.total_amount }}</td>
+                                    <td class="p-0 m-0 p-1"><strong>{{ purchaseinventory.total_amount }}</strong></td>
                                 </tr>
                                 {% if purchaseinventory.num_cost_of_returned_inventory.0 >= 1 %}
                                 <tr>
                                     <td>Number of unit's returned:</td>
-                                    <td class="p-0 m-0 p-1 text-danger">{{ purchaseinventory.num_cost_of_returned_inventory.0 }}</td>
+                                    <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.num_cost_of_returned_inventory.0 }}</strong></td>
                                 </tr>
                                   <tr>
                                     <td>Cost of unit's returned:</td>
-                                    <td class="p-0 m-0 p-1 text-danger">{{ purchaseinventory.num_cost_of_returned_inventory.1 }}</td>
+                                    <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.num_cost_of_returned_inventory.1 }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Net Purchase:</td>
+                                    <td class="p-0 m-0 p-1 text-success"><strong>{{ purchaseinventory.net_purchase }}</strong></td>
                                 </tr>
                                 {% endif %}
                             </tbody>
@@ -75,37 +80,22 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-xl-7 p-0 m-0 p-3 bg-info mx-auto" style="background-color:white!important">
-                    <h5 class="text-primary p-0 m-0 pb-2"><strong>TUS PAGOS:</strong></h5>
-                    <p class="p-0 m-0 pb-2">A continuación encuentras listado el nombre del curso realizado y el pago asociado.</p>
+                    <h5 class="text-primary p-0 m-0 pb-2"><strong>Payment History and other info</strong></h5>
+                    <p class="p-0 m-0 pb-2"></p>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>CURSO</th>
-                                    <th>VALOR</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
                                     <th>OPTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>Infraestructura de datos</td>
-                                    <td>$20.000</td>
-                                    <td><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button><span>&nbsp;</span><button class="btn btn-dark" type="button"><i class="fa fa-pencil"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td>Diseño y maquetado de sitios</td>
+                                    <td>test</td>
                                     <td>$35.000</td>
-                                    <td><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button><span>&nbsp;</span><button class="btn btn-dark" type="button"><i class="fa fa-pencil"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td>Diseño y maquetado de sitios</td>
-                                    <td>$35.000</td>
-                                    <td><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button><span>&nbsp;</span><button class="btn btn-dark" type="button"><i class="fa fa-pencil"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td>Diseño y maquetado de sitios</td>
-                                    <td>$35.000</td>
-                                    <td><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button><span>&nbsp;</span><button class="btn btn-dark" type="button"><i class="fa fa-pencil"></i></button></td>
+                                    <td><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button><span>&nbsp;</span></td>
                                 </tr>
                             </tbody>
                         </table>

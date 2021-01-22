@@ -131,7 +131,7 @@ class PurchaseManager(models.Manager):
                     total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__number_of_unit"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
-        return  query.get("total_cost__sum" , 0)
+        return  query["total_cost__sum"] if query["total_cost__sum"] != None else 0
 
     def total_units_returned(self , owner):
         query = self.filter(owner=owner).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
@@ -139,11 +139,57 @@ class PurchaseManager(models.Manager):
 
 
     def total_cost_of_units_returned(self , owner):
-        query = self.filter(owner=2).annotate(
+        query = self.filter(owner=owner).annotate(
                         total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__inventoryreturn__num_returned"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
-        return query.get("total_cost__sum" , 0)
+        return query["total_cost__sum"] if query["total_cost__sum"] != None else 0
+
+    def net_purchases(self , owner):
+        return PurchaseManager.total_purchases_amount(self , owner) - PurchaseManager.total_cost_of_units_returned(self ,owner)
+
+    def total_amount_paid(self , owner):
+        # this one for PAID invoice already on Cash
+        PAID = [obj.net_purchase for obj in self.filter(owner=owner) if obj.check_status() == "PAID"]
+        # this query of unpaid invoice anfd then we pay it partuaily or full the amount
+        query = self.filter(owner=owner).aggregate(Sum("payinvoice__amount_paid"))
+        return (query["payinvoice__amount_paid__sum"] if query["payinvoice__amount_paid__sum"] != None else 0) + sum(PAID)
+
+    def total_amount_unpaid(self, owner):
+        return PurchaseManager.net_purchases(self ,owner) - PurchaseManager.total_amount_paid(self ,owner)
+
+    def unique_supplier(self, owner):
+        return set([obj.supplier for obj in self.filter(owner=owner)])
+
+    def group_by_supplier(self , owner):
+        data = {
+            "Supplier": [] , 
+            "net_pruchases": [] ,
+            "total_amount_unpaid": [] ,
+            "total_amount_paid" : [] , 
+            "total_cost_of_units_returned": [] ,
+            "total_units_returned": [] ,
+            "total_purchases_amount" : [] ,
+            "total_units_purchased": []
+
+        }
+
+        for supplier in self.unique_supplier(owner):
+            data["Supplier"].append(supplier.full_name)
+            query = PurchaseInventory.objects.filter(owner=owner , supplier = supplier)
+            data["net_pruchases"].append(PurchaseManager.net_purchases(query , owner))
+            data["total_purchases_amount"].append(PurchaseManager.total_purchases_amount(query ,  owner))
+            data["total_amount_unpaid"].append(PurchaseManager.total_amount_unpaid(query , owner))
+            data["total_amount_paid"].append(PurchaseManager.total_amount_paid(query , owner))
+            data["total_cost_of_units_returned"].append(PurchaseManager.total_cost_of_units_returned(query , owner))
+            data["total_units_purchased"].append(PurchaseManager.total_units_purchased(query , owner))
+            data["total_units_returned"].append(PurchaseManager.total_units_returned(query , owner))
+
+        return data
+
+
+    
+        
 
 
 
@@ -173,7 +219,7 @@ class PurchaseInventory(models.Model):
         """
         Check if this invoice PAID or UNPAID
         """
-        if self.term.terms == 0:
+        if self.term.terms == 0 or (self.net_purchase == self.total_amount_paid):
             return "PAID"
         else:
             return  "UNPAID"
@@ -247,10 +293,46 @@ class PurchaseInventory(models.Model):
         
         return query.get("total_amount" , 0)
 
+    @property
+    def net_purchase(self):
+        """
+        return amount of purchase take into our account if we return some inventory
+        """
+        return self.total_amount - self.num_cost_of_returned_inventory[1]
 
+    @property
+    def total_amount_paid(self):
+        """
+        return  total amount paid for specific invoice
+        """
+        query = self.payinvoice_set.aggregate(Sum("amount_paid"))["amount_paid__sum"]
+        if query == None:
+            return 0
+        return query
+ 
+    def __str__(self):
+        return f"invoice number:{self.pk}"
     
     # we will add in the future the address for the supplier and the ship address
 
+class PayInvoice(models.Model):
+    purchase_inventory = models.ForeignKey(PurchaseInventory , on_delete=models.CASCADE)
+    amount_paid = models.FloatField()
+
+            
+
+    def clean(self):
+        amount_paid = self.purchase_inventory.total_amount_paid
+        invoice_cost = self.purchase_inventory.net_purchase - amount_paid
+        if self.amount_paid > invoice_cost:
+            raise ValidationError({
+        "amount_paid":ValidationError(_("Paid amount can't be greater than invoice cost") , code="invaild") , 
+        })
+       
+
+    def __str__(self):
+        return f"Pay {self.purchase_inventory}"
+    
 
 class InventoryPrice(models.Model):
     """

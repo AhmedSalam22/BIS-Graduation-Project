@@ -9,6 +9,24 @@ from sole_proprietorship.models import Journal
 from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Sum
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import base64
+from io import BytesIO
+def get_graph():
+    """
+    reference :https://www.youtube.com/watch?v=jrT6NiM46jk
+    """
+    buffer = BytesIO()
+    plt.savefig(buffer , format="png")
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    graph = base64.b64encode(image_png)
+    graph = graph.decode('utf-8')
+    buffer.close()
+    return graph
+
 # Create your views here.
 class CreateTermView(OwnerCreateView):
     form_class  = PaymentSalesTermForm
@@ -242,6 +260,17 @@ class PurchasesDashboard(LoginRequiredMixin , View):
     template_name = "inventory/purchases_dashboard.html"
     def get(self , request , *args, **kwargs):
         owner = request.user
+
+        summary_supplier = PurchaseInventory.purchases.group_by_supplier(owner)
+        summary_supplier_df = pd.DataFrame(summary_supplier)
+        plt.switch_backend("AGG")
+        fig, ax1 = plt.subplots(figsize=(12, 5))
+        sns.barplot(x="net_pruchases", y="Supplier", data=summary_supplier_df , color="blue")
+        sns.barplot(x="total_amount_unpaid", y="Supplier", data=summary_supplier_df , color="red")
+
+        graph = get_graph()
+
+        
         ctx = {
             "total_purchases_amount" : PurchaseInventory.purchases.total_purchases_amount(owner) , 
             "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
@@ -250,7 +279,13 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(owner) , 
             "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(owner) , 
             "total_units_returned": PurchaseInventory.purchases.total_units_returned(owner) , 
-            "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(owner) , 
+            "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(owner) ,
+            "net_purchases": PurchaseInventory.purchases.net_purchases(owner) , 
+            "total_amount_unpaid": PurchaseInventory.purchases.total_amount_unpaid(owner) , 
+            "total_amount_paid": PurchaseInventory.purchases.total_amount_paid(owner) , 
+            "graph": graph,
+
+ 
 
         }
 
