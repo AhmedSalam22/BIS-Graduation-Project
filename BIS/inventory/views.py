@@ -120,6 +120,7 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
         if purchase_inventory_form.is_valid() and inventory_price_formset.is_valid():
             form1 = purchase_inventory_form.save(commit=False)
             form1.owner = owner
+            form1.status = 0 if form1.check_status() =="UNPAID" else 1
             form1.save()
             # print("form1")
             # print(dir(form1))
@@ -128,6 +129,9 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
                 form2 = form.save(commit=False)
                 form2.purchase_inventory = form1
                 form2.save()
+                form1.status = 0 if form1.check_status() =="UNPAID" else 1
+                form1.save()
+                
                 # print(dir(form2))
                 # print(form2.inventory.general_ledeger_account)
                 # print(form1.purchase_date)
@@ -171,7 +175,7 @@ class DetailInventoryView(OwnerDetailView):
         context = super().get_context_data(**kwargs)
         context["last_unit"] =  context["inventory"].inventoryprice_set.order_by("-purchase_inventory__purchase_date").first()
         # prices >> all the hisorcal data for purchases
-        context["prices"] = context["inventory"].inventoryprice_set.order_by("-purchase_inventory__purchase_date")
+        context["prices"] = context["inventory"].inventoryprice_set.order_by("-purchase_inventory__purchase_date").select_related()
         return context
     
 
@@ -237,6 +241,10 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
             if self.vaildate_return(request , obj) == False:
                 return render(request , self.template_name , {"form": form} )
             obj.save()
+            purchaseinventory = obj.inventory_price.purchase_inventory
+            purchaseinventory.status = 0 if purchaseinventory.check_status() =="UNPAID" else 1
+            purchaseinventory.save()
+
             self.save_journal_transaction(owner=owner, inventory_return= obj)
             return redirect(reverse_lazy(self.success_url , args=[
                 query.inventory.pk
@@ -261,30 +269,84 @@ class PurchasesDashboard(LoginRequiredMixin , View):
     def get(self , request , *args, **kwargs):
         owner = request.user
 
-        summary_supplier = PurchaseInventory.purchases.group_by_supplier(owner)
-        summary_supplier_df = pd.DataFrame(summary_supplier)
-        plt.switch_backend("AGG")
-        fig, ax1 = plt.subplots(figsize=(12, 5))
-        sns.barplot(x="net_pruchases", y="Supplier", data=summary_supplier_df , color="blue")
-        sns.barplot(x="total_amount_unpaid", y="Supplier", data=summary_supplier_df , color="red")
+        # summary_supplier = PurchaseInventory.purchases.group_by_supplier(owner)
+        # summary_supplier_df = pd.DataFrame(summary_supplier)
 
-        graph = get_graph()
+        data = PurchaseInventory.purchases.join_data(owner.id)
+        data_coulumns = [
+                'pu.id' ,
+                'pu.owner_id' ,
+                'pu.purchase_date',
+                'pu.frieght_in' ,
+                'pr.number_of_unit' ,
+                'pr.cost_per_unit' ,
+                'Re.date' , 
+                're.num_returned',
+                'pa.amount_paid' ,
+                'su.first_name' ,
+                'su.middle_name' ,
+                'su.last_name' ,
+                'inv.item_name' ,
+                'acc.account' , 
+                'te.config' ,
+                'te.terms' ,
+                'te.discount_percentage' ,
+                'te.discount_in_days' ,
+                'te.num_of_days_due' 
+        ]
+        df = pd.DataFrame(data, columns=data_coulumns)
+        df["total_cost"] = df["pr.number_of_unit"] * df["pr.cost_per_unit"] 
+        df["total_cost_returned"] = df["re.num_returned"] * df["pr.cost_per_unit"] 
+        df = df.sort_values('pr.number_of_unit').reset_index()
+
+
+        # plt.switch_backend("AGG")
+        # fig, ax1 = plt.subplots(figsize=(11.5, 5))
+        # sns.barplot(x="net_pruchases", y="Supplier", data=summary_supplier_df.sort_values("net_pruchases" , ascending=False) , color="blue" , label="net purchases")
+        # sns.barplot(x="total_amount_unpaid", y="Supplier", data=summary_supplier_df , color="red" , label="UNPAID amount")
+        # plt.yticks(rotation=45)
+        # plt.legend()
+        # plt.xlabel("total amount")
+        # plt.title("Supplier Vs Purchases Vs UNPAID amount")
+        # graph = get_graph()
+
+        plt.switch_backend("AGG")
+        fig, ax1 = plt.subplots(figsize=(11.5, 5))
+        sns.lineplot(data=df, x="pu.purchase_date" , y="total_cost" , color="blue" , label="total cost of purchases")
+        sns.lineplot(data=df, x="pu.purchase_date" , y="total_cost_returned" , color="red" , label="total cost of returnd")
+        plt.ylabel("Total")
+        plt.xlabel("Date")
+        plt.title("Purchases and Returnning over the time")
+        graph2 = get_graph()
+
+        plt.switch_backend("AGG")
+        fig, ax1 = plt.subplots(figsize=(11.5, 5))
+        sns.barplot(x="pr.number_of_unit", y="inv.item_name", data=df.sort_values("pr.number_of_unit" , ascending=False) , color="blue" , label="Num of unit" )
+        sns.barplot(x="re.num_returned", y="inv.item_name", data=df.sort_values("pr.number_of_unit" , ascending=False) , color="red" , label="Num of returned")
+        plt.title("inventory item")
+        plt.xlabel("Number of unit")
+        plt.ylabel("inventoy")
+        plt.yticks(rotation=45)
+        plt.legend()
+        graph3 = get_graph()
+    
 
         
         ctx = {
             "total_purchases_amount" : PurchaseInventory.purchases.total_purchases_amount(owner) , 
             "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
-            "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
-            "std_cost_per_unit": PurchaseInventory.purchases.std_cost_per_unit(owner) , 
-            "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(owner) , 
-            "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(owner) , 
+            # "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
+            # "std_cost_per_unit": PurchaseInventory.purchases.std_cost_per_unit(owner) , 
+            # "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(owner) , 
+            # "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(owner) , 
             "total_units_returned": PurchaseInventory.purchases.total_units_returned(owner) , 
-            "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(owner) ,
+            # "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(owner) ,
             "net_purchases": PurchaseInventory.purchases.net_purchases(owner) , 
-            "total_amount_unpaid": PurchaseInventory.purchases.total_amount_unpaid(owner) , 
+            # "total_amount_unpaid": PurchaseInventory.purchases.total_amount_unpaid(owner) , 
             "total_amount_paid": PurchaseInventory.purchases.total_amount_paid(owner) , 
-            "graph": graph,
-
+            # "graph": graph,
+            "line_fig": graph2 ,
+            "graph3" : graph3
  
 
         }

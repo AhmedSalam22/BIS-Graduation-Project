@@ -127,19 +127,19 @@ class PurchaseManager(models.Manager):
         """
          sum of total purchases amount (freight in or returned purchased not included)
         """
-        query = self.filter(owner=owner).annotate(
+        query = self.prefetch_related("inventoryprice__cost_per_unit","inventoryprice__number_of_unit").filter(owner=owner).annotate(
                     total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__number_of_unit"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
         return  query["total_cost__sum"] if query["total_cost__sum"] != None else 0
 
     def total_units_returned(self , owner):
-        query = self.filter(owner=owner).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
+        query = self.prefetch_related("inventoryprice__inventoryreturn__num_returned").filter(owner=owner).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
         return query.get("inventoryprice__inventoryreturn__num_returned__sum" , 0)
 
 
     def total_cost_of_units_returned(self , owner):
-        query = self.filter(owner=owner).annotate(
+        query = self.select_related("inventoryprice__cost_per_unit","inventoryprice__inventoryreturn__num_returned").filter(owner=owner).annotate(
                         total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__inventoryreturn__num_returned"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
@@ -150,7 +150,8 @@ class PurchaseManager(models.Manager):
 
     def total_amount_paid(self , owner):
         # this one for PAID invoice already on Cash
-        PAID = [obj.net_purchase for obj in self.filter(owner=owner) if obj.check_status() == "PAID"]
+        # i have discoverd this is not effiecient way  i should use raw sql instead
+        PAID = [obj.net_purchase for obj in self.filter(owner=owner) if obj.status == "PAID"]
         # this query of unpaid invoice anfd then we pay it partuaily or full the amount
         query = self.filter(owner=owner).aggregate(Sum("payinvoice__amount_paid"))
         return (query["payinvoice__amount_paid__sum"] if query["payinvoice__amount_paid__sum"] != None else 0) + sum(PAID)
@@ -188,9 +189,57 @@ class PurchaseManager(models.Manager):
         return data
 
 
-    
-        
+    def join_data(self , owner):
+        """
+        Join all table related to purchases 
+            -
+            
+        """
+        from django.db import connection
+        with connection.cursor() as cursor:
+            query = cursor.execute("""
+               SELECT 
+                pu.id ,
+                pu.owner_id ,
+                pu.purchase_date,
+                pu.frieght_in ,
+                pr.number_of_unit ,
+                pr.cost_per_unit ,
+                Re.date , 
+                re.num_returned,
+                pa.amount_paid ,
+                su.first_name ,
+                su.middle_name ,
+                su.last_name ,
+                inv.item_name ,
+                acc.account , 
+                te.config ,
+                te.terms ,
+                te.discount_percentage ,
+                te.discount_in_days ,
+                te.num_of_days_due 	
+                
+                FROM inventory_purchaseinventory Pu
+                LEFT JOIN  inventory_inventoryprice Pr
+                ON Pr.purchase_inventory_id = Pu.id
+                AND pu.owner_id = %s
 
+                LEFT JOIN inventory_inventoryreturn Re
+                ON Re.inventory_price_id = Pr.id
+                LEFT JOIN inventory_payinvoice Pa
+                ON Pa.purchase_inventory_id = Pu.id
+                JOIN suppliers_supplier Su
+                On Pu.supplier_id = Su.id
+                JOIN inventory_inventory inv 
+                ON pr.inventory_id = inv.id
+                Join inventory_paymentsalesterm te
+                on te.id = pu.term_id
+                JOIN sole_proprietorship_accounts  acc 
+                ON acc.id = te.general_ledeger_account_id
+
+                """, [owner])
+            result = query.fetchall()
+        return result
 
 
 class PurchaseInventory(models.Model):
@@ -198,6 +247,11 @@ class PurchaseInventory(models.Model):
     Note freight in cost which inccure when you purchase your inventory will charge only on the first
     form inventory in formset
     """
+    class Status(models.IntegerChoices):
+        UNPAID = 0 , _("UNPAID")
+        PAID = 1 , _("PAID")
+
+    status = models.IntegerField(choices=Status.choices)
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     # a unique identifyer for youe purchase tansaction
     num = models.IntegerField()
@@ -291,7 +345,7 @@ class PurchaseInventory(models.Model):
                         )).aggregate(total_amount=Sum("total_cost"))
 
         
-        return query.get("total_amount" , 0)
+        return query["total_amount"] if query["total_amount"] != None else 0
 
     @property
     def net_purchase(self):
