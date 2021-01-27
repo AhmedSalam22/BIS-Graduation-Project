@@ -4,7 +4,8 @@ from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerU
 from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice , PurchaseInventory
 from django.views.generic import View , TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from inventory.forms import PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset , InventoryPriceFormsetHelper , InventoryReturnForm
+from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
+                                 InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm )
 from sole_proprietorship.models import Journal
 from django.utils import timezone
 from django.contrib import messages
@@ -14,6 +15,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
+
 def get_graph():
     """
     reference :https://www.youtube.com/watch?v=jrT6NiM46jk
@@ -120,7 +122,7 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
         if purchase_inventory_form.is_valid() and inventory_price_formset.is_valid():
             form1 = purchase_inventory_form.save(commit=False)
             form1.owner = owner
-            form1.status = 0 if form1.check_status() =="UNPAID" else 1
+            form1.status = 0 if form1.check_status() =="UNPAID" else 1 
             form1.save()
             # print("form1")
             # print(dir(form1))
@@ -129,9 +131,6 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
                 form2 = form.save(commit=False)
                 form2.purchase_inventory = form1
                 form2.save()
-                form1.status = 0 if form1.check_status() =="UNPAID" else 1
-                form1.save()
-                
                 # print(dir(form2))
                 # print(form2.inventory.general_ledeger_account)
                 # print(form1.purchase_date)
@@ -147,6 +146,13 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
                         purchase_inventory_form = form1,
                         inventory_price_form = form2)
                 counter +=1
+            form1.update_and_save()
+            # form1.total_purchases =  form1.check_total_amount()
+            # form1.net_purchases = form1.check_net_purchase()
+            # form1.total_amount_paid = form1.check_total_amount_paid()
+            # form1.status = 0 if form1.check_status() =="UNPAID" else 1
+            # form1.due_date = form1.check_due_date()
+            # form1.save()
 
             return redirect(self.success_url)
         ctx = {
@@ -243,6 +249,9 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
             obj.save()
             purchaseinventory = obj.inventory_price.purchase_inventory
             purchaseinventory.status = 0 if purchaseinventory.check_status() =="UNPAID" else 1
+            purchaseinventory.num_returend , purchaseinventory.cost_returned =  purchaseinventory.check_num_cost_of_returned_inventory()
+            purchaseinventory.net_purchases = purchaseinventory.check_net_purchase()
+            # purchaseinventory.total_amount_paid
             purchaseinventory.save()
 
             self.save_journal_transaction(owner=owner, inventory_return= obj)
@@ -353,3 +362,18 @@ class PurchasesDashboard(LoginRequiredMixin , View):
 
         return render(request , self.template_name , ctx)
         
+class PayInvoicePayView(OwnerCreateView):
+    form_class = PayInvoiceForm
+    template_name = "inventory/payinvoice_form.html"
+
+    def get_initial(self):
+        try:
+            invoice = PurchaseInventory.objects.get(owner=self.request.user , pk=self.kwargs['pk'] , status=0)
+            return {'purchase_inventory': invoice}
+        except PurchaseInventory.DoesNotExist:
+            messages.warning(self.request , "Warning:the pk in your url is not vaild.") 
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({"owner":self.request.user})
+        return kwargs

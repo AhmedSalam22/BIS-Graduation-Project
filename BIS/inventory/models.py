@@ -265,15 +265,20 @@ class PurchaseInventory(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
     frieght_in = models.FloatField(default=0)
-
+    num_returend = models.IntegerField(blank=True, null=True)
+    cost_returned =  models.FloatField(blank=True, null=True)
+    total_purchases = models.FloatField(blank=True, null=True)
+    net_purchases = models.FloatField(blank=True, null=True)
+    total_amount_paid = models.FloatField(blank=True, null=True)
     objects = models.Manager() # the default_managers
     purchases = PurchaseManager()
+
 
     def check_status(self):
         """
         Check if this invoice PAID or UNPAID
         """
-        if self.term.terms == 0 or (self.net_purchase == self.total_amount_paid):
+        if self.term.terms == 0 or (self.check_net_purchase() == self.check_total_amount_paid()):
             return "PAID"
         else:
             return  "UNPAID"
@@ -283,6 +288,9 @@ class PurchaseInventory(models.Model):
         """
         retrun due date if user don't specify it's directly and used terms instead
         """
+        if self.check_status() == "PAID":
+            return None
+
         if self.due_date:
             return self.due_date
         else:
@@ -317,8 +325,8 @@ class PurchaseInventory(models.Model):
 
 
 
-    @property
-    def num_cost_of_returned_inventory(self) -> tuple:
+    
+    def check_num_cost_of_returned_inventory(self) -> tuple:
         """
         return a tuble of  total number of returned and it's cost
         # take into account if we return inventory so we accumulate this cost
@@ -335,8 +343,7 @@ class PurchaseInventory(models.Model):
                 cost_of_returned_inventory += total_cost
         return total_returned , cost_of_returned_inventory
 
-    @property
-    def total_amount(self) -> float:
+    def check_total_amount(self) -> float:
         """amount of purchase whether on account or paid cash"""
         # reurn dict for total amount of purchases
         query = self.inventoryprice_set.annotate(
@@ -347,23 +354,37 @@ class PurchaseInventory(models.Model):
         
         return query["total_amount"] if query["total_amount"] != None else 0
 
-    @property
-    def net_purchase(self):
+    
+    def check_net_purchase(self):
         """
         return amount of purchase take into our account if we return some inventory
         """
-        return self.total_amount - self.num_cost_of_returned_inventory[1]
+        return self.check_total_amount() - self.check_num_cost_of_returned_inventory()[1]
 
-    @property
-    def total_amount_paid(self):
+    
+    def check_total_amount_paid(self):
         """
         return  total amount paid for specific invoice
         """
         query = self.payinvoice_set.aggregate(Sum("amount_paid"))["amount_paid__sum"]
         if query == None:
-            return 0
+            if self.status == "PAID":
+                return self.total_purchases
+            else:
+                return 0
         return query
- 
+
+    def update_and_save(self):
+        """
+        Update this row after we purchase item and know their cost and quantity
+        """
+        self.total_purchases =  self.check_total_amount()
+        self.net_purchases = self.check_net_purchase()
+        self.total_amount_paid = self.check_total_amount_paid()
+        self.status = 0 if self.check_status() =="UNPAID" else 1
+        # self.due_date = self.check_due_date()
+        self.save()
+
     def __str__(self):
         return f"invoice number:{self.pk}"
     
@@ -377,12 +398,23 @@ class PayInvoice(models.Model):
 
     def clean(self):
         amount_paid = self.purchase_inventory.total_amount_paid
-        invoice_cost = self.purchase_inventory.net_purchase - amount_paid
+        invoice_cost = self.purchase_inventory.net_purchases - amount_paid
         if self.amount_paid > invoice_cost:
             raise ValidationError({
         "amount_paid":ValidationError(_("Paid amount can't be greater than invoice cost") , code="invaild") , 
         })
        
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        purchase_inventory = self.purchase_inventory
+        purchase_inventory.total_amount_paid = purchase_inventory.check_total_amount_paid()
+        purchase_inventory.status = 1 if purchase_inventory.check_status() == "PAID" else 0
+        purchase_inventory.save()
+
+
+
+
 
     def __str__(self):
         return f"Pay {self.purchase_inventory}"
@@ -434,3 +466,10 @@ class InventoryReturn(models.Model):
 
     def __str__(self):
         return f"return {self.num_returned} of {self.inventory_price.inventory.item_name}"
+
+
+class JournalForInventoryReturn(models.Model):
+    """
+    All Journal entry associated with inventory return 
+    """
+    pass

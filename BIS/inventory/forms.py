@@ -1,5 +1,5 @@
 from django import forms
-from inventory.models import PurchaseInventory , PaymentSalesTerm , InventoryPrice , Inventory, InventoryReturn
+from inventory.models import PurchaseInventory , PaymentSalesTerm , InventoryPrice , Inventory, InventoryReturn , PayInvoice
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
 from crispy_forms.bootstrap import InlineRadios
@@ -80,3 +80,13 @@ class InventoryReturnForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["date"].initial = timezone.localdate()
         
+
+class PayInvoiceForm(forms.ModelForm):
+    class Meta:
+        model = PayInvoice
+        fields = '__all__'
+
+    def __init__(self , *args, **kwargs):
+        self.owner = kwargs.pop('owner')
+        super().__init__(*args, **kwargs)
+        self.fields["purchase_inventory"].queryset = PurchaseInventory.objects.filter(owner=self.owner , status=0)

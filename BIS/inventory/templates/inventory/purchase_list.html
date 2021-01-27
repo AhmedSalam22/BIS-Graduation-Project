@@ -26,7 +26,9 @@
                             <th>Supplier</th>
                             <th>Term</th>
                             <th>Total amount of purchase</th>
-                            <th>returned amount , cost</th>
+                            <th>returned Num</th>
+                            <th>returned cost</th>
+
                             <th>Options</th>
 
                         </tr>
@@ -43,8 +45,9 @@
                                         <a href="{% url "inventory:list_term"%}" target="blank">{{ purchase.term}}</a>
                                     </strong>
                                 </td>
-                                <td><strong>{{ purchase.total_amount }}</strong></td>
-                                <td><strong>{{ purchase.num_cost_of_returned_inventory }}</strong></td>
+                                <td><strong>{{ purchase.total_purchases }}</strong></td>
+                                <td><strong>{{ purchase.num_returend }}</strong></td>
+                                <td><strong>{{ purchase.cost_returned }}</strong></td>
                                 <td><a href="{% url "inventory:detail_purchase" purchase.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a><td/>
                             </tr>
                             {% endfor %}

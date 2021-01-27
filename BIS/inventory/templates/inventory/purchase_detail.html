@@ -2,6 +2,13 @@
 {% extends "home/base.html" %}
 
 {% block content %}
+<div class="d-grid gap-2 col-6 mx-auto">
+  <button class="btn btn-light" type="button"><i class="far fa-file-pdf"> PDF</i></button>
+  <button class="btn btn-light" type="button"><i class="far fa-file-excel"> Excel</i></button>
+  {% if purchaseinventory.status == 0 %}
+    <button class="btn btn-light" type="button"><strong><a href="{% url "inventory:pay_invoice" purchaseinventory.pk %}" target="blank"><i class="fab fa-amazon-pay"> Pay Invoice</i></a></strong></button>
+  {% endif %}
+</div>
  <div class="row" style="margin:0px;padding:20px;">
         <div class="w-100 d-sm-block d-md-none d-lg-none d-xl-none"></div>
         <div class="col" style="padding:0px;">
@@ -22,9 +29,9 @@
                         </div>
                         <div class="col-lg-4 col-xl-4 p-0 m-0 p-3 mx-auto  border">
                             <h5 class="text-primary p-0 m-0 pb-2"><strong>STATUS:</strong></h5>
-                                {% if purchaseinventory.check_status == "UNPAID" %}
+                                {% if purchaseinventory.status == 0 %}
                                     <div class="progress h-25">
-                                    {% widthratio purchaseinventory.total_amount_paid purchaseinventory.net_purchase 100 as percentage  %}
+                                    {% widthratio purchaseinventory.total_amount_paid purchaseinventory.net_purchases 100 as percentage  %}
                                         <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: {{percentage}}%;">{{percentage}}%</div>
                                     </div>
                                     <h5 class="text-primary p-0 m-0 pb-2 pt-2 mt-2 text-center bg-danger" style="color:floralwhite!important"><strong>UNPAID</strong><br></h5>
@@ -59,20 +66,20 @@
                                 </tr>
                                 <tr>
                                     <td>Total Purchase amount:</td>
-                                    <td class="p-0 m-0 p-1"><strong>{{ purchaseinventory.total_amount }}</strong></td>
+                                    <td class="p-0 m-0 p-1"><strong>{{ purchaseinventory.total_purchases }}</strong></td>
                                 </tr>
-                                {% if purchaseinventory.num_cost_of_returned_inventory.0 >= 1 %}
+                                {% if purchaseinventory.num_returend > 0 %}
                                 <tr>
                                     <td>Number of unit's returned:</td>
-                                    <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.num_cost_of_returned_inventory.0 }}</strong></td>
+                                    <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.num_returend }}</strong></td>
                                 </tr>
                                   <tr>
                                     <td>Cost of unit's returned:</td>
-                                    <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.num_cost_of_returned_inventory.1 }}</strong></td>
+                                    <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.cost_returned }}</strong></td>
                                 </tr>
                                 <tr>
                                     <td>Net Purchase:</td>
-                                    <td class="p-0 m-0 p-1 text-success"><strong>{{ purchaseinventory.net_purchase }}</strong></td>
+                                    <td class="p-0 m-0 p-1 text-success"><strong>{{ purchaseinventory.net_purchases }}</strong></td>
                                 </tr>
                                 {% endif %}
                             </tbody>
@@ -139,7 +146,7 @@
                 </table>
             </div>
         </section>
-         {% if  purchaseinventory.num_cost_of_returned_inventory.0 >= 1 %}
+         {% if  purchaseinventory.num_returend >= 1 %}
          <section >
             <h5 class="text-center text-primary p-0 m-0 pb-3"><strong>List of Returned Item</strong></h5>
             <div>
