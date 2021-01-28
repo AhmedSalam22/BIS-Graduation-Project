@@ -5,11 +5,11 @@ from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , In
 from django.views.generic import View , TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
-                                 InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm )
+                                 InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm )
 from sole_proprietorship.models import Journal
 from django.utils import timezone
 from django.contrib import messages
-from django.db.models import Sum
+from django.db.models import Sum , Q
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -278,6 +278,16 @@ class PurchasesDashboard(LoginRequiredMixin , View):
     def get(self , request , *args, **kwargs):
         owner = request.user
 
+        initial_data = {
+            "start_date": None , 
+            "end_date": None}
+        try:
+            initial_data["start_date"] =  PurchaseInventory.objects.filter(owner=owner).earliest("purchase_date").purchase_date
+            initial_data["end_date"] =  PurchaseInventory.objects.filter(owner=owner).latest("purchase_date").purchase_date
+        except PurchaseInventory.DoesNotExist:
+            pass
+        reporting_period_form = ReportingPeriodConfigForm(initial = initial_data)
+
         # summary_supplier = PurchaseInventory.purchases.group_by_supplier(owner)
         # summary_supplier_df = pd.DataFrame(summary_supplier)
 
@@ -340,19 +350,20 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         graph3 = get_graph()
     
 
-        
+        query = Q(owner=owner)    
         ctx = {
-            "total_purchases_amount" : PurchaseInventory.purchases.total_purchases_amount(owner) , 
-            "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
-            # "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(owner) , 
-            # "std_cost_per_unit": PurchaseInventory.purchases.std_cost_per_unit(owner) , 
-            # "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(owner) , 
-            # "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(owner) , 
-            "total_units_returned": PurchaseInventory.purchases.total_units_returned(owner) , 
-            # "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(owner) ,
-            "net_purchases": PurchaseInventory.purchases.net_purchases(owner) , 
-            # "total_amount_unpaid": PurchaseInventory.purchases.total_amount_unpaid(owner) , 
-            "total_amount_paid": PurchaseInventory.purchases.total_amount_paid(owner) , 
+            "form": reporting_period_form,
+            "total_purchases_amount" : PurchaseInventory.purchases.total_purchases_amount(query) , 
+            "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(query) , 
+            # "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(query) , 
+            # "std_cost_per_unit": PurchaseInventory.purchases.std_cost_per_unit(query) , 
+            # "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(query) , 
+            # "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(query) , 
+            "total_units_returned": PurchaseInventory.purchases.total_units_returned(query) , 
+            # "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(query) ,
+            "net_purchases": PurchaseInventory.purchases.net_purchases(query) , 
+            # "total_amount_unpaid": PurchaseInventory.purchases.total_amount_unpaid(query) , 
+            "total_amount_paid": PurchaseInventory.purchases.total_amount_paid(query) , 
             # "graph": graph,
             "line_fig": graph2 ,
             "graph3" : graph3

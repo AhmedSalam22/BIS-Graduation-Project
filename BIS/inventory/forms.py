@@ -90,3 +90,24 @@ class PayInvoiceForm(forms.ModelForm):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
         self.fields["purchase_inventory"].queryset = PurchaseInventory.objects.filter(owner=self.owner , status=0)
+
+
+
+class DateInput(forms.DateInput):
+    input_type = 'date'
+
+class ReportingPeriodConfigForm(forms.Form):
+    start_date = forms.DateField(widget = DateInput)
+    end_date = forms.DateField(widget = DateInput)
+  
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            'start_date', 'end_date'  
+        )
+        self.helper.form_tag = False
+
+        
+

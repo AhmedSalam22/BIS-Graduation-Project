@@ -90,29 +90,29 @@ class InventoryImag(models.Model):
 
 
 class PurchaseManager(models.Manager):
-    def avg_cost_per_unit(self , owner):
+    def avg_cost_per_unit(self , query):
         """
         avg cost per unit
         """
-        data = self.filter(owner=owner).aggregate(Avg("inventoryprice__cost_per_unit"))
+        data = self.filter(query).aggregate(Avg("inventoryprice__cost_per_unit"))
         return data.get("inventoryprice__cost_per_unit__avg" , 0)
 
-    def std_cost_per_unit(self, owner):
+    def std_cost_per_unit(self, query):
         """
         return the stander deviation (change upward ow donward) for cost per unit
         """
-        query = self.filter(owner=owner).aggregate(StdDev("inventoryprice__cost_per_unit"))
+        query = self.filter(query).aggregate(StdDev("inventoryprice__cost_per_unit"))
         return query.get("inventoryprice__cost_per_unit__stddev" , 0)
 
-    def max_cost_per_unit(self , owner):
-        query = self.filter(owner=owner).aggregate(Max("inventoryprice__cost_per_unit"))
+    def max_cost_per_unit(self , query):
+        query = self.filter(query).aggregate(Max("inventoryprice__cost_per_unit"))
         return query.get("PurchaseInventory.objects.filter(owner=2" , 0)
 
-    def min_cost_per_unit(self , owner):
-        query = self.filter(owner=owner).aggregate(Min("inventoryprice__cost_per_unit"))
+    def min_cost_per_unit(self , query):
+        query = self.filter(query).aggregate(Min("inventoryprice__cost_per_unit"))
         return query.get("inventoryprice__cost_per_unit__min" , 0)
 
-    def total_units_purchased(self , owner):
+    def total_units_purchased(self , query):
         """
         sum of of total unit purchased we don't take into account(returned cost this will be different method)
         args: 
@@ -120,73 +120,75 @@ class PurchaseManager(models.Manager):
         return 
             the sum of unit's purchases 
         """
-        data = self.filter(owner=owner).aggregate(Sum("inventoryprice__number_of_unit"))
+        data = self.filter(query).aggregate(Sum("inventoryprice__number_of_unit"))
         return data.get("inventoryprice__number_of_unit__sum" , 0)
 
-    def total_purchases_amount(self , owner):
+    def total_purchases_amount(self , query):
         """
          sum of total purchases amount (freight in or returned purchased not included)
         """
-        query = self.prefetch_related("inventoryprice__cost_per_unit","inventoryprice__number_of_unit").filter(owner=owner).annotate(
+        query = self.prefetch_related("inventoryprice__cost_per_unit","inventoryprice__number_of_unit").filter(query).annotate(
                     total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__number_of_unit"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
         return  query["total_cost__sum"] if query["total_cost__sum"] != None else 0
 
-    def total_units_returned(self , owner):
-        query = self.prefetch_related("inventoryprice__inventoryreturn__num_returned").filter(owner=owner).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
+    def total_units_returned(self , query):
+        query = self.prefetch_related("inventoryprice__inventoryreturn__num_returned").filter(query).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
         return query.get("inventoryprice__inventoryreturn__num_returned__sum" , 0)
 
 
-    def total_cost_of_units_returned(self , owner):
-        query = self.select_related("inventoryprice__cost_per_unit","inventoryprice__inventoryreturn__num_returned").filter(owner=owner).annotate(
+    def total_cost_of_units_returned(self , query):
+        query = self.select_related("inventoryprice__cost_per_unit","inventoryprice__inventoryreturn__num_returned").filter(query).annotate(
                         total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__inventoryreturn__num_returned"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
         return query["total_cost__sum"] if query["total_cost__sum"] != None else 0
 
-    def net_purchases(self , owner):
-        return PurchaseManager.total_purchases_amount(self , owner) - PurchaseManager.total_cost_of_units_returned(self ,owner)
+    def net_purchases(self , query):
+        return PurchaseManager.total_purchases_amount(self , query) - PurchaseManager.total_cost_of_units_returned(self ,query)
 
-    def total_amount_paid(self , owner):
+    def total_amount_paid(self , query):
         # this one for PAID invoice already on Cash
         # i have discoverd this is not effiecient way  i should use raw sql instead
-        PAID = [obj.net_purchase for obj in self.filter(owner=owner) if obj.status == "PAID"]
+        # PAID = [obj.net_purchase for obj in self.filter(owner=owner) if obj.status == "PAID"]
         # this query of unpaid invoice anfd then we pay it partuaily or full the amount
-        query = self.filter(owner=owner).aggregate(Sum("payinvoice__amount_paid"))
-        return (query["payinvoice__amount_paid__sum"] if query["payinvoice__amount_paid__sum"] != None else 0) + sum(PAID)
+        # query = self.filter(owner=owner).aggregate(Sum("payinvoice__amount_paid"))
+        query = self.filter(query).aggregate(Sum("total_amount_paid"))
+        return query["total_amount_paid__sum"] if query["total_amount_paid__sum"] != None else 0
 
-    def total_amount_unpaid(self, owner):
-        return PurchaseManager.net_purchases(self ,owner) - PurchaseManager.total_amount_paid(self ,owner)
+    def total_amount_unpaid(self, query):
+        return PurchaseManager.net_purchases(self ,query) - PurchaseManager.total_amount_paid(self ,query)
 
-    def unique_supplier(self, owner):
-        return set([obj.supplier for obj in self.filter(owner=owner)])
+    def unique_supplier(self, query):
+        return set([obj.supplier for obj in self.filter(query)])
 
-    def group_by_supplier(self , owner):
-        data = {
-            "Supplier": [] , 
-            "net_pruchases": [] ,
-            "total_amount_unpaid": [] ,
-            "total_amount_paid" : [] , 
-            "total_cost_of_units_returned": [] ,
-            "total_units_returned": [] ,
-            "total_purchases_amount" : [] ,
-            "total_units_purchased": []
+    def group_by_supplier(self , query):
+        pass
+        # data = {
+        #     "Supplier": [] , 
+        #     "net_pruchases": [] ,
+        #     "total_amount_unpaid": [] ,
+        #     "total_amount_paid" : [] , 
+        #     "total_cost_of_units_returned": [] ,
+        #     "total_units_returned": [] ,
+        #     "total_purchases_amount" : [] ,
+        #     "total_units_purchased": []
 
-        }
+        # }
 
-        for supplier in self.unique_supplier(owner):
-            data["Supplier"].append(supplier.full_name)
-            query = PurchaseInventory.objects.filter(owner=owner , supplier = supplier)
-            data["net_pruchases"].append(PurchaseManager.net_purchases(query , owner))
-            data["total_purchases_amount"].append(PurchaseManager.total_purchases_amount(query ,  owner))
-            data["total_amount_unpaid"].append(PurchaseManager.total_amount_unpaid(query , owner))
-            data["total_amount_paid"].append(PurchaseManager.total_amount_paid(query , owner))
-            data["total_cost_of_units_returned"].append(PurchaseManager.total_cost_of_units_returned(query , owner))
-            data["total_units_purchased"].append(PurchaseManager.total_units_purchased(query , owner))
-            data["total_units_returned"].append(PurchaseManager.total_units_returned(query , owner))
+        # for supplier in self.unique_supplier(query):
+        #     data["Supplier"].append(supplier.full_name)
+        #     query = PurchaseInventory.objects.filter(query , supplier = supplier)
+        #     data["net_pruchases"].append(PurchaseManager.net_purchases(query , owner))
+        #     data["total_purchases_amount"].append(PurchaseManager.total_purchases_amount(query ,  owner))
+        #     data["total_amount_unpaid"].append(PurchaseManager.total_amount_unpaid(query , owner))
+        #     data["total_amount_paid"].append(PurchaseManager.total_amount_paid(query , owner))
+        #     data["total_cost_of_units_returned"].append(PurchaseManager.total_cost_of_units_returned(query , owner))
+        #     data["total_units_purchased"].append(PurchaseManager.total_units_purchased(query , owner))
+        #     data["total_units_returned"].append(PurchaseManager.total_units_returned(query , owner))
 
-        return data
+        # return data
 
 
     def join_data(self , owner):
@@ -407,6 +409,7 @@ class PayInvoice(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        # update
         purchase_inventory = self.purchase_inventory
         purchase_inventory.total_amount_paid = purchase_inventory.check_total_amount_paid()
         purchase_inventory.status = 1 if purchase_inventory.check_status() == "PAID" else 0
