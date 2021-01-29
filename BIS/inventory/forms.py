@@ -108,6 +108,8 @@ class ReportingPeriodConfigForm(forms.Form):
             'start_date', 'end_date'  
         )
         self.helper.form_tag = False
+        self.helper.disable_csrf = True
+
 
         
 

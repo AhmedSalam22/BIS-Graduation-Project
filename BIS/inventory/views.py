@@ -288,10 +288,14 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             pass
         reporting_period_form = ReportingPeriodConfigForm(initial = initial_data)
 
+        start_date = request.GET.get("start_date", initial_data["start_date"])
+        end_date = request.GET.get("end_date", initial_data["end_date"])
+        query = Q(owner=owner) & Q(purchase_date__gte=start_date)  & Q(purchase_date__lte=end_date)
+
         # summary_supplier = PurchaseInventory.purchases.group_by_supplier(owner)
         # summary_supplier_df = pd.DataFrame(summary_supplier)
 
-        data = PurchaseInventory.purchases.join_data(owner.id)
+        data = PurchaseInventory.purchases.join_data(owner.id , start_date , end_date)
         data_coulumns = [
                 'pu.id' ,
                 'pu.owner_id' ,
@@ -350,8 +354,10 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         graph3 = get_graph()
     
 
-        query = Q(owner=owner)    
+
         ctx = {
+            "start_date": start_date ,
+            "end_date": end_date ,
             "form": reporting_period_form,
             "total_purchases_amount" : PurchaseInventory.purchases.total_purchases_amount(query) , 
             "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(query) , 

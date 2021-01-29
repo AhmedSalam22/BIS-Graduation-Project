@@ -191,7 +191,7 @@ class PurchaseManager(models.Manager):
         # return data
 
 
-    def join_data(self , owner):
+    def join_data(self , owner , start_date , end_date):
         """
         Join all table related to purchases 
             -
@@ -224,7 +224,7 @@ class PurchaseManager(models.Manager):
                 FROM inventory_purchaseinventory Pu
                 LEFT JOIN  inventory_inventoryprice Pr
                 ON Pr.purchase_inventory_id = Pu.id
-                AND pu.owner_id = %s
+                AND pu.owner_id = %s AND pu.purchase_date >= %s AND pu.purchase_date <= %s
 
                 LEFT JOIN inventory_inventoryreturn Re
                 ON Re.inventory_price_id = Pr.id
@@ -239,7 +239,7 @@ class PurchaseManager(models.Manager):
                 JOIN sole_proprietorship_accounts  acc 
                 ON acc.id = te.general_ledeger_account_id
 
-                """, [owner])
+                """, [owner , start_date , end_date])
             result = query.fetchall()
         return result
 
