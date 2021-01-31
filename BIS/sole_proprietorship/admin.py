@@ -23,7 +23,9 @@ class AccountsAdmin(admin.ModelAdmin):
 
 
 class JournalAdmin(admin.ModelAdmin):
-    list_display = ('account' , 'date' , 'balance' , 'transaction_type' , 'comment' , 'owner')
+    list_display = ('account' , 'date' , 'balance' , 'transaction_type' , 'comment' ,
+     'owner', "purchase_inventory","inventory_price", "inventory_return", "status"
+     )
     list_editable = ['comment']
     search_fields = ['comment']
     list_filter = ['account', 'transaction_type' , 'owner']
@@ -33,7 +35,7 @@ class JournalAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Main", {
-            "fields": ['owner' , ('account' , 'date' , 'balance' , 'transaction_type' )],
+            "fields": ['owner' , ('account' , 'date' , 'balance' , 'transaction_type' ) , ("purchase_inventory","inventory_price", "inventory_return", "status")],
         }),
         ("optional" , {
             "fields": ["comment"],

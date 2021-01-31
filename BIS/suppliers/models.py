@@ -8,7 +8,7 @@ class Supplier(models.Model):
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     first_name  = models.CharField(max_length=50)
     last_name   = models.CharField(max_length=50)
-    middle_name = models.CharField(max_length=50 , blank=True , null=True)
+    middle_name = models.CharField(max_length=50 , blank=True , null=False , default=" ")
 
     @property
     def full_name(self):

@@ -1,13 +1,15 @@
 from django.db import models
-from sole_proprietorship.models import Accounts
 from django.contrib.auth import get_user_model
 from suppliers.models import Supplier
 from django.utils.translation import gettext as _
 from  django.core.validators import MaxValueValidator
 from django.utils import timezone
-from django.db.models import Sum , ExpressionWrapper , F , FloatField , Max , Min , Avg , StdDev
+from django.db.models import Sum , ExpressionWrapper , F , FloatField , Max , Min , Avg , StdDev , Count , Q
 import calendar
 from django.core.exceptions import ValidationError
+from django.db import connection
+import datetime
+from sole_proprietorship.models import Journal
 # Create your models here.
 class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):
@@ -37,7 +39,7 @@ class PaymentSalesTerm(models.Model):
         help_text="Enter discount like this 5%>>will be  5 not 0.05",
   
     )
-    general_ledeger_account = models.ForeignKey(Accounts,on_delete=models.CASCADE)
+    general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
 
     def __str__(self):
         return self.config
@@ -55,7 +57,7 @@ class Inventory(models.Model):
         null= True,
         blank= True
     )
-    general_ledeger_account = models.ForeignKey(Accounts,on_delete=models.CASCADE)
+    general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
 
     def __str__(self):
         return self.item_name
@@ -90,6 +92,113 @@ class InventoryImag(models.Model):
 
 
 class PurchaseManager(models.Manager):
+    def purchases_analysis(self , query):
+        data = PurchaseInventory.objects.filter(query).aggregate(
+            total_amount_paid=Sum("total_amount_paid"), 
+            count=Count("pk") , 
+            num_returend=Sum("num_returend")  ,
+            cost_returned=Sum("cost_returned") ,
+            total_purchases=Sum("total_purchases")  , 
+            net_purchases=Sum("net_purchases")
+             )
+        data["unpaid_count"] = PurchaseInventory.objects.filter(query & Q(status=0)).count()
+        # to avoide Type error ex) 1 - None >> TypeError
+        data = {key:( value if value != None else 0) for (key, value) in data.items() }
+        data["total_amount_unpaid"] = data["net_purchases"] - data["total_amount_paid"]
+        return data
+
+
+    def analysis(self , owner , start_date , end_date):
+        # to prevent sql injection as tempview don't allow to pass param
+        # the user can't input owner so it's okay if we leave it but this is double check 
+        if  not str(owner).isdigit() :
+            return None
+        with connection.cursor() as cursor:
+            cursor.execute("DROP VIEW IF EXISTS myview;")
+            # TEMP VIEW doesn't allow as to pass params so be careful when take input from user : sql Injection can occure
+            cursor.execute(f"""
+            CREATE TEMP VIEW myview AS
+            SELECT 
+                pu.id ,
+                pu.owner_id,
+                pu.purchase_date,
+                pu.frieght_in ,
+				pu.due_date,
+				pu.status,
+				pu.cost_returned,
+				pu.net_purchases,
+				pu.num_returend as purchaes_num_returend,
+				pu.total_amount_paid as purchaes_total_amount_paid ,
+				pu.total_purchases,
+                pr.number_of_unit ,
+                pr.cost_per_unit ,
+                re.num_returned as return_num_returned,
+                pa.amount_paid as payment_amount_paid,
+                su.first_name || " " || su.middle_name || " " || su.last_name as supplier_name ,
+                inv.item_name  ,
+                acc.account , 
+                te.config ,
+                te.terms ,
+                te.discount_percentage ,
+                te.discount_in_days ,
+                te.num_of_days_due 	
+                
+                FROM inventory_purchaseinventory Pu
+                LEFT JOIN  inventory_inventoryprice Pr
+                ON Pr.purchase_inventory_id = Pu.id
+                AND pu.owner_id = {owner} 
+                LEFT JOIN inventory_inventoryreturn Re
+                ON Re.inventory_price_id = Pr.id
+                LEFT JOIN inventory_payinvoice Pa
+                ON Pa.purchase_inventory_id = Pu.id
+                LEFT JOIN suppliers_supplier Su
+                On Pu.supplier_id = Su.id
+                LEFT JOIN inventory_inventory inv 
+                ON pr.inventory_id = inv.id
+                LEFT Join inventory_paymentsalesterm te
+                on te.id = pu.term_id
+                LEFT JOIN sole_proprietorship_accounts  acc 
+                ON acc.id = te.general_ledeger_account_id;
+                """)
+
+            cursor.execute("""
+            SELECT  purchase_date , net_purchases , cost_returned   FROM myview
+            where owner_id = %s AND purchase_date >= %s AND purchase_date <= %s
+            GROUP BY id;
+            """ , [owner , start_date , end_date])
+            purchases_return_over_time = cursor.fetchall()
+
+            cursor.execute("""
+            SELECT item_name, Sum(number_of_unit) , SUM(return_num_returned) From myview
+            where owner_id = %s  AND purchase_date >= %s AND purchase_date <= %s
+            GROUP By item_name ;
+            """ , [owner , start_date , end_date])
+            inventory = cursor.fetchall()
+
+            cursor.execute("""
+            SELECT supplier_name , sum(total_purchases) as total_purchases , sum(cost_returned)  FROM (
+                SELECT supplier_name, total_purchases , cost_returned  FROM myview
+                where owner_id = %s  AND purchase_date >= %s AND purchase_date <= %s
+                GROUP By id, supplier_name)
+            GROUP by supplier_name
+            ORDER by total_purchases DESC;
+            """ , [owner , start_date , end_date])
+            supplier = cursor.fetchall()            
+            
+          
+            cursor.execute("DROP VIEW IF EXISTS myview")
+            result = {
+                "purchases_return_over_time": purchases_return_over_time ,
+                "inventory": inventory ,
+                "supplier":supplier,
+            }
+            
+        return result
+
+
+        
+    
+
     def avg_cost_per_unit(self , query):
         """
         avg cost per unit
@@ -101,16 +210,16 @@ class PurchaseManager(models.Manager):
         """
         return the stander deviation (change upward ow donward) for cost per unit
         """
-        query = self.filter(query).aggregate(StdDev("inventoryprice__cost_per_unit"))
-        return query.get("inventoryprice__cost_per_unit__stddev" , 0)
+        data = self.filter(query).aggregate(StdDev("inventoryprice__cost_per_unit"))
+        return data.get("inventoryprice__cost_per_unit__stddev" , 0)
 
     def max_cost_per_unit(self , query):
-        query = self.filter(query).aggregate(Max("inventoryprice__cost_per_unit"))
-        return query.get("PurchaseInventory.objects.filter(owner=2" , 0)
+        data = self.filter(query).aggregate(Max("inventoryprice__cost_per_unit"))
+        return data.get("PurchaseInventory.objects.filter(owner=2" , 0)
 
     def min_cost_per_unit(self , query):
-        query = self.filter(query).aggregate(Min("inventoryprice__cost_per_unit"))
-        return query.get("inventoryprice__cost_per_unit__min" , 0)
+        data = self.filter(query).aggregate(Min("inventoryprice__cost_per_unit"))
+        return data.get("inventoryprice__cost_per_unit__min" , 0)
 
     def total_units_purchased(self , query):
         """
@@ -127,23 +236,23 @@ class PurchaseManager(models.Manager):
         """
          sum of total purchases amount (freight in or returned purchased not included)
         """
-        query = self.prefetch_related("inventoryprice__cost_per_unit","inventoryprice__number_of_unit").filter(query).annotate(
+        data = self.prefetch_related("inventoryprice__cost_per_unit","inventoryprice__number_of_unit").filter(query).annotate(
                     total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__number_of_unit"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
-        return  query["total_cost__sum"] if query["total_cost__sum"] != None else 0
+        return  data["total_cost__sum"] if data["total_cost__sum"] != None else 0
 
     def total_units_returned(self , query):
-        query = self.prefetch_related("inventoryprice__inventoryreturn__num_returned").filter(query).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
-        return query.get("inventoryprice__inventoryreturn__num_returned__sum" , 0)
+        data = self.prefetch_related("inventoryprice__inventoryreturn__num_returned").filter(query).aggregate(Sum("inventoryprice__inventoryreturn__num_returned"))
+        return data.get("inventoryprice__inventoryreturn__num_returned__sum" , 0)
 
 
     def total_cost_of_units_returned(self , query):
-        query = self.select_related("inventoryprice__cost_per_unit","inventoryprice__inventoryreturn__num_returned").filter(query).annotate(
+        data = self.select_related("inventoryprice__cost_per_unit","inventoryprice__inventoryreturn__num_returned").filter(query).annotate(
                         total_cost=ExpressionWrapper(
                         F("inventoryprice__cost_per_unit")*F("inventoryprice__inventoryreturn__num_returned"), output_field=FloatField()
                         )).aggregate(Sum("total_cost"))
-        return query["total_cost__sum"] if query["total_cost__sum"] != None else 0
+        return data["total_cost__sum"] if data["total_cost__sum"] != None else 0
 
     def net_purchases(self , query):
         return PurchaseManager.total_purchases_amount(self , query) - PurchaseManager.total_cost_of_units_returned(self ,query)
@@ -154,8 +263,8 @@ class PurchaseManager(models.Manager):
         # PAID = [obj.net_purchase for obj in self.filter(owner=owner) if obj.status == "PAID"]
         # this query of unpaid invoice anfd then we pay it partuaily or full the amount
         # query = self.filter(owner=owner).aggregate(Sum("payinvoice__amount_paid"))
-        query = self.filter(query).aggregate(Sum("total_amount_paid"))
-        return query["total_amount_paid__sum"] if query["total_amount_paid__sum"] != None else 0
+        data = self.filter(query).aggregate(Sum("total_amount_paid"))
+        return data["total_amount_paid__sum"] if data["total_amount_paid__sum"] != None else 0
 
     def total_amount_unpaid(self, query):
         return PurchaseManager.net_purchases(self ,query) - PurchaseManager.total_amount_paid(self ,query)
@@ -197,7 +306,7 @@ class PurchaseManager(models.Manager):
             -
             
         """
-        from django.db import connection
+       
         with connection.cursor() as cursor:
             query = cursor.execute("""
                SELECT 
@@ -450,9 +559,54 @@ class InventoryPrice(models.Model):
     number_of_unit = models.PositiveIntegerField()
     purchase_inventory = models.ForeignKey(PurchaseInventory, on_delete=models.CASCADE)
 
+
     @property
     def total_cost(self):
         return self.cost_per_unit * self.number_of_unit
+
+    def save_journal_transaction(self,*args, **kwargs):
+        """"
+        Purchase Inventory transaction:
+        transaction1:Inventory Debit by                      xxxx
+        transaction2:     Cash or Accounts payable Credit by       xxx
+        """
+
+        owner = self.purchase_inventory.owner
+        purchase_inventory = self.purchase_inventory
+        inventory_price = self
+        # for update
+        Journal.objects.filter(
+            Q(inventory_price=inventory_price) & Q(status=1) 
+            ).delete()
+
+        
+        transaction1 = Journal(owner=owner,
+                account = inventory_price.inventory.general_ledeger_account,
+                date = purchase_inventory.purchase_date ,
+                balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
+                transaction_type="Debit" , 
+                purchase_inventory = purchase_inventory,
+                inventory_price = inventory_price,
+                status = 1,
+                comment=f"purchase inventory {inventory_price.inventory}, number of units purchased{inventory_price.number_of_unit}")
+        transaction1.save(*args, **kwargs)
+        transaction2 = Journal(owner=owner,
+                    account = purchase_inventory.term.general_ledeger_account,
+                    date = purchase_inventory.purchase_date ,
+                    balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
+                    transaction_type="Credit" , 
+                    purchase_inventory = purchase_inventory,
+                    inventory_price = inventory_price,
+                    status = 1,
+                    comment=f"purchase {inventory_price.inventory}")
+        transaction2.save(*args, **kwargs)
+
+
+
+    def save(self,*args, **kwargs):
+        super().save(*args, **kwargs)
+        self.save_journal_transaction(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.inventory.item_name}:{self.cost_per_unit}/unit"
@@ -471,8 +625,4 @@ class InventoryReturn(models.Model):
         return f"return {self.num_returned} of {self.inventory_price.inventory.item_name}"
 
 
-class JournalForInventoryReturn(models.Model):
-    """
-    All Journal entry associated with inventory return 
-    """
-    pass
+

@@ -56,27 +56,27 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
     success_url = None
     inventory_price_formset_helper = InventoryPriceFormsetHelper()
 
-    def save_journal_transaction(self , owner , purchase_inventory_form , inventory_price_form):
-        """"
-        Purchase Inventory transaction:
-        transaction1:Inventory Debit by                      xxxx
-        transaction2:     Cash or Accounts payable Credit by       xxx
-        """
+    # def save_journal_transaction(self , owner , purchase_inventory_form , inventory_price_form):
+    #     """"
+    #     Purchase Inventory transaction:
+    #     transaction1:Inventory Debit by                      xxxx
+    #     transaction2:     Cash or Accounts payable Credit by       xxx
+    #     """
         
-        transaction1 = Journal(owner=owner,
-                account = inventory_price_form.inventory.general_ledeger_account,
-                date = purchase_inventory_form.purchase_date ,
-                balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
-                transaction_type="Debit" , 
-                comment=f"purchase inventory {inventory_price_form.inventory}, number of units purchased{inventory_price_form.number_of_unit}")
-        transaction1.save()
-        transaction2 = Journal(owner=owner,
-                    account = purchase_inventory_form.term.general_ledeger_account,
-                    date = purchase_inventory_form.purchase_date ,
-                    balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
-                    transaction_type="Credit" , 
-                    comment=f"purchase {inventory_price_form.inventory}")
-        transaction2.save()
+    #     transaction1 = Journal(owner=owner,
+    #             account = inventory_price_form.inventory.general_ledeger_account,
+    #             date = purchase_inventory_form.purchase_date ,
+    #             balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
+    #             transaction_type="Debit" , 
+    #             comment=f"purchase inventory {inventory_price_form.inventory}, number of units purchased{inventory_price_form.number_of_unit}")
+    #     transaction1.save()
+    #     transaction2 = Journal(owner=owner,
+    #                 account = purchase_inventory_form.term.general_ledeger_account,
+    #                 date = purchase_inventory_form.purchase_date ,
+    #                 balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
+    #                 transaction_type="Credit" , 
+    #                 comment=f"purchase {inventory_price_form.inventory}")
+    #     transaction2.save()
 
     def freight_in_cost(self,owner, purchase_inventory_form , inventory_price_form):
         """
@@ -136,10 +136,12 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
                 # print(form1.purchase_date)
                 # print(form2.number_of_unit)
                 # print(form2.cost_per_unit)
-                self.save_journal_transaction(owner=owner,
-                    purchase_inventory_form=form1,
-                    inventory_price_form = form2
-                    )
+
+                # self.save_journal_transaction(owner=owner,
+                #     purchase_inventory_form=form1,
+                #     inventory_price_form = form2
+                #     )
+
                 # fright in charge only in first invenory form in formset
                 if counter == 1 and  form1.frieght_in > 0:
                     self.freight_in_cost(owner = owner, 
@@ -279,79 +281,65 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         owner = request.user
 
         initial_data = {
-            "start_date": None , 
-            "end_date": None}
-        try:
-            initial_data["start_date"] =  PurchaseInventory.objects.filter(owner=owner).earliest("purchase_date").purchase_date
-            initial_data["end_date"] =  PurchaseInventory.objects.filter(owner=owner).latest("purchase_date").purchase_date
-        except PurchaseInventory.DoesNotExist:
-            pass
+            "start_date": timezone.now() - timezone.timedelta(weeks=1) , 
+            "end_date": timezone.now() }
+  
         reporting_period_form = ReportingPeriodConfigForm(initial = initial_data)
 
         start_date = request.GET.get("start_date", initial_data["start_date"])
         end_date = request.GET.get("end_date", initial_data["end_date"])
         query = Q(owner=owner) & Q(purchase_date__gte=start_date)  & Q(purchase_date__lte=end_date)
 
-        # summary_supplier = PurchaseInventory.purchases.group_by_supplier(owner)
-        # summary_supplier_df = pd.DataFrame(summary_supplier)
+        data = PurchaseInventory.purchases.analysis(owner.id , start_date , end_date)
+        purchases_return_over_time_df = pd.DataFrame(data["purchases_return_over_time"] , columns=["purchase_date" , "net_purchases" , "cost_returned"])
+        inventory_df = pd.DataFrame(data["inventory"] , columns=["item_name", "number_of_unit" , "num_returned"])
+        summary_supplier_df = pd.DataFrame(data["supplier"] , columns=["supplier", "total_purchases" , "cost_returned" ])
 
-        data = PurchaseInventory.purchases.join_data(owner.id , start_date , end_date)
-        data_coulumns = [
-                'pu.id' ,
-                'pu.owner_id' ,
-                'pu.purchase_date',
-                'pu.frieght_in' ,
-                'pr.number_of_unit' ,
-                'pr.cost_per_unit' ,
-                'Re.date' , 
-                're.num_returned',
-                'pa.amount_paid' ,
-                'su.first_name' ,
-                'su.middle_name' ,
-                'su.last_name' ,
-                'inv.item_name' ,
-                'acc.account' , 
-                'te.config' ,
-                'te.terms' ,
-                'te.discount_percentage' ,
-                'te.discount_in_days' ,
-                'te.num_of_days_due' 
-        ]
-        df = pd.DataFrame(data, columns=data_coulumns)
-        df["total_cost"] = df["pr.number_of_unit"] * df["pr.cost_per_unit"] 
-        df["total_cost_returned"] = df["re.num_returned"] * df["pr.cost_per_unit"] 
-        df = df.sort_values('pr.number_of_unit').reset_index()
-
-
-        # plt.switch_backend("AGG")
-        # fig, ax1 = plt.subplots(figsize=(11.5, 5))
-        # sns.barplot(x="net_pruchases", y="Supplier", data=summary_supplier_df.sort_values("net_pruchases" , ascending=False) , color="blue" , label="net purchases")
-        # sns.barplot(x="total_amount_unpaid", y="Supplier", data=summary_supplier_df , color="red" , label="UNPAID amount")
-        # plt.yticks(rotation=45)
-        # plt.legend()
-        # plt.xlabel("total amount")
-        # plt.title("Supplier Vs Purchases Vs UNPAID amount")
-        # graph = get_graph()
+    
 
         plt.switch_backend("AGG")
         fig, ax1 = plt.subplots(figsize=(11.5, 5))
-        sns.lineplot(data=df, x="pu.purchase_date" , y="total_cost" , color="blue" , label="total cost of purchases")
-        sns.lineplot(data=df, x="pu.purchase_date" , y="total_cost_returned" , color="red" , label="total cost of returnd")
+        try:
+            sns.barplot(x="total_purchases", y="supplier", data=summary_supplier_df , color="blue" , label="total purchases")
+            sns.barplot(x="cost_returned", y="supplier", data=summary_supplier_df , color="red" , label="cost_returned")
+        except ValueError:
+            pass
+
+        plt.yticks(rotation=45)
+        plt.legend()
+        plt.xlabel("total amount")
+        plt.title("Supplier Vs total purchases  Vs cost of returned")
+        graph = get_graph()
+   
+    
+        
+        plt.switch_backend("AGG")
+        fig, ax1 = plt.subplots(figsize=(11.5, 5))
+        try:
+            sns.lineplot(data=purchases_return_over_time_df, x="purchase_date" , y="net_purchases" , color="blue" , label="total cost of purchases")
+            sns.lineplot(data=purchases_return_over_time_df, x="purchase_date" , y="cost_returned" , color="red" , label="total cost of returnd")
+        except ValueError:
+            pass
         plt.ylabel("Total")
         plt.xlabel("Date")
         plt.title("Purchases and Returnning over the time")
         graph2 = get_graph()
+        
 
         plt.switch_backend("AGG")
         fig, ax1 = plt.subplots(figsize=(11.5, 5))
-        sns.barplot(x="pr.number_of_unit", y="inv.item_name", data=df.sort_values("pr.number_of_unit" , ascending=False) , color="blue" , label="Num of unit" )
-        sns.barplot(x="re.num_returned", y="inv.item_name", data=df.sort_values("pr.number_of_unit" , ascending=False) , color="red" , label="Num of returned")
+        try:
+            sns.barplot(x="number_of_unit", y="item_name", data=inventory_df , color="blue" , label="Num of unit" )
+            sns.barplot(x="num_returned", y="item_name", data=inventory_df , color="red" , label="Num of returned")
+        except ValueError:
+            pass 
         plt.title("inventory item")
         plt.xlabel("Number of unit")
         plt.ylabel("inventoy")
         plt.yticks(rotation=45)
         plt.legend()
         graph3 = get_graph()
+
     
 
 
@@ -359,18 +347,13 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             "start_date": start_date ,
             "end_date": end_date ,
             "form": reporting_period_form,
-            "total_purchases_amount" : PurchaseInventory.purchases.total_purchases_amount(query) , 
-            "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(query) , 
+            "purchases_analysis": PurchaseInventory.purchases.purchases_analysis(query) , 
+            # "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(query) , 
             # "avg_cost_per_unit": PurchaseInventory.purchases.avg_cost_per_unit(query) , 
             # "std_cost_per_unit": PurchaseInventory.purchases.std_cost_per_unit(query) , 
             # "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(query) , 
             # "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(query) , 
-            "total_units_returned": PurchaseInventory.purchases.total_units_returned(query) , 
-            # "total_cost_of_units_returned": PurchaseInventory.purchases.total_cost_of_units_returned(query) ,
-            "net_purchases": PurchaseInventory.purchases.net_purchases(query) , 
-            # "total_amount_unpaid": PurchaseInventory.purchases.total_amount_unpaid(query) , 
-            "total_amount_paid": PurchaseInventory.purchases.total_amount_paid(query) , 
-            # "graph": graph,
+            "graph": graph,
             "line_fig": graph2 ,
             "graph3" : graph3
  
