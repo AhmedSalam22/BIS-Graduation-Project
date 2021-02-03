@@ -15,6 +15,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
+from django.http import HttpResponse
 
 def get_graph():
     """
@@ -377,3 +378,31 @@ class PayInvoicePayView(OwnerCreateView):
         kwargs = super().get_form_kwargs()
         kwargs.update({"owner":self.request.user})
         return kwargs
+
+class PivotTableView(LoginRequiredMixin , View):
+    template_name = "inventory/pivot_table.html"
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+class Test(LoginRequiredMixin , View):
+    def get(self , request , *args , **kwargs):
+        import json
+
+        initial_data = {
+        "start_date": timezone.now() - timezone.timedelta(weeks=10) , 
+        "end_date": timezone.now() 
+        }
+  
+
+        start_date = request.GET.get("start_date", initial_data["start_date"])
+        end_date = request.GET.get("end_date", initial_data["end_date"])
+
+        data = PurchaseInventory.purchases.analysis(request.user.id , start_date , end_date)
+        # df = pd.DataFrame(data["purchases_return_over_time"] , columns=["purchase_date" , "net_purchases" , "cost_returned"])
+        df = pd.DataFrame(data["supplier"] , columns=["supplier", "total_purchases" , "cost_returned" ])
+
+        response = HttpResponse(content_type='application/json')
+        # response['Content-Disposition'] = 'attachment; filename="somefilename.json"'
+        df.to_json(response, orient='records')
+
+        return response
