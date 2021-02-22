@@ -196,27 +196,27 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
     template_name = "inventory/purchase_return_form.html"
     success_url = "inventory:detail_inventory"
 
-    def save_journal_transaction(self , owner , inventory_return):
-        """
-         A/P or CASH Debit by xxx
-            Inventory Credit by     xxx
-        """
-        date = inventory_return.date
-        balance = inventory_return.num_returned * inventory_return.inventory_price.cost_per_unit
-        transaction1 = Journal(owner=owner,
-                account = inventory_return.inventory_price.inventory.general_ledeger_account,
-                date = date ,
-                balance= balance,
-                transaction_type="Credit" , 
-                comment=f"return inventory")
-        transaction1.save()
-        transaction2 = Journal(owner=owner,
-                    account = inventory_return.inventory_price.purchase_inventory.term.general_ledeger_account,
-                    date = date ,
-                    balance=  balance ,
-                    transaction_type="Debit" , 
-                    comment=f"return {inventory_return.num_returned} from {inventory_return.inventory_price.inventory} to {inventory_return.inventory_price.purchase_inventory.supplier}")
-        transaction2.save()
+    # def save_journal_transaction(self , owner , inventory_return):
+        # """
+        #  A/P or CASH Debit by xxx
+        #     Inventory Credit by     xxx
+        # """
+        # date = inventory_return.date
+        # balance = inventory_return.num_returned * inventory_return.inventory_price.cost_per_unit
+        # transaction1 = Journal(owner=owner,
+        #         account = inventory_return.inventory_price.inventory.general_ledeger_account,
+        #         date = date ,
+        #         balance= balance,
+        #         transaction_type="Credit" , 
+        #         comment=f"return inventory")
+        # transaction1.save()
+        # transaction2 = Journal(owner=owner,
+        #             account = inventory_return.inventory_price.purchase_inventory.term.general_ledeger_account,
+        #             date = date ,
+        #             balance=  balance ,
+        #             transaction_type="Debit" , 
+        #             comment=f"return {inventory_return.num_returned} from {inventory_return.inventory_price.inventory} to {inventory_return.inventory_price.purchase_inventory.supplier}")
+        # transaction2.save()
       
     def vaildate_return(self , request,   obj):
         """
@@ -257,7 +257,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
             # purchaseinventory.total_amount_paid
             purchaseinventory.save()
 
-            self.save_journal_transaction(owner=owner, inventory_return= obj)
+            # self.save_journal_transaction(owner=owner, inventory_return= obj)
             return redirect(reverse_lazy(self.success_url , args=[
                 query.inventory.pk
             ]))

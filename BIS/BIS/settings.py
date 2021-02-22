@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'new_partner_admission', 
     'result' , 
     'Customers_Sales.apps.CustomersSalesConfig',
-    'inventory',
+    'inventory.apps.InventoryConfig',
     'suppliers',
     # pip installed app
     'crispy_forms',
