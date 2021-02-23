@@ -64,27 +64,6 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
     template_name = "inventory/purchase_form.html"
     success_url = None
     inventory_price_formset_helper = InventoryPriceFormsetHelper()
-
-    def freight_in_cost(self,owner, purchase_inventory_form , inventory_price_form):
-        """
-        for now if there is freight in cost we will use the account in the term wheter
-        it's CASH or Accounts Payable
-        """
-        transaction1 = Journal(owner=owner,
-                account = inventory_price_form.inventory.general_ledeger_account,
-                date = purchase_inventory_form.purchase_date ,
-                balance= purchase_inventory_form.frieght_in ,
-                transaction_type="Debit" , 
-                comment=f"freight in cost {inventory_price_form.inventory}")
-        transaction1.save()
-        transaction2 = Journal(owner=owner,
-                    account = purchase_inventory_form.term.general_ledeger_account,
-                    date = purchase_inventory_form.purchase_date ,
-                    balance=  purchase_inventory_form.frieght_in ,
-                    transaction_type="Credit" , 
-                    comment=f"freight in cost {inventory_price_form.inventory}")
-        transaction2.save()
-
         
     def get(self , request , *args, **kwargs):
         owner = self.request.user
@@ -101,47 +80,20 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
     def post(self , request , *args , **kwargs):
         """
             save the form data if is vaild
-            fright-in charge will charge of first inventory form in formset
         """
         owner = self.request.user
         purchase_inventory_form = PurchaseInventoryForm(data=request.POST , owner=owner)
         inventory_price_formset = InventoryPriceFormset(request.POST , form_kwargs={'owner': owner})
         if purchase_inventory_form.is_valid() and inventory_price_formset.is_valid():
-            form1 = purchase_inventory_form.save(commit=False)
-            form1.owner = owner
-            form1.status = 0 if form1.check_status() =="UNPAID" else 1 
-            form1.save()
-            # print("form1")
-            # print(dir(form1))
-            counter = 1
+            purchase_inventory = purchase_inventory_form.save(commit=False)
+            purchase_inventory.owner = owner
+            purchase_inventory.status = 0 if purchase_inventory.check_status() =="UNPAID" else 1 
+            purchase_inventory.save()
+    
             for form in inventory_price_formset:
-                form2 = form.save(commit=False)
-                form2.purchase_inventory = form1
-                form2.save()
-                # print(dir(form2))
-                # print(form2.inventory.general_ledeger_account)
-                # print(form1.purchase_date)
-                # print(form2.number_of_unit)
-                # print(form2.cost_per_unit)
-
-                # self.save_journal_transaction(owner=owner,
-                #     purchase_inventory_form=form1,
-                #     inventory_price_form = form2
-                #     )
-
-                # fright in charge only in first invenory form in formset
-                if counter == 1 and  form1.frieght_in > 0:
-                    self.freight_in_cost(owner = owner, 
-                        purchase_inventory_form = form1,
-                        inventory_price_form = form2)
-                counter +=1
-            form1.update_and_save()
-            # form1.total_purchases =  form1.check_total_amount()
-            # form1.net_purchases = form1.check_net_purchase()
-            # form1.total_amount_paid = form1.check_total_amount_paid()
-            # form1.status = 0 if form1.check_status() =="UNPAID" else 1
-            # form1.due_date = form1.check_due_date()
-            # form1.save()
+                inventory_price = form.save(commit=False)
+                inventory_price.purchase_inventory = purchase_inventory
+                inventory_price.save()
 
             return redirect(self.success_url)
         ctx = {
@@ -181,31 +133,11 @@ class HomeView(TemplateView):
 class CreatePurchaseReturnView(LoginRequiredMixin ,View):
     template_name = "inventory/purchase_return_form.html"
     success_url = "inventory:detail_inventory"
-    
-      
-    # def vaildate_return(self , request,   obj):
-    #     """
-    #     # num of returned unit can't be greater than num units purchased
-    #     a custom vaildation as we can't do that in the level of model of form using clean method
-    #     as the failed inventory_price we don't render it and save it's manually
-    #     """
-    #     if obj.inventory_price.inventoryreturn_set.exists():
-    #         agg_data =obj.inventory_price.inventoryreturn_set.aggregate(total_num_returned=Sum("num_returned"))
-    #         avilable = obj.inventory_price.number_of_unit - agg_data.get("total_num_returned", 0)
-    #         if obj.num_returned > avilable:
-    #             messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase take into our account previous returned: {avilable}")
-    #             return False
-
-    #     else:
-    #         if obj.num_returned > obj.inventory_price.number_of_unit:
-    #             messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase {obj.inventory_price.number_of_unit}")
-    #             return False
 
     def get(self,request,*args, **kwargs):
         inventory_price = get_object_or_404(InventoryPrice , pk=kwargs.get('pk') , inventory__owner=request.user)
         form = InventoryReturnForm()
         form.fields['inventory_price'].initial = inventory_price
-
         return render(request , self.template_name , {"form": form} )
 
     def post(self, request, pk , *args, **kwargs):
@@ -213,19 +145,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
         query = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
         form = InventoryReturnForm(data=request.POST)
         if form.is_valid():
-            obj = form.save(commit=False)
-            # obj.inventory_price = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
-            # if self.vaildate_return(request , obj) == False:
-            #     return render(request , self.template_name , {"form": form} )
-            obj.save()
-            purchaseinventory = obj.inventory_price.purchase_inventory
-            purchaseinventory.status = 0 if purchaseinventory.check_status() =="UNPAID" else 1
-            purchaseinventory.num_returend , purchaseinventory.cost_returned =  purchaseinventory.check_num_cost_of_returned_inventory()
-            purchaseinventory.net_purchases = purchaseinventory.check_net_purchase()
-            # purchaseinventory.total_amount_paid
-            purchaseinventory.save()
-
-            # self.save_journal_transaction(owner=owner, inventory_return= obj)
+            form.save(commit=True)
             return redirect(reverse_lazy(self.success_url , args=[
                 obj.inventory_price.inventory.pk
             ]))
@@ -342,10 +262,7 @@ class PayInvoicePayView(FormKwargsMixin, OwnerCreateView):
         except PurchaseInventory.DoesNotExist:
             messages.warning(self.request , "Warning:the pk in your url is not vaild.") 
 
-    # def get_form_kwargs(self):
-    #     kwargs = super().get_form_kwargs()
-    #     kwargs.update({"owner":self.request.user})
-    #     return kwargs
+
 
 class PivotTableView(LoginRequiredMixin , View):
     template_name = "inventory/pivot_table.html"

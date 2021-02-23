@@ -11,12 +11,13 @@ from sole_proprietorship.models import Accounts
 class PaymentSalesTermForm(forms.ModelForm):
     class Meta:
         model = PaymentSalesTerm
-        fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' , "general_ledeger_account"]
+        fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' , "general_ledeger_account", 'freight_in_account']
 
     def __init__(self, *args, **kwargs):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
         self.fields['general_ledeger_account'].queryset = Accounts.objects.filter(owner=self.owner)
+        self.fields['freight_in_account'].queryset = Accounts.objects.filter(owner=self.owner)
 
         self.helper = FormHelper()
         self.helper.layout = Layout(
@@ -24,8 +25,11 @@ class PaymentSalesTermForm(forms.ModelForm):
             'general_ledeger_account',
             Row( 
                 Column(InlineRadios('terms') , css_class="col-4"),
-                Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage') )
+                Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage') ),
+            'freight_in_account'
+            
         )
+        
         self.helper.form_tag = False
 
 

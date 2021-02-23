@@ -39,7 +39,8 @@ class PaymentSalesTerm(models.Model):
         help_text="Enter discount like this 5%>>will be  5 not 0.05",
   
     )
-    general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
+    general_ledeger_account = models.OneToOneField('sole_proprietorship.Accounts',on_delete=models.CASCADE)
+    freight_in_account = models.OneToOneField('sole_proprietorship.Accounts',on_delete=models.CASCADE, related_name='freight_in_account' , null=True, blank=True)
 
     def __str__(self):
         return self.config
@@ -485,16 +486,7 @@ class PurchaseInventory(models.Model):
                 return 0
         return query
 
-    def update_and_save(self):
-        """
-        Update this row after we purchase item and know their cost and quantity
-        """
-        self.total_purchases =  self.check_total_amount()
-        self.net_purchases = self.check_net_purchase()
-        self.total_amount_paid = self.check_total_amount_paid()
-        self.status = 0 if self.check_status() =="UNPAID" else 1
-        # self.due_date = self.check_due_date()
-        self.save()
+ 
 
     def __str__(self):
         return f"invoice number:{self.pk}"
@@ -505,8 +497,6 @@ class PayInvoice(models.Model):
     purchase_inventory = models.ForeignKey(PurchaseInventory , on_delete=models.CASCADE)
     amount_paid = models.FloatField()
 
-            
-
     def clean(self):
         amount_paid = self.purchase_inventory.total_amount_paid
         invoice_cost = self.purchase_inventory.net_purchases - amount_paid
@@ -515,18 +505,6 @@ class PayInvoice(models.Model):
         "amount_paid":ValidationError(_("Paid amount can't be greater than invoice cost") , code="invaild") , 
         })
        
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # update
-        purchase_inventory = self.purchase_inventory
-        purchase_inventory.total_amount_paid = purchase_inventory.check_total_amount_paid()
-        purchase_inventory.status = 1 if purchase_inventory.check_status() == "PAID" else 0
-        purchase_inventory.save()
-
-
-
-
 
     def __str__(self):
         return f"Pay {self.purchase_inventory}"
@@ -581,8 +559,6 @@ class InventoryReturn(models.Model):
     def vaildate_return(self):
         """
         # num of returned unit can't be greater than num units purchased
-        a custom vaildation as we can't do that in the level of model of form using clean method
-        as the failed inventory_price we don't render it and save it's manually
         """
         message = None
         status = None

@@ -45,9 +45,10 @@ class Accounts(models.Model):
 
 class Journal(models.Model):
     class Status(models.IntegerChoices):
-        PURCHASE_INVENTORY = 1 , _("Purchase Inventory")
-        PURCHASE_RETURN = 2 , _("Purchase return")
-        PURCHASE_ALLOWANCE = 3 , _("Purchase Allowance")
+        PURCHASE_INVENTORY = 1, _("Purchase Inventory")
+        PURCHASE_RETURN = 2, _("Purchase return")
+        PURCHASE_ALLOWANCE = 3, _("Purchase Allowance")
+        FREIGHT_IN = 4, _("Freight in")
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     account = models.ForeignKey(Accounts, on_delete=models.CASCADE)
