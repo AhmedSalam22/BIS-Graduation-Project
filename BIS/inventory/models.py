@@ -564,48 +564,6 @@ class InventoryPrice(models.Model):
     def total_cost(self):
         return self.cost_per_unit * self.number_of_unit
 
-    def save_journal_transaction(self,*args, **kwargs):
-        """"
-        Purchase Inventory transaction:
-        transaction1:Inventory Debit by                      xxxx
-        transaction2:     Cash or Accounts payable Credit by       xxx
-        """
-
-        owner = self.purchase_inventory.owner
-        purchase_inventory = self.purchase_inventory
-        inventory_price = self
-        # for update
-        Journal.objects.filter(
-            Q(inventory_price=inventory_price) & Q(status=1) 
-            ).delete()
-
-        
-        transaction1 = Journal(owner=owner,
-                account = inventory_price.inventory.general_ledeger_account,
-                date = purchase_inventory.purchase_date ,
-                balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
-                transaction_type="Debit" , 
-                purchase_inventory = purchase_inventory,
-                inventory_price = inventory_price,
-                status = 1,
-                comment=f"purchase inventory {inventory_price.inventory}, number of units purchased{inventory_price.number_of_unit}")
-        transaction1.save(*args, **kwargs)
-        transaction2 = Journal(owner=owner,
-                    account = purchase_inventory.term.general_ledeger_account,
-                    date = purchase_inventory.purchase_date ,
-                    balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
-                    transaction_type="Credit" , 
-                    purchase_inventory = purchase_inventory,
-                    inventory_price = inventory_price,
-                    status = 1,
-                    comment=f"purchase {inventory_price.inventory}")
-        transaction2.save(*args, **kwargs)
-
-
-
-    def save(self,*args, **kwargs):
-        super().save(*args, **kwargs)
-        self.save_journal_transaction(*args, **kwargs)
 
 
     def __str__(self):
@@ -619,6 +577,34 @@ class InventoryReturn(models.Model):
     inventory_price = models.ForeignKey(InventoryPrice, on_delete=models.CASCADE)
     date = models.DateField()
     num_returned = models.PositiveIntegerField()
+
+    def vaildate_return(self):
+        """
+        # num of returned unit can't be greater than num units purchased
+        a custom vaildation as we can't do that in the level of model of form using clean method
+        as the failed inventory_price we don't render it and save it's manually
+        """
+        message = None
+        status = None
+        if self.inventory_price.inventoryreturn_set.exists():
+            agg_data =self.inventory_price.inventoryreturn_set.aggregate(total_num_returned=Sum("num_returned"))
+            avilable = self.inventory_price.number_of_unit - agg_data.get("total_num_returned", 0)
+            if self.num_returned > avilable:
+                message = f"num of returned unit {self.num_returned} can't be greater than num units purchase take into our account previous returned: {avilable}"
+                status = False
+
+        else:
+            if self.num_returned > self.inventory_price.number_of_unit:
+                message = f"num of returned unit {self.num_returned} can't be greater than num units purchase {self.inventory_price.number_of_unit}"
+                status = False
+        return status, message
+
+    def clean(self):
+        STATUS, MESSAGE = self.vaildate_return()
+        if STATUS == False:
+            raise ValidationError({
+        "num_returned":ValidationError(_(MESSAGE) , code="invaild") , 
+        })
 
 
     def __str__(self):

@@ -31,11 +31,19 @@ def get_graph():
     return graph
 
 # Create your views here.
-class CreateTermView(OwnerCreateView):
+class FormKwargsMixin:
+    def get_form_kwargs(self):
+        """override get_form_kwargs from CREATE or UPDATE View to accept owner as argument"""
+        kwargs = super().get_form_kwargs()
+        kwargs.update({"owner":self.request.user})
+        return kwargs
+
+class CreateTermView(FormKwargsMixin, OwnerCreateView):
     form_class  = PaymentSalesTermForm
     template_name = "inventory/term_form.html"
 
-class UpdateTermView(OwnerUpdateView):
+
+class UpdateTermView(FormKwargsMixin, OwnerUpdateView):
     model = PaymentSalesTerm
     form_class  = PaymentSalesTermForm
     template_name = "inventory/term_form.html"
@@ -56,28 +64,6 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
     template_name = "inventory/purchase_form.html"
     success_url = None
     inventory_price_formset_helper = InventoryPriceFormsetHelper()
-
-    # def save_journal_transaction(self , owner , purchase_inventory_form , inventory_price_form):
-    #     """"
-    #     Purchase Inventory transaction:
-    #     transaction1:Inventory Debit by                      xxxx
-    #     transaction2:     Cash or Accounts payable Credit by       xxx
-    #     """
-        
-    #     transaction1 = Journal(owner=owner,
-    #             account = inventory_price_form.inventory.general_ledeger_account,
-    #             date = purchase_inventory_form.purchase_date ,
-    #             balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
-    #             transaction_type="Debit" , 
-    #             comment=f"purchase inventory {inventory_price_form.inventory}, number of units purchased{inventory_price_form.number_of_unit}")
-    #     transaction1.save()
-    #     transaction2 = Journal(owner=owner,
-    #                 account = purchase_inventory_form.term.general_ledeger_account,
-    #                 date = purchase_inventory_form.purchase_date ,
-    #                 balance= inventory_price_form.number_of_unit *  inventory_price_form.cost_per_unit ,
-    #                 transaction_type="Credit" , 
-    #                 comment=f"purchase {inventory_price_form.inventory}")
-    #     transaction2.save()
 
     def freight_in_cost(self,owner, purchase_inventory_form , inventory_price_form):
         """
@@ -195,60 +181,42 @@ class HomeView(TemplateView):
 class CreatePurchaseReturnView(LoginRequiredMixin ,View):
     template_name = "inventory/purchase_return_form.html"
     success_url = "inventory:detail_inventory"
-
-    # def save_journal_transaction(self , owner , inventory_return):
-        # """
-        #  A/P or CASH Debit by xxx
-        #     Inventory Credit by     xxx
-        # """
-        # date = inventory_return.date
-        # balance = inventory_return.num_returned * inventory_return.inventory_price.cost_per_unit
-        # transaction1 = Journal(owner=owner,
-        #         account = inventory_return.inventory_price.inventory.general_ledeger_account,
-        #         date = date ,
-        #         balance= balance,
-        #         transaction_type="Credit" , 
-        #         comment=f"return inventory")
-        # transaction1.save()
-        # transaction2 = Journal(owner=owner,
-        #             account = inventory_return.inventory_price.purchase_inventory.term.general_ledeger_account,
-        #             date = date ,
-        #             balance=  balance ,
-        #             transaction_type="Debit" , 
-        #             comment=f"return {inventory_return.num_returned} from {inventory_return.inventory_price.inventory} to {inventory_return.inventory_price.purchase_inventory.supplier}")
-        # transaction2.save()
+    
       
-    def vaildate_return(self , request,   obj):
-        """
-        # num of returned unit can't be greater than num units purchased
-        a custom vaildation as we can't do that in the level of model of form using clean method
-        as the failed inventory_price we don't render it and save it's manually
-        """
-        if obj.inventory_price.inventoryreturn_set.exists():
-            agg_data =obj.inventory_price.inventoryreturn_set.aggregate(total_num_returned=Sum("num_returned"))
-            avilable = obj.inventory_price.number_of_unit - agg_data.get("total_num_returned", 0)
-            if obj.num_returned > avilable:
-                messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase take into our account previous returned: {avilable}")
-                return False
+    # def vaildate_return(self , request,   obj):
+    #     """
+    #     # num of returned unit can't be greater than num units purchased
+    #     a custom vaildation as we can't do that in the level of model of form using clean method
+    #     as the failed inventory_price we don't render it and save it's manually
+    #     """
+    #     if obj.inventory_price.inventoryreturn_set.exists():
+    #         agg_data =obj.inventory_price.inventoryreturn_set.aggregate(total_num_returned=Sum("num_returned"))
+    #         avilable = obj.inventory_price.number_of_unit - agg_data.get("total_num_returned", 0)
+    #         if obj.num_returned > avilable:
+    #             messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase take into our account previous returned: {avilable}")
+    #             return False
 
-        else:
-            if obj.num_returned > obj.inventory_price.number_of_unit:
-                messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase {obj.inventory_price.number_of_unit}")
-                return False
+    #     else:
+    #         if obj.num_returned > obj.inventory_price.number_of_unit:
+    #             messages.info(request, f"num of returned unit {obj.num_returned} can't be greater than num units purchase {obj.inventory_price.number_of_unit}")
+    #             return False
 
     def get(self,request,*args, **kwargs):
+        inventory_price = get_object_or_404(InventoryPrice , pk=kwargs.get('pk') , inventory__owner=request.user)
         form = InventoryReturnForm()
+        form.fields['inventory_price'].initial = inventory_price
+
         return render(request , self.template_name , {"form": form} )
 
     def post(self, request, pk , *args, **kwargs):
         owner = request.user
         query = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
-        form = InventoryReturnForm(request.POST)
+        form = InventoryReturnForm(data=request.POST)
         if form.is_valid():
             obj = form.save(commit=False)
-            obj.inventory_price = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
-            if self.vaildate_return(request , obj) == False:
-                return render(request , self.template_name , {"form": form} )
+            # obj.inventory_price = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
+            # if self.vaildate_return(request , obj) == False:
+            #     return render(request , self.template_name , {"form": form} )
             obj.save()
             purchaseinventory = obj.inventory_price.purchase_inventory
             purchaseinventory.status = 0 if purchaseinventory.check_status() =="UNPAID" else 1
@@ -259,7 +227,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
 
             # self.save_journal_transaction(owner=owner, inventory_return= obj)
             return redirect(reverse_lazy(self.success_url , args=[
-                query.inventory.pk
+                obj.inventory_price.inventory.pk
             ]))
         return render(request , self.template_name , {"form": form} )
 
@@ -363,7 +331,7 @@ class PurchasesDashboard(LoginRequiredMixin , View):
 
         return render(request , self.template_name , ctx)
         
-class PayInvoicePayView(OwnerCreateView):
+class PayInvoicePayView(FormKwargsMixin, OwnerCreateView):
     form_class = PayInvoiceForm
     template_name = "inventory/payinvoice_form.html"
 
@@ -374,10 +342,10 @@ class PayInvoicePayView(OwnerCreateView):
         except PurchaseInventory.DoesNotExist:
             messages.warning(self.request , "Warning:the pk in your url is not vaild.") 
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({"owner":self.request.user})
-        return kwargs
+    # def get_form_kwargs(self):
+    #     kwargs = super().get_form_kwargs()
+    #     kwargs.update({"owner":self.request.user})
+    #     return kwargs
 
 class PivotTableView(LoginRequiredMixin , View):
     template_name = "inventory/pivot_table.html"

@@ -6,6 +6,7 @@ from crispy_forms.bootstrap import InlineRadios
 from suppliers.models import Supplier
 from django.forms import formset_factory
 from django.utils import timezone
+from sole_proprietorship.models import Accounts
 
 class PaymentSalesTermForm(forms.ModelForm):
     class Meta:
@@ -13,7 +14,10 @@ class PaymentSalesTermForm(forms.ModelForm):
         fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' , "general_ledeger_account"]
 
     def __init__(self, *args, **kwargs):
+        self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
+        self.fields['general_ledeger_account'].queryset = Accounts.objects.filter(owner=self.owner)
+
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'config', 
@@ -71,13 +75,13 @@ InventoryPriceFormset = formset_factory(InventoryPriceForm)
 class InventoryReturnForm(forms.ModelForm):
     class Meta:
         model = InventoryReturn
-        fields = ["date" , "num_returned"]
+        fields = '__all__'
         widgets = {
             'date': forms.widgets.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)        
         self.fields["date"].initial = timezone.localdate()
         
 
