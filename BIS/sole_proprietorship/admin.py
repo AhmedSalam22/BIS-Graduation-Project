@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Journal , Accounts , ReportingPeriodConfig
+from .models import Journal , Accounts , ReportingPeriodConfig, Transaction
 
 
 
@@ -52,9 +52,12 @@ class ReportingPeriodConfigAdmin(admin.ModelAdmin):
     list_editable = ['start_date' , 'end_date']
     fields = ('owner' , ( 'start_date', 'end_date'))
 
+class TransactionAdmin(admin.ModelAdmin):
+    exclude = ['num']
 
 # Register your models here.
 admin.site.register(Accounts , AccountsAdmin)
+admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Journal , JournalAdmin)
 admin.site.register(ReportingPeriodConfig , ReportingPeriodConfigAdmin)
 # Customize Django Admin

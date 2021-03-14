@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
+from sole_proprietorship.managers import TransactionManager
+
 # Create your models here.
 class Accounts(models.Model):
     class Meta:
@@ -36,12 +38,63 @@ class Accounts(models.Model):
         default = "Assest"
     )
 
-
-
-
-
     def __str__(self):
         return self.account
+
+class Transaction(models.Model):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['num', 'owner'], name='unique_transaction')
+        ]
+
+    class Status(models.IntegerChoices):
+        PURCHASE_INVENTORY = 1, _("Purchase Inventory")
+        PURCHASE_RETURN = 2, _("Purchase return")
+        PURCHASE_ALLOWANCE = 3, _("Purchase Allowance")
+        FREIGHT_IN = 4, _("Freight in")
+    
+    @classmethod
+    def num_of_transaction(cls, owner):
+        return cls.objects.filter(owner=owner).count()
+
+    @classmethod
+    def last_transaction_num(cls, owner):
+        query = Transaction.objects.filter(owner=owner).aggregate(models.Max('num'))
+        if query['num__max'] != None:
+            return query['num__max']
+        return 0
+
+    def set_num(self):
+        """
+        if updated keep transaction num else create new transaction num
+        """
+        if self.num:
+            return self.num
+        else:
+            return Transaction.last_transaction_num(owner=self.owner) + 1
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    num = models.IntegerField()
+    date = models.DateField()
+    comment = models.CharField(max_length=2500 , null= True , blank=True )
+
+  
+    purchase_inventory = models.ForeignKey('inventory.PurchaseInventory', null=True, blank=True, on_delete=models.CASCADE)
+    inventory_price = models.ForeignKey('inventory.InventoryPrice', null=True , blank=True, on_delete=models.CASCADE)
+    inventory_return = models.ForeignKey('inventory.InventoryReturn' , null=True, blank=True, on_delete=models.CASCADE)
+    status = models.IntegerField(choices=Status.choices , null=True, blank=True)
+
+    objects = models.Manager() # The default manager.
+    my_objects = TransactionManager()
+
+
+    def save(self, *args, **kwargs):
+        self.num = self.set_num()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Transaction Num:{self.num}, owner={self.owner}'
+
 
 class Journal(models.Model):
     class Status(models.IntegerChoices):
@@ -53,7 +106,7 @@ class Journal(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     account = models.ForeignKey(Accounts, on_delete=models.CASCADE)
 
-    date = models.DateField()
+    date = models.DateField(null=True, blank=True)
     balance = models.FloatField()
     transaction_type = models.CharField(
         max_length=7,
@@ -63,6 +116,8 @@ class Journal(models.Model):
         ],
         default= "Debit",
     )
+
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True, blank=True)
     comment = models.CharField(max_length=1500 , null= True , blank=True )
     purchase_inventory = models.ForeignKey('inventory.PurchaseInventory', null=True , on_delete=models.CASCADE)
     inventory_price = models.ForeignKey('inventory.InventoryPrice', null=True , on_delete=models.CASCADE)

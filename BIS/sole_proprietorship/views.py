@@ -4,9 +4,12 @@ from django.db import connection
 from django.http import HttpResponse , HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render , redirect
-from .models import Journal , Accounts
+from .models import Journal , Accounts, Transaction
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import JournalForm , JournalFilter , AccountForm  , UploadFileForm , create_form , ReportingPeriodConfigForm , JournalFormSet, AccountsForm
+from .forms import ( JournalForm, JournalFilter, AccountForm,
+                    UploadFileForm, create_form, ReportingPeriodConfigForm,
+                    JournalFormSet, AccountsForm, TransactionForm, TransactionFilter)
+
 import pandas as pd
 import numpy as np
 import csv
@@ -102,6 +105,24 @@ class AccountsDeleteView(OwnerDeleteView):
     model = Accounts
 
 
+class TransactionListView(LoginRequiredMixin, FilterView):
+    model = Transaction
+    template_name = "sole_proprietorship/transaction_list.html"
+    filterset_class = TransactionFilter
+
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(owner=self.request.user)
+        return qs.select_related()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        query = Transaction.my_objects.total_debit_and_total_credit(self.request.user.id)
+        ctx['Debit'], ctx['Credit'] = query.get('Debit') , query.get('Credit')
+        return ctx
+
+
+
 class JournalListView( LoginRequiredMixin , FilterView):
     paginate_by = 10
     ordering = ["-date"]
@@ -147,25 +168,40 @@ class JournalCreateView(LoginRequiredMixin , View):
     template_name = 'sole_proprietorship/journal_form.html'
     success_url = None
 
+    def __init__(self, *args, **kwargs):
+        self.ctx = self.populate_ctx()
+        super().__init__(*args, **kwargs)
+
+    def populate_ctx(self):
+        helper = JournalFormSetHelper()
+        return {'helper': helper}
+
     def get(self , request , *args, **kwargs):
         JournalFormSetForm = JournalFormSet(form_kwargs={'user': request.user} )
-        helper = JournalFormSetHelper()
-        return render(request, self.template_name , {"formset": JournalFormSetForm , "helper":helper} )
+        self.ctx['formset'] = JournalFormSetForm
+        self.ctx['transaction_form'] = TransactionForm()
+        return render(request, self.template_name , self.ctx )
 
     
     def post(self , request , *args , **kwargs):
-        formset = JournalFormSet(request.POST , form_kwargs={'user': request.user})
-        helper = JournalFormSetHelper()
+
+        self.ctx['formset'] = JournalFormSet(request.POST , form_kwargs={'user': request.user})
+        self.ctx['transaction_form'] = TransactionForm(request.POST)
 
         # do whatever you'd like to do with the valid formset
-        if formset.is_valid():
-            for form in formset:
-                object = form.save(commit=False)
-                object.owner = self.request.user
-                object.save()
-                messages.success(self.request, 'Your Transaction Was Created Succesffuly')
+        if self.ctx['formset'].is_valid() and self.ctx['transaction_form'].is_valid():
+            transaction = self.ctx['transaction_form'].save(commit=False)
+            transaction.owner = self.request.user
+            transaction.save()
+
+            for journal_form in self.ctx['formset']:
+                journal = journal_form.save(commit=False)
+                journal.owner = self.request.user
+                journal.transaction = transaction
+                journal.save()
+                messages.success(request, 'Your Transaction Was Created Succesffuly')
             return redirect(self.success_url)
-        return render(request, self.template_name , {"formset": formset, "helper":helper} )
+        return render(request, self.template_name , self.ctx)
 # an old way to create multipe form using external liabrary
 # class JournalCreateView(LoginRequiredMixin , MyFormSetView):
 #     fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]

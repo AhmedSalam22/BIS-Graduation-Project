@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Journal  , Accounts , ReportingPeriodConfig
+from .models import Journal  , Accounts , ReportingPeriodConfig, Transaction
 from django import forms
 import django_filters
 from django.utils import timezone
@@ -13,10 +13,10 @@ from django.core.exceptions import ValidationError
 class JournalFormSetForm(ModelForm):
     class Meta:
         model = Journal
-        fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
-        widgets = {
-            "comment":forms.Textarea(attrs={"placeholder":"Type Comment about specific transaction" , "rows":"2"})
-        }
+        fields = ['account', 'balance' , "transaction_type"]
+        # widgets = {
+        #     "comment":forms.Textarea(attrs={"placeholder":"Type Comment about specific transaction" , "rows":"2"})
+        # }
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,8 +24,8 @@ class JournalFormSetForm(ModelForm):
         self.user = user
         self.fields['account'].queryset = Accounts.objects.filter(owner = user)
         self.fields['account'].widget.attrs.update({'class': 'select2'})
-        self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
-        self.fields["date"].initial = timezone.localdate()
+        # self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
+        # self.fields["date"].initial = timezone.localdate()
           
 class BaseJournalFormSet(BaseFormSet):
     def clean(self):
@@ -53,7 +53,7 @@ class JournalFormSetHelper(FormHelper):
         super().__init__(*args, **kwargs)
         self.layout = Layout(
            Div(
-                Row('account', 'date' , 'balance' , 'transaction_type' , 'comment'), 
+                Row('account', 'balance' , 'transaction_type'), 
                 css_class='link-formset')
            
         )
@@ -87,7 +87,7 @@ def create_form(user):
 class JournalForm(ModelForm):
     class Meta:
         model = Journal
-        fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+        fields = ['account', 'balance' , "transaction_type"]
 
 
 class AccountForm(ModelForm):
@@ -149,4 +149,23 @@ class AccountsForm(ModelForm):
 
 
 
-    
+class TransactionForm(ModelForm):
+    class Meta:
+        model = Transaction
+        fields = ['date', 'comment']
+        
+
+class TransactionFilter(django_filters.FilterSet):
+    balance__gte = django_filters.NumberFilter(field_name='journal__balance', label='balance is greater than or equal', lookup_expr='gte') 
+    balance__lte = django_filters.NumberFilter(field_name='journal__balance', label='balance is less than or equal', lookup_expr='lte') 
+
+    class Meta:
+        model = Transaction
+        fields = {
+                'date': ['gte', 'lte'],
+                'comment': ['icontains'],
+                }
+
+    # def __init__(self,   **kwargs):
+    #     super().__init__(**kwargs)
+    #     self.form.fields["account"].queryset = Accounts.objects.filter(owner=self.request.user)

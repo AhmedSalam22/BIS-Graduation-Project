@@ -1,5 +1,6 @@
 from sole_proprietorship.models import Journal
 from django.db.models import Q 
+from inventory.helper import Helper
 
 def inventory_price_journal_delete(sender, instance, **kwargs):
     """Delete journal transaction related to inventory price"""
@@ -44,7 +45,7 @@ def purchase_return_journal_save(sender, instance , created,  **kwargs):
             status=Journal.Status.PURCHASE_RETURN.value
             )
     Journal.objects.create(owner=owner,
-                account = instance.inventory_price.purchase_inventory.term.general_ledeger_account,
+                account = Helper.cash_or_accounts_payable(instance.inventory_price.purchase_inventory),
                 date = date ,
                 balance=  balance ,
                 transaction_type="Debit" , 
@@ -83,7 +84,7 @@ def inventory_price_journal_save(sender, instance , created,  **kwargs):
             status = 1,
             comment=f"purchase inventory {inventory_price.inventory}, number of units purchased{inventory_price.number_of_unit}")
     Journal.objects.create(owner=owner,
-                account = purchase_inventory.term.general_ledeger_account,
+                account = Helper.cash_or_accounts_payable(purchase_inventory),
                 date = purchase_inventory.purchase_date ,
                 balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
                 transaction_type="Credit" , 
@@ -169,3 +170,22 @@ def update_purchase_after_pay_invoice(sender, instance , created,  **kwargs):
     purchase_inventory.total_amount_paid = purchase_inventory.check_total_amount_paid()
     purchase_inventory.status = 1 if purchase_inventory.check_status() == "PAID" else 0
     purchase_inventory.save()
+
+
+
+def journal_pay_invoice(sender, instance, create, **kwargs):
+    """
+    Journal Entry to record paid Invoice
+    A/p Debit by  xxxx
+        Cash Credit by xxxxx
+    """
+    # Journal.objects.create(
+    #     owner=owner,
+    #     account = instance.inventory_price.inventory.general_ledeger_account,
+    #     date = date ,
+    #     balance= balance,
+    #     transaction_type="Credit" , 
+    #     comment=f"return inventory",
+    #     inventory_return = instance,
+    #     status=Journal.Status.PURCHASE_RETURN.value
+    #     )

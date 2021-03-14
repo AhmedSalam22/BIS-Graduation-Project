@@ -39,8 +39,15 @@ class PaymentSalesTerm(models.Model):
         help_text="Enter discount like this 5%>>will be  5 not 0.05",
   
     )
-    general_ledeger_account = models.OneToOneField('sole_proprietorship.Accounts',on_delete=models.CASCADE)
-    freight_in_account = models.OneToOneField('sole_proprietorship.Accounts',on_delete=models.CASCADE, related_name='freight_in_account' , null=True, blank=True)
+    # general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
+    cash_account =  models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE , related_name='payment_sales_term_cash_account')
+    accounts_payable =models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE , related_name='payment_sales_term_accounts_payable_account')
+    freight_in_account = models.ForeignKey('sole_proprietorship.Accounts',
+                                    on_delete=models.CASCADE,
+                                    related_name='freight_in_account',
+                                    null=True,
+                                    blank=True,
+                                    help_text='choose A/p or Cash to determine if you paid this cost cash or not')
 
     def __str__(self):
         return self.config
@@ -137,7 +144,6 @@ class PurchaseManager(models.Manager):
                 pa.amount_paid as payment_amount_paid,
                 su.first_name || " " || su.middle_name || " " || su.last_name as supplier_name ,
                 inv.item_name  ,
-                acc.account , 
                 te.config ,
                 te.terms ,
                 te.discount_percentage ,
@@ -158,8 +164,7 @@ class PurchaseManager(models.Manager):
                 ON pr.inventory_id = inv.id
                 LEFT Join inventory_paymentsalesterm te
                 on te.id = pu.term_id
-                LEFT JOIN sole_proprietorship_accounts  acc 
-                ON acc.id = te.general_ledeger_account_id;
+                
                 """)
 
             cursor.execute("""
