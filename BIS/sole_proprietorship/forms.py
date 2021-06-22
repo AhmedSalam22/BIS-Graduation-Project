@@ -9,6 +9,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column , Submit , Div
 from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory, BaseInlineFormSet
+from .from_mixin import TransactionValidation
 
 class JournalFormSetForm(ModelForm):
     class Meta:
@@ -27,20 +29,8 @@ class JournalFormSetForm(ModelForm):
         # self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
         # self.fields["date"].initial = timezone.localdate()
           
-class BaseJournalFormSet(BaseFormSet):
-    def clean(self):
-        """Checks that total debit is equal to total credit"""
-        totalDebit = 0.0
-        totalCredit = 0.0
-        for form in self.forms:
-            transaction_type = form.cleaned_data.get('transaction_type')
-            if transaction_type == "Debit":
-                totalDebit += form.cleaned_data.get('balance')
-            else:
-                totalCredit += form.cleaned_data.get('balance')
-        
-        if totalDebit != totalCredit:
-            raise ValidationError(_(f"Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}"))
+class BaseJournalFormSet(TransactionValidation, BaseFormSet):
+    pass
 
 JournalFormSet = formset_factory(JournalFormSetForm ,
                                      formset= BaseJournalFormSet,
@@ -169,3 +159,28 @@ class TransactionFilter(django_filters.FilterSet):
     # def __init__(self,   **kwargs):
     #     super().__init__(**kwargs)
     #     self.form.fields["account"].queryset = Accounts.objects.filter(owner=self.request.user)
+
+
+class CustomTransactionFormSet(TransactionValidation, BaseInlineFormSet):
+    pass
+
+
+     
+
+TransactionFormSet = inlineformset_factory(
+    Transaction, Journal, fields=('account', 'balance' , "transaction_type"),
+    formset= CustomTransactionFormSet, extra = 0
+    )
+
+                                     
+class TransactionFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout = Layout(
+           Div(
+                Row('account', 'balance' , 'transaction_type', 'DELETE'),
+           )
+        )
+        self.render_required_fields = True
+        self.form_tag = False
+     

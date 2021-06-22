@@ -28,7 +28,8 @@ urlpatterns = [
     path('accounts/import' , views.AccountsImport.as_view() , name="ImportAccounts" ) ,
     path('pivotTable' , views.PivotTable.as_view()  , name="pivottable"),
     path('ReportingPeriodConfig' ,views.ReportingPeriodConfigView.as_view(), name="ReportingPeriodConfig"),
-    path('transactions', views.TransactionListView.as_view(), name='transaction_list')
+    path('transactions', views.TransactionListView.as_view(), name='transaction_list'),
+    path('transaction/<int:pk>/update', views.TransactionUpdateView.as_view(), name='transaction_update')
 
 
 ]

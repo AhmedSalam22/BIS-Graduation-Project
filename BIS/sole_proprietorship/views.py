@@ -8,7 +8,9 @@ from .models import Journal , Accounts, Transaction
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
 from .forms import ( JournalForm, JournalFilter, AccountForm,
                     UploadFileForm, create_form, ReportingPeriodConfigForm,
-                    JournalFormSet, AccountsForm, TransactionForm, TransactionFilter)
+                    JournalFormSet, AccountsForm, TransactionForm, TransactionFilter,
+                    TransactionFormSet, TransactionFormSetHelper
+                    )
 
 import pandas as pd
 import numpy as np
@@ -28,7 +30,7 @@ from home.formsetview import MyFormSetView
 from django.contrib import messages
 from django.db.models import Q
 from .forms import JournalFormSetHelper
-
+from django.shortcuts import get_object_or_404
 
 def prepare_data_frame( journal  ,  accounts):
     accounts = pd.DataFrame(accounts)
@@ -106,6 +108,7 @@ class AccountsDeleteView(OwnerDeleteView):
 
 
 class TransactionListView(LoginRequiredMixin, FilterView):
+    paginate_by = 25
     model = Transaction
     template_name = "sole_proprietorship/transaction_list.html"
     filterset_class = TransactionFilter
@@ -733,3 +736,36 @@ class ReportingPeriodConfigView(LoginRequiredMixin , View):
             messages.success(request, 'Reporting Period Config Has been set correctly')
 
         return HttpResponseRedirect(reverse("sole_proprietorship:home"))
+
+
+class TransactionUpdateView(LoginRequiredMixin, View):
+    template_name = 'sole_proprietorship/transaction_update.html'
+    helper = TransactionFormSetHelper()
+
+    def get(self, request, pk, *args, **kwargs):
+        transaction = get_object_or_404(Transaction, pk=pk, owner=request.user)
+        formset = TransactionFormSet(instance=transaction)
+        return render(request, self.template_name, {'formset': formset, 'helper': self.helper})
+
+
+    def post(self, request, pk,  *args, **kwargs):
+        transaction = get_object_or_404(Transaction, pk=pk, owner=request.user)
+        formset = TransactionFormSet(request.POST, request.FILES, instance=transaction)
+        if formset.is_valid():
+            formset.save()
+            
+            messages.success(request, 'Your transaction has been updated successfully')
+            return HttpResponseRedirect(reverse("sole_proprietorship:transaction_list"))
+        return render(request, self.template_name, {'formset': formset, 'helper': self.helper})
+
+
+
+class TransactionDeleteView(OwnerDeleteView):
+    model = Transaction
+
+
+
+ 
+
+
+
