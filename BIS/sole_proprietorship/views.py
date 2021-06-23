@@ -9,7 +9,7 @@ from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteV
 from .forms import ( JournalForm, JournalFilter, AccountForm,
                     UploadFileForm, create_form, ReportingPeriodConfigForm,
                     JournalFormSet, AccountsForm, TransactionForm, TransactionFilter,
-                    TransactionFormSet, TransactionFormSetHelper
+                    TransactionFormSet, TransactionFormSetHelper, LedgerFilterForm
                     )
 
 import pandas as pd
@@ -764,8 +764,28 @@ class TransactionDeleteView(OwnerDeleteView):
     model = Transaction
 
 
+class LedgerView(LoginRequiredMixin, View):
+    template_name = 'sole_proprietorship/ledger.html'
 
- 
+    def get(self, request, *args, **kwargs):
+        
+        form = LedgerFilterForm()
+        form.fields['account'].queryset  = Accounts.objects.filter(owner=request.user)
+        return render(request, self.template_name, {'form':form})
 
 
+from django.http import JsonResponse
 
+class FetchLedgerView(LoginRequiredMixin, View):
+    def get(self, request):
+        ctx = {
+            'begginingBalance': Accounts.my_objects.beginning_balance(owner_id=request.user.id, 
+                end_date= request.GET.get('start_date'),
+                account =  request.GET.get('account')
+            ),
+            'data': Accounts.my_objects.ledger(owner_id = request.user.id,
+             account=request.GET.get('account'),
+            start_date=request.GET.get('start_date'),
+            end_date= request.GET.get('end_date'))
+        }
+        return JsonResponse(ctx)

@@ -184,3 +184,11 @@ class TransactionFormSetHelper(FormHelper):
         self.render_required_fields = True
         self.form_tag = False
      
+
+
+
+class LedgerFilterForm(forms.Form):
+    account =  forms.ModelChoiceField(queryset= Accounts.objects.none(), required=True)
+    start_date = forms.DateField(required=True,  widget= forms.widgets.DateInput(attrs={'type': 'date'}))
+    end_date = forms.DateField(required= True, widget= forms.widgets.DateInput(attrs={'type': 'date'}))
+

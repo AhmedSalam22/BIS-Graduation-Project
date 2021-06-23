@@ -1,0 +1,93 @@
+{% extends "sole_proprietorship/index.html" %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="get">
+            {{ form }}
+            <button type="submit" class="btn btn-primary">Run</button>
+        </form>
+    </div>
+</div>
+
+<br>
+<br>
+<div class="container-fluid">
+    <table class="table">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Comment</th>
+                <th>Debit</th>
+                <th>Credit</th>
+                <th>balance</th>
+            </tr>
+        </thead>
+        <tbody id="ledgerBodyTable">
+
+        </tbody>
+      </table>      
+</div>
+
+<script>
+
+    function createTableBody(begginingBalance, data){
+        const tbody = document.querySelector('#ledgerBodyTable');
+        tbody.innerHTML = `
+                <td></td>
+                <td>Beggining Balance</td>
+                <td></td>
+                <td></td>
+                <td>${begginingBalance}</td>
+        `;
+        let endingBalance = begginingBalance;
+        for (const array of data) {
+            endingBalance += array[3];
+            tbody.appendChild(createRow(array, endingBalance));
+        }
+
+    }
+
+
+    function createRow([date, comment, transaction_type, amount], balance) {
+        const tr = document.createElement('tr');
+        if (transaction_type=== 'Debit') {
+            tr.innerHTML = `
+                <td>${date}</td>
+                <td>${comment}</td>
+                <td>${Math.abs(amount)}</td>
+                <td></td>
+                <td>${balance}</td>
+            `
+        } else {
+            tr.innerHTML = `
+                <td>${date}</td>
+                <td>${comment}</td>
+                <td></td>
+                <td>${Math.abs(amount)}</td>
+                <td>${balance}</td>
+            `
+        }
+        return tr;
+    }
+    document.querySelector('form button').addEventListener('click', function (event) {
+        event.preventDefault();
+        $.ajax({
+        url: "{% url 'sole_proprietorship:fetch_ledger' %}",
+        type: "GET",
+        dataType: "JSON",
+        data: $('form').serialize(),
+        success: function(data) {
+            console.log(data.begginingBalance);
+            console.log(data.data);
+            createTableBody(data.begginingBalance, data.data);
+        },
+        error : function(xhr,errmsg,err) {
+            console.log(`${xhr.status} ${xhr.responseText} \nerrmsg= ${errmsg}\n err: ${err}`); // provide a bit more info about the error to the console
+        }
+        });
+    });
+ 
+
+</script>
+
+{% endblock %}

@@ -29,7 +29,12 @@ urlpatterns = [
     path('pivotTable' , views.PivotTable.as_view()  , name="pivottable"),
     path('ReportingPeriodConfig' ,views.ReportingPeriodConfigView.as_view(), name="ReportingPeriodConfig"),
     path('transactions', views.TransactionListView.as_view(), name='transaction_list'),
-    path('transaction/<int:pk>/update', views.TransactionUpdateView.as_view(), name='transaction_update')
+    path('transaction/<int:pk>/update', views.TransactionUpdateView.as_view(), name='transaction_update'),
+    path('transaction/<int:pk>/delete', 
+        views.TransactionDeleteView.as_view(success_url=reverse_lazy('sole_proprietorship:transaction_list')), name='transaction_delete'),
+    path('ledger/', views.LedgerView.as_view(), name='ledger'),
+    path('fetch_ledger', views.FetchLedgerView.as_view(), name='fetch_ledger')
+
 
 
 ]

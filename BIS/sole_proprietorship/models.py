@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
-from sole_proprietorship.managers import TransactionManager
+from sole_proprietorship.managers import TransactionManager, AccountManager
 
 # Create your models here.
 class Accounts(models.Model):
@@ -37,6 +37,9 @@ class Accounts(models.Model):
         ] , 
         default = "Assest"
     )
+
+    objects = models.Manager() # The default manager.
+    my_objects = AccountManager()
 
     def __str__(self):
         return self.account
