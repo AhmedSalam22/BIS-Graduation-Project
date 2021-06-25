@@ -1,13 +1,13 @@
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import connection
-from django.http import HttpResponse , HttpResponseRedirect
+from django.http import HttpResponse , HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.urls import reverse
 from django.shortcuts import render , redirect
 from .models import Journal , Accounts, Transaction
 from .owner import OwnerListView, OwnerCreateView, OwnerUpdateView, OwnerDeleteView
-from .forms import ( JournalForm, JournalFilter, AccountForm,
-                    UploadFileForm, create_form, ReportingPeriodConfigForm,
+from .forms import ( JournalForm, AccountForm,TransactionFilterHelper,
+                    UploadFileForm, ReportingPeriodConfigForm,
                     JournalFormSet, AccountsForm, TransactionForm, TransactionFilter,
                     TransactionFormSet, TransactionFormSetHelper, LedgerFilterForm
                     )
@@ -26,11 +26,11 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import xlsxwriter
 from pivottablejs import pivot_ui
-from home.formsetview import MyFormSetView
 from django.contrib import messages
 from django.db.models import Q
 from .forms import JournalFormSetHelper
 from django.shortcuts import get_object_or_404
+
 
 def prepare_data_frame( journal  ,  accounts):
     accounts = pd.DataFrame(accounts)
@@ -110,62 +110,25 @@ class AccountsDeleteView(OwnerDeleteView):
 class TransactionListView(LoginRequiredMixin, FilterView):
     paginate_by = 25
     model = Transaction
+    ordering = ["-date", 'journal__transaction_type']
     template_name = "sole_proprietorship/transaction_list.html"
     filterset_class = TransactionFilter
+    helper = TransactionFilterHelper()
 
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(owner=self.request.user)
-        return qs.select_related()
+        qs = super().get_queryset().filter(journal__account__owner=self.request.user).distinct()
+        print('query', qs.query)
+        return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         query = Transaction.my_objects.total_debit_and_total_credit(self.request.user.id)
         ctx['Debit'], ctx['Credit'] = query.get('Debit') , query.get('Credit')
+        ctx['helper'] = self.helper
         return ctx
 
 
-
-class JournalListView( LoginRequiredMixin , FilterView):
-    paginate_by = 10
-    ordering = ["-date"]
-    model = Journal
-    template_name = "sole_proprietorship/journal_list.html"
-    filterset_class = JournalFilter
-
-    def get_queryset(self):
-        qs = super(JournalListView, self).get_queryset()
-        return qs.filter(owner=self.request.user)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # we don't this line since we use FilterView which do this automatically for you
-        # context["filter"] = JournalFilter(data=self.request.GET , queryset = get_queryset() , user=self.request.user)
-        with connection.cursor() as cursor:
-            cursor.execute(""" 
-                  SELECT   sum(helper) as balance ,  normal_balance  FROM (
-                                                        SELECT * ,
-                                                        CASE
-                                                            WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                            ELSE ( -1 * j.balance)
-                                                        END as helper 
-                                                        FROM sole_proprietorship_journal as j
-                                                        JOIN sole_proprietorship_accounts as a
-                                                        on j.account_id = a.id
-                                                        where j.owner_id = %s
-                                        )
-        GROUP by normal_balance 
-                                                    """ , [self.request.user.id])
-            row = list(cursor.fetchall())
-            print(row)
-        try:
-            context[row[0][1]] = row[0][0]
-            context[row[1][1]] = row[1][0]
-        except IndexError:
-            context["Debit"] = 0
-            context["Credit"] = 0
-
-        return context
 
 class JournalCreateView(LoginRequiredMixin , View):
     template_name = 'sole_proprietorship/journal_form.html'
@@ -194,75 +157,28 @@ class JournalCreateView(LoginRequiredMixin , View):
         # do whatever you'd like to do with the valid formset
         if self.ctx['formset'].is_valid() and self.ctx['transaction_form'].is_valid():
             transaction = self.ctx['transaction_form'].save(commit=False)
-            transaction.owner = self.request.user
             transaction.save()
 
             for journal_form in self.ctx['formset']:
                 journal = journal_form.save(commit=False)
-                journal.owner = self.request.user
                 journal.transaction = transaction
                 journal.save()
                 messages.success(request, 'Your Transaction Was Created Succesffuly')
             return redirect(self.success_url)
         return render(request, self.template_name , self.ctx)
-# an old way to create multipe form using external liabrary
-# class JournalCreateView(LoginRequiredMixin , MyFormSetView):
-#     fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
-#     template_name = 'sole_proprietorship/journal_form.html'
-#     form_class = None
-   
-                      
-#     def get_form_class(self , request):
-#         """
-#         Returns the form class to use with the formset in this view
-#         """
-#         self.form_class = create_form(request.user) #overriding
-#         return self.form_class
-    
-    
 
-#     # لكى يستطيع ان يتعامل مع الحسابات التى يمتلكها فقط
-#     # def get_form(self, form_class=JournalForm):
-#     #     print("sdfsdfdsfsf")
-#     #     form = super(OwnerCreateView,self).get_form(form_class) #instantiate using parent
-#     #     form.fields['account'].queryset = Accounts.objects.filter(owner=self.request.user)
-#     #     return form
 
-#     # print(super(JournalCreateView , self).get_form(**kwargs))
-#     def formset_valid(self, formset):
-#         # do whatever you'd like to do with the valid formset
-#         totalDebit = 0.0
-#         totalCredit = 0.0
-#         for form in formset:
-#             object = form.save(commit=False)
-#             if object.transaction_type == "Debit":
-#                 totalDebit += object.balance
-#             else:
-#                 totalCredit +=  object.balance
-
-#         if totalDebit == totalCredit:
-#             messages.success(self.request, 'Your Transaction Was Created Succesffuly')
-#             for form in formset:
-#                 object = form.save(commit=False)
-#                 object.owner = self.request.user
-#                 object.save()
-#         else:
-#             messages.error(self.request, f'Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}, so your Transaction not saved')
-
-#         return super(JournalCreateView, self).formset_valid(formset)
-#     # def form_valid(self, form):
-#     #     object = form.save(commit=False)
-#     #     object.owner = self.request.user
-#     #     object.save()
-#     #     return super(OwnerCreateView, self).form_valid(form)
 
 class JournalUpdateView(OwnerUpdateView):
     model = Journal
-    fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
+    fields = ['account', 'balance' , "transaction_type"]
 
 class JournalDeleteView(OwnerDeleteView):
     model = Journal
 
+    def get_queryset(self):
+        qs = super(OwnerDeleteView, self).get_queryset()
+        return qs.filter(account__owner=self.request.user)
 
 class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
     def financial_sataements_by_pandas(self):
@@ -271,7 +187,7 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
         #Accounts.objects.filter(owner=owner).all().values()
 
         accounts = Accounts.objects.filter(owner=owner).all().values()
-        journal = Journal.objects.filter(owner=owner).all().values()
+        journal = Journal.objects.filter(account__owner=owner).all().values()
         data = prepare_data_frame(journal , accounts)
         trial_balance = prepare_trial_balance(data)
         net_income =  prepare_net_income(data)
@@ -313,7 +229,7 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
                                                     FROM sole_proprietorship_journal as j
                                                     JOIN sole_proprietorship_accounts as a
                                                     on j.account_id = a.id
-                                                    where j.owner_id = %s AND j.date >= %s AND j.date <= %s
+                                                    where a.owner_id = %s AND j.date >= %s AND j.date <= %s
                                     )
     GROUP by account_type , account
     ORDER by balance DESC
@@ -361,9 +277,9 @@ class ExportJournal(LoginRequiredMixin , View):
     def get(self , request):
         # Create the HttpResponse object with the appropriate CSV header.
         owner= request.user
-        journal = Journal.objects.filter(owner=owner).all()
+        journal = Journal.objects.filter(account__owner=owner).all()
 
-        response = HttpResponse(content_type='text/csv')
+        response = StreamingHttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="journal{}.csv"'.format(timezone.now())
 
         writer = csv.writer(response)
@@ -743,13 +659,15 @@ class TransactionUpdateView(LoginRequiredMixin, View):
     helper = TransactionFormSetHelper()
 
     def get(self, request, pk, *args, **kwargs):
-        transaction = get_object_or_404(Transaction, pk=pk, owner=request.user)
+        queryset = Transaction.objects.filter(journal__account__owner=request.user, pk=pk).distinct()
+        transaction = get_object_or_404(queryset)
         formset = TransactionFormSet(instance=transaction)
         return render(request, self.template_name, {'formset': formset, 'helper': self.helper})
 
 
     def post(self, request, pk,  *args, **kwargs):
-        transaction = get_object_or_404(Transaction, pk=pk, owner=request.user)
+        queryset = Transaction.objects.filter(journal__account__owner=request.user, pk=pk).distinct()
+        transaction = get_object_or_404(queryset)
         formset = TransactionFormSet(request.POST, request.FILES, instance=transaction)
         if formset.is_valid():
             formset.save()
@@ -774,7 +692,6 @@ class LedgerView(LoginRequiredMixin, View):
         return render(request, self.template_name, {'form':form})
 
 
-from django.http import JsonResponse
 
 class FetchLedgerView(LoginRequiredMixin, View):
     def get(self, request):

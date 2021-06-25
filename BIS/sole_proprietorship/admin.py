@@ -23,25 +23,21 @@ class AccountsAdmin(admin.ModelAdmin):
 
 
 class JournalAdmin(admin.ModelAdmin):
-    list_display = ('account' , 'date' , 'balance' , 'transaction_type' , 'comment' ,
-     'owner', "purchase_inventory","inventory_price", "inventory_return", "status"
-     )
-    list_editable = ['comment']
-    search_fields = ['comment']
-    list_filter = ['account', 'transaction_type' , 'owner']
-    sortable_by = ['account' ,'date' ,'balance' , 'date' , 'transaction_type' ,  'owner']
-    ordering = ['-date' , 'owner']
+    list_display = ('account' ,  'balance' , 'transaction_type' ,  )
+
+    list_filter = ['account', 'transaction_type']
+    sortable_by = ['account' ,'balance' , 'transaction_type' , ]
     # fields = ('owner' , ('account' , 'date' , 'balance' , 'transaction_type' ) , 'comment')
 
     fieldsets = (
         ("Main", {
-            "fields": ['owner' , ('account' , 'date' , 'balance' , 'transaction_type' ) , ("purchase_inventory","inventory_price", "inventory_return", "status")],
+            "fields": [ ('account' , 'balance' , 'transaction_type' )],
         }),
-        ("optional" , {
-            "fields": ["comment"],
-            "classes": ('collapse',)
-        }
-        )
+        # ("optional" , {
+        #     "fields": ["comment"],
+        #     "classes": ('collapse',)
+        # }
+        # )
     )
     
 
@@ -52,12 +48,11 @@ class ReportingPeriodConfigAdmin(admin.ModelAdmin):
     list_editable = ['start_date' , 'end_date']
     fields = ('owner' , ( 'start_date', 'end_date'))
 
-class TransactionAdmin(admin.ModelAdmin):
-    exclude = ['num']
+
 
 # Register your models here.
 admin.site.register(Accounts , AccountsAdmin)
-admin.site.register(Transaction, TransactionAdmin)
+admin.site.register(Transaction)
 admin.site.register(Journal , JournalAdmin)
 admin.site.register(ReportingPeriodConfig , ReportingPeriodConfigAdmin)
 # Customize Django Admin

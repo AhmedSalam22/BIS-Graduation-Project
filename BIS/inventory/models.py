@@ -9,7 +9,7 @@ import calendar
 from django.core.exceptions import ValidationError
 from django.db import connection
 import datetime
-from sole_proprietorship.models import Journal
+
 # Create your models here.
 class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):

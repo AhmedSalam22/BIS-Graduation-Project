@@ -4,7 +4,7 @@
     <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:home' %}">Home</a></li>
     <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:all' %}">Accounts</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:journal_all' %}">Journal</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:transaction_list' %}">Journal</a></li>
     <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:dashboard' %}">Dashboard</a></li>
     <li class="breadcrumb-item"><a href="{% url 'sole_proprietorship:financialstatements' %}">Financial Statements</a></li>
     </ol>
@@ -35,7 +35,7 @@
                         <button type="button" class="btn btn-light">Find out more</button>
                         </div>
                         <div class="dropdown-menu" role="menu">
-                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:journal_all' %}">View Journal entries</a>
+                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:transaction_list' %}">View Journal entries</a>
                         <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:journal_create' %}">Create transactions</a>
                         <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:export_journal' %}">Export Journal to CSV</a>
                         </div>
@@ -69,6 +69,12 @@
                 <p class="text-center" style="color:#fff;"><br><strong>Settings</strong></p>
                 <a href="{% url 'sole_proprietorship:ReportingPeriodConfig' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
             </div>
+            <div class="col-md-3" style="background-color:#3399ff;">
+                <p class="text-center"><i class="fa fa-table" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+                <p class="text-center" style="color:#fff;"><br><strong>Ledger</strong></p>
+                <a href="{% url 'sole_proprietorship:ledger' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+            </div>
+      
             
         </div>
     

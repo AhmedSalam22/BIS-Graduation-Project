@@ -4,6 +4,159 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from sole_proprietorship.managers import TransactionManager, AccountManager
+from inventory.helper import Helper
+from django.db.models import Q 
+
+class TransactionSignal:
+    def PurchaseInventory(self, sender, instance , created,  **kwargs):
+        """"
+        Purchase Inventory transaction:
+        transaction1:Inventory Debit by                      xxxx
+        transaction2:     Cash or Accounts payable Credit by       xxx
+        
+        instance: InventoryPrice
+        """
+
+        owner = instance.purchase_inventory.owner
+        purchase_inventory = instance.purchase_inventory
+        inventory_price = instance
+
+
+        if not created:
+            Transaction.objects.filter(
+                Q(inventory_price=inventory_price) & Q(status=Transaction.Status.PURCHASE_INVENTORY.value) 
+                ).delete()
+        
+        transaction = Transaction.objects.create(
+            owner=owner,
+            date = purchase_inventory.purchase_date ,
+            purchase_inventory = purchase_inventory,
+            inventory_price = inventory_price,
+            status=Transaction.Status.PURCHASE_INVENTORY.value,
+            comment=f"purchase inventory {inventory_price.inventory}, number of units purchased{inventory_price.number_of_unit}")
+
+
+        Journal.objects.create(owner=owner,
+        account = inventory_price.inventory.general_ledeger_account,
+        date = purchase_inventory.purchase_date ,
+        balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
+        transaction_type="Debit",
+        transaction= transaction
+        
+        )
+        
+        
+        Journal.objects.create(owner=owner,
+                    account = Helper.cash_or_accounts_payable(purchase_inventory),
+                    date = purchase_inventory.purchase_date ,
+                    balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
+                    transaction_type="Credit" , 
+                    transaction= transaction
+                    )
+
+
+        
+    def PurchaseReturn(self, sender, instance , created,  **kwargs):
+        """
+        Journal transaxtion related to purchase return
+            A/P or CASH Debit by xxx
+            Inventory Credit by     xxx
+
+        instance: InventoryReturn
+        """
+        owner = instance.inventory_price.inventory.owner
+        date = instance.date
+        balance = instance.num_returned * instance.inventory_price.cost_per_unit
+
+        if not created:
+            Transaction.objects.filter(
+                Q(inventory_return=instance) & Q(status=Transaction.Status.PURCHASE_RETURN.value) 
+            ).delete()
+
+        transaction = Transaction.objects.create(
+            owner=owner,
+            date = date ,
+            inventory_return = instance,
+            status=Journal.Status.PURCHASE_RETURN.value,
+            comment=f"return {instance.num_returned} from {instance.inventory_price.inventory} to {instance.inventory_price.purchase_inventory.supplier}"
+        )
+
+        Journal.objects.create(
+                owner=owner,
+                account = instance.inventory_price.inventory.general_ledeger_account,
+                date = date ,
+                balance= balance,
+                transaction_type="Credit" ,
+                transaction = transaction 
+              
+                )
+        Journal.objects.create(owner=owner,
+                    account = Helper.cash_or_accounts_payable(instance.inventory_price.purchase_inventory),
+                    date = date ,
+                    balance=  balance ,
+                    transaction_type="Debit" , 
+                    transaction = transaction 
+                    )
+
+
+    
+
+    def freight_in_cost(self, sender, instance , created,  **kwargs):
+        """
+        - record journal transaction if there is freight cost due to the purchase process
+        - fright-in charge will charge of first inventory form in formset
+
+        instance: InventoryPrice
+        """
+        owner = instance.purchase_inventory.owner
+        date = instance.purchase_inventory.purchase_date
+        balance = instance.purchase_inventory.frieght_in
+
+        exists = Transaction.objects.filter(
+            Q(purchase_inventory = instance.purchase_inventory) & Q(status=Transaction.Status.FREIGHT_IN.value) 
+            ).exists()
+
+        if not exists and balance != 0:
+            transaction = Transaction.objects.create(
+                owner=owner,
+                date = date,
+                comment=f"freight in cost {instance.inventory}",
+                status= Transaction.Status.FREIGHT_IN.value,
+                purchase_inventory = instance.purchase_inventory, 
+
+            )
+            Journal.objects.create(owner=owner,
+                    account = instance.inventory.general_ledeger_account,
+                    date = date ,
+                    balance= balance ,
+                    transaction_type="Debit" , 
+                    transaction= transaction
+                    )
+            Journal.objects.create(owner=owner,
+                        account = instance.purchase_inventory.term.freight_in_account,
+                        date = date ,
+                        balance=  balance ,
+                        transaction_type="Credit" ,
+                        transaction= transaction
+                        )
+
+
+
+
+    def pay_invoice(sender, instance, create, **kwargs):
+        """
+        Journal Entry to record paid Invoice
+        A/p Debit by  xxxx
+            Cash Credit by xxxxx
+        """
+        
+        if not created:
+            Transaction.objects.filter(
+                Q(pay_invoice=instance) & Q(status=Transaction.Status.PAY_INVOICE.value) 
+            ).delete()
+
+
+
 
 # Create your models here.
 class Accounts(models.Model):
@@ -45,39 +198,17 @@ class Accounts(models.Model):
         return self.account
 
 class Transaction(models.Model):
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['num', 'owner'], name='unique_transaction')
-        ]
-
     class Status(models.IntegerChoices):
         PURCHASE_INVENTORY = 1, _("Purchase Inventory")
         PURCHASE_RETURN = 2, _("Purchase return")
         PURCHASE_ALLOWANCE = 3, _("Purchase Allowance")
         FREIGHT_IN = 4, _("Freight in")
+        PAY_INVOICE = 5, _("Pay Invoice")
     
     @classmethod
     def num_of_transaction(cls, owner):
-        return cls.objects.filter(owner=owner).count()
-
-    @classmethod
-    def last_transaction_num(cls, owner):
-        query = Transaction.objects.filter(owner=owner).aggregate(models.Max('num'))
-        if query['num__max'] != None:
-            return query['num__max']
-        return 0
-
-    def set_num(self):
-        """
-        if updated keep transaction num else create new transaction num
-        """
-        if self.num:
-            return self.num
-        else:
-            return Transaction.last_transaction_num(owner=self.owner) + 1
-
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    num = models.IntegerField()
+        return cls.objects.filter(journal__account__owner=owner).distinct().count()
+    
     date = models.DateField()
     comment = models.CharField(max_length=2500 , null= True , blank=True )
 
@@ -85,31 +216,20 @@ class Transaction(models.Model):
     purchase_inventory = models.ForeignKey('inventory.PurchaseInventory', null=True, blank=True, on_delete=models.CASCADE)
     inventory_price = models.ForeignKey('inventory.InventoryPrice', null=True , blank=True, on_delete=models.CASCADE)
     inventory_return = models.ForeignKey('inventory.InventoryReturn' , null=True, blank=True, on_delete=models.CASCADE)
+    pay_invoice = models.ForeignKey('inventory.PayInvoice' , null=True, blank=True, on_delete=models.CASCADE)
     status = models.IntegerField(choices=Status.choices , null=True, blank=True)
 
     objects = models.Manager() # The default manager.
     my_objects = TransactionManager()
 
-
-    def save(self, *args, **kwargs):
-        self.num = self.set_num()
-        super().save(*args, **kwargs)
+    signal = TransactionSignal()    
 
     def __str__(self):
-        return f'Transaction Num:{self.num}, owner={self.owner}'
+        return f'Transaction Num:{self.num}'
 
 
 class Journal(models.Model):
-    class Status(models.IntegerChoices):
-        PURCHASE_INVENTORY = 1, _("Purchase Inventory")
-        PURCHASE_RETURN = 2, _("Purchase return")
-        PURCHASE_ALLOWANCE = 3, _("Purchase Allowance")
-        FREIGHT_IN = 4, _("Freight in")
-
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     account = models.ForeignKey(Accounts, on_delete=models.CASCADE)
-
-    date = models.DateField(null=True, blank=True)
     balance = models.FloatField()
     transaction_type = models.CharField(
         max_length=7,
@@ -121,11 +241,7 @@ class Journal(models.Model):
     )
 
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True, blank=True)
-    comment = models.CharField(max_length=1500 , null= True , blank=True )
-    purchase_inventory = models.ForeignKey('inventory.PurchaseInventory', null=True , on_delete=models.CASCADE)
-    inventory_price = models.ForeignKey('inventory.InventoryPrice', null=True , on_delete=models.CASCADE)
-    inventory_return = models.ForeignKey('inventory.InventoryReturn' , null=True  , on_delete=models.CASCADE)
-    status = models.IntegerField(choices=Status.choices , null=True)
+
  
     def __str__(self):
         return f"{self.account}"

@@ -43,7 +43,7 @@ class JournalFormSetHelper(FormHelper):
         super().__init__(*args, **kwargs)
         self.layout = Layout(
            Div(
-                Row('account', 'balance' , 'transaction_type'), 
+                Row(Column('account'), Column('balance') , Column('transaction_type')), 
                 css_class='link-formset')
            
         )
@@ -52,27 +52,6 @@ class JournalFormSetHelper(FormHelper):
         # self.template = 'bootstrap/table_inline_formset.html'
 
 
-def create_form(user):
-    """Returns a new model form which uses the correct queryset for user
-    https://stackoverflow.com/questions/20276302/passing-arguments-to-modelform-through-formset
-    
-    """
-
-    class JournalFormUser(forms.ModelForm):
-
-        class Meta:
-            model = Journal
-            fields = ['account', 'date' , 'balance' , "transaction_type" , "comment"]
-
-
-        def __init__(self, *args, **kwargs):
-            super(JournalFormUser, self).__init__(*args, **kwargs)
-            self.fields['account'].queryset = Accounts.objects.filter(owner = user)
-            self.fields['account'].widget.attrs.update({'class': 'select2'})
-            self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
-
-
-    return JournalFormUser
 
 class JournalForm(ModelForm):
     class Meta:
@@ -92,14 +71,14 @@ class AccountForm(ModelForm):
 
 
 
-class JournalFilter( django_filters.FilterSet):
-    class Meta:
-        model = Journal
-        fields = ['account', 'date' , 'balance' , "transaction_type"]
+# class JournalFilter( django_filters.FilterSet):
+#     class Meta:
+#         model = Journal
+#         fields = ['account', 'date' , 'balance' , "transaction_type"]
 
-    def __init__(self,   **kwargs):
-        super().__init__(**kwargs)
-        self.form.fields["account"].queryset = Accounts.objects.filter(owner=self.request.user)
+#     def __init__(self,   **kwargs):
+#         super().__init__(**kwargs)
+#         self.form.fields["account"].queryset = Accounts.objects.filter(owner=self.request.user)
 
 
 
@@ -143,11 +122,16 @@ class TransactionForm(ModelForm):
     class Meta:
         model = Transaction
         fields = ['date', 'comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={'rows':2}),
+            'date': forms.widgets.DateInput(attrs={'type': 'date'}),
+
+        }
         
 
 class TransactionFilter(django_filters.FilterSet):
-    balance__gte = django_filters.NumberFilter(field_name='journal__balance', label='balance is greater than or equal', lookup_expr='gte') 
-    balance__lte = django_filters.NumberFilter(field_name='journal__balance', label='balance is less than or equal', lookup_expr='lte') 
+    balance__gte = django_filters.NumberFilter(field_name='journal__balance', label='balance is >=', lookup_expr='gte') 
+    balance__lte = django_filters.NumberFilter(field_name='journal__balance', label='balance is <=', lookup_expr='lte') 
 
     class Meta:
         model = Transaction
@@ -156,10 +140,28 @@ class TransactionFilter(django_filters.FilterSet):
                 'comment': ['icontains'],
                 }
 
-    # def __init__(self,   **kwargs):
-    #     super().__init__(**kwargs)
-    #     self.form.fields["account"].queryset = Accounts.objects.filter(owner=self.request.user)
+    def __init__(self,   **kwargs):
+        super().__init__(**kwargs)
+        self.form.fields["date__gte"].widget =forms.widgets.DateInput(attrs={'type': 'date'})
+        self.form.fields["date__gte"].label = 'Start Date'
+        self.form.fields["date__lte"].widget =forms.widgets.DateInput(attrs={'type': 'date'})
+        self.form.fields["date__lte"].label = 'End Date'
+        self.form.fields['comment__icontains'].widget = forms.Textarea(attrs={'rows':2})
 
+
+        
+class TransactionFilterHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout = Layout(
+           Div(
+                Row(Column('date__gte', 'date__lte'), 
+                    Column('balance__gte', 'balance__lte'),
+                    Column('comment__icontains') , 
+                ),
+           )
+        )
+        self.form_tag = False
 
 class CustomTransactionFormSet(TransactionValidation, BaseInlineFormSet):
     pass
@@ -178,7 +180,7 @@ class TransactionFormSetHelper(FormHelper):
         super().__init__(*args, **kwargs)
         self.layout = Layout(
            Div(
-                Row('account', 'balance' , 'transaction_type', 'DELETE'),
+                Row(Column('account'), Column('balance') , Column('transaction_type', 'DELETE')),
            )
         )
         self.render_required_fields = True

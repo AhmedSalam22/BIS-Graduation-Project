@@ -145,7 +145,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
         query = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
         form = InventoryReturnForm(data=request.POST)
         if form.is_valid():
-            form.save(commit=True)
+            obj = form.save(commit=True)
             return redirect(reverse_lazy(self.success_url , args=[
                 obj.inventory_price.inventory.pk
             ]))

@@ -82,7 +82,7 @@ class TransactionManager(models.Manager):
                             on j.account_id = a.id
                             JOIN sole_proprietorship_transaction as t
                             ON j.transaction_id = t.id
-                            where t.owner_id = %s
+                            where a.owner_id = %s
                                         )
                     GROUP by normal_balance 
 
