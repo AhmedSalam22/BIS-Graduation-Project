@@ -30,6 +30,7 @@ from django.contrib import messages
 from django.db.models import Q
 from .forms import JournalFormSetHelper
 from django.shortcuts import get_object_or_404
+from django.views.generic import DeleteView
 
 
 def prepare_data_frame( journal  ,  accounts):
@@ -123,7 +124,8 @@ class TransactionListView(LoginRequiredMixin, FilterView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        query = Transaction.my_objects.total_debit_and_total_credit(self.request.user.id)
+        query = Transaction.my_objects.total_debit_and_total_credit(self.request.user.id,
+         end_date= self.request.GET.get('date__lte', None))
         ctx['Debit'], ctx['Credit'] = query.get('Debit') , query.get('Credit')
         ctx['helper'] = self.helper
         return ctx
@@ -187,7 +189,7 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
         #Accounts.objects.filter(owner=owner).all().values()
 
         accounts = Accounts.objects.filter(owner=owner).all().values()
-        journal = Journal.objects.filter(account__owner=owner).all().values()
+        journal = Journal.objects.filter(account__owner=owner).distinct().all().values()
         data = prepare_data_frame(journal , accounts)
         trial_balance = prepare_trial_balance(data)
         net_income =  prepare_net_income(data)
@@ -229,7 +231,9 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
                                                     FROM sole_proprietorship_journal as j
                                                     JOIN sole_proprietorship_accounts as a
                                                     on j.account_id = a.id
-                                                    where a.owner_id = %s AND j.date >= %s AND j.date <= %s
+                                                    JOIN sole_proprietorship_transaction as t
+                                                    ON j.transaction_id = t.id
+                                                    where a.owner_id = %s AND t.date >= %s AND t.date <= %s
                                     )
     GROUP by account_type , account
     ORDER by balance DESC
@@ -293,11 +297,14 @@ class ExportJournal(LoginRequiredMixin , View):
 class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
     def get(self, request):
         owner =  request.user
-        query = Q(owner=owner,date__gte=request.user.fs_reporting_period.start_date)
+        query = Q(journal__account__owner=owner,date__gte=request.user.fs_reporting_period.start_date)
         query.add(Q(date__lte=request.user.fs_reporting_period.end_date), Q.AND)
-        total_transaction = Journal.objects.filter(query).count()
+        total_transaction = Transaction.objects.filter(query).distinct().count()
         total_accounts = Accounts.objects.filter(owner=owner).count()
-        avg_transaction = Journal.objects.filter(query).aggregate(Avg("balance")) 
+
+        query2 = Q(account__owner=owner,transaction__date__gte=request.user.fs_reporting_period.start_date)
+        query2.add(Q(transaction__date__lte=request.user.fs_reporting_period.end_date), Q.AND)
+        avg_transaction = Journal.objects.filter(query2).distinct().aggregate(Avg("balance")) 
         with connection.cursor() as cursor:
             cursor.execute(""" 
                             SELECT sum(helper) as balance,  account_type FROM (
@@ -309,7 +316,9 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
                                                     FROM sole_proprietorship_journal as j
                                                     JOIN sole_proprietorship_accounts as a
                                                     on j.account_id = a.id
-                                                    where j.owner_id = %s AND j.date >= %s AND j.date <= %s )
+                                                    JOIN sole_proprietorship_transaction as t
+                                                     ON j.transaction_id = t.id
+                                                    where a.owner_id = %s AND t.date >= %s AND t.date <= %s )
             GROUP by account_type
             ORDER by balance DESC
                                                     """ , [request.user.id,
@@ -326,7 +335,9 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
                                             FROM sole_proprietorship_journal as j
                                             JOIN sole_proprietorship_accounts as a
                                             on j.account_id = a.id
-                                            where j.owner_id = %s AND j.date >= %s AND j.date <= %s		
+                                            JOIN sole_proprietorship_transaction as t
+                                            ON j.transaction_id = t.id
+                                            where a.owner_id = %s AND t.date >= %s AND t.date <= %s		
                                                                                                         )
                             GROUP by date , account """ , [request.user.id,
                                                         request.user.fs_reporting_period.start_date ,
@@ -678,17 +689,26 @@ class TransactionUpdateView(LoginRequiredMixin, View):
 
 
 
-class TransactionDeleteView(OwnerDeleteView):
+class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     model = Transaction
+    
+    def get_queryset(self):
+        qs = super().get_queryset().filter(journal__account__owner=self.request.user).distinct()
+        return qs
 
 
-class LedgerView(LoginRequiredMixin, View):
+
+
+class LedgerView(LoginRequiredMixin, ConfigRequiredMixin,  View):
     template_name = 'sole_proprietorship/ledger.html'
 
     def get(self, request, *args, **kwargs):
         
         form = LedgerFilterForm()
         form.fields['account'].queryset  = Accounts.objects.filter(owner=request.user)
+        form.fields['start_date'].initial = request.user.fs_reporting_period.start_date
+        form.fields['end_date'].initial = request.user.fs_reporting_period.end_date
+
         return render(request, self.template_name, {'form':form})
 
 

@@ -2,12 +2,36 @@
 {% block cardheader %} Delete  Transaction {% endblock %}
 {% block delete %}
 <h1>Delete transaction on your journal Journal</h1>
-<p>Are you sure you want to delete the account?: {{ journal }}?</p>
+<p>Are you sure you want to delete this transaction?: {{ journal }}?</p>
 <pre>
   Some Details 
-  account:{{ journal.account }}
-  date : {{ journal.date }}
-  transaction_type : {{ journal.transaction_type }}
-  comment : {{ journal.comment}}
+   transaction date:{{ transaction.date}}
+   transaction comment: {{ transaction.comment}}
+  <table class="table my-0" >
+    <thead>
+        <tr>
+            <th>Account</th>
+            <th>Debit </th>
+            <th>Credit </th>
+        </tr>
+    </thead>
+    <tbody>           
+      {% for journal in transaction.journal_set.all %}
+        <tr>
+        {% if journal.transaction_type == "Debit" %}
+          <td><strong><pre>{{ journal.account}}</pre></strong></td>
+          <td><strong>{{ journal.balance}}</strong></td>
+          <td><strong></strong></td>
+        {% else %}
+          <td><strong><pre>   {{ journal.account}}</pre></strong></td>
+          <td><strong></strong></td>
+          <td><strong>{{ journal.balance}}</strong></td>
+        {% endif %}    
+      </tr>
+      {% endfor %}
+
+  </tbody>
+</table>
+
 </pre>
 {% endblock %}

@@ -171,7 +171,7 @@ class CustomTransactionFormSet(TransactionValidation, BaseInlineFormSet):
 
 TransactionFormSet = inlineformset_factory(
     Transaction, Journal, fields=('account', 'balance' , "transaction_type"),
-    formset= CustomTransactionFormSet, extra = 0
+    formset= CustomTransactionFormSet, extra = 3
     )
 
                                      

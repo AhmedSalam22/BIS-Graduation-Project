@@ -61,7 +61,7 @@ class AccountManager(models.Manager):
 
 
 class TransactionManager(models.Manager):
-    def total_debit_and_total_credit(self, owner_id):
+    def total_debit_and_total_credit(self, owner_id, end_date=None):
         """
         return {
             'Debit': amount(float)
@@ -70,6 +70,18 @@ class TransactionManager(models.Manager):
         """
         result = dict()
         with connection.cursor() as cursor:
+            if end_date == None or end_date =='':
+                cursor.execute("""
+                    SELECT MAX(date) FROM sole_proprietorship_transaction as t
+                    JOIN sole_proprietorship_journal as j
+                    ON j.transaction_id = t.id
+                    JOIN sole_proprietorship_accounts as a
+                    ON j.account_id = a.id
+                    WHERE a.owner_id = %s
+                """,  [owner_id])
+                end_date = cursor.fetchone()[0]
+
+
             cursor.execute(""" 
                    SELECT   sum(helper) as balance ,  normal_balance  FROM (
                         SELECT normal_balance,
@@ -82,11 +94,11 @@ class TransactionManager(models.Manager):
                             on j.account_id = a.id
                             JOIN sole_proprietorship_transaction as t
                             ON j.transaction_id = t.id
-                            where a.owner_id = %s
+                            where a.owner_id = %s and t.date <= %s
                                         )
                     GROUP by normal_balance 
 
-                                                    """ , [owner_id])
+                                                    """ , [owner_id, end_date])
             row = list(cursor.fetchall())
         try:
             result["Credit"] = row[0][0]

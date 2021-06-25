@@ -47,6 +47,8 @@
                 {% endfor %}
                 <hr>
                 <button class="btn btn-primary" type="submit" value="Save">Save</button>
+                <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{{ request.META.HTTP_REFERER}}';return false;">Cancel</button>
+
             
    
 </form> 
@@ -56,7 +58,7 @@
  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script> 
     <script>
         $('.link-formset').formset({
-            addText: '<i class="fa fa-plus"></i> Add Transation',
+            addText: '<i class="fa fa-plus add"></i> Add Transation',
             deleteText: '<i class="far fa-trash-alt"></i>Remove'
         });
     </script>
