@@ -111,6 +111,7 @@ class PurchaseManager(models.Manager):
              )
         data["unpaid_count"] = PurchaseInventory.objects.filter(query & Q(status=0)).count()
         # to avoide Type error ex) 1 - None >> TypeError
+        print('total_amount_paid', data.get('total_amount_paid', None))
         data = {key:( value if value != None else 0) for (key, value) in data.items() }
         data["total_amount_unpaid"] = data["net_purchases"] - data["total_amount_paid"]
         return data
@@ -370,8 +371,6 @@ class PurchaseInventory(models.Model):
 
     status = models.IntegerField(choices=Status.choices)
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    # a unique identifyer for youe purchase tansaction
-    num = models.IntegerField()
     purchase_date = models.DateTimeField()
     due_date = models.DateField(
         help_text="optional if you want to specify it by yourself",
@@ -395,7 +394,29 @@ class PurchaseInventory(models.Model):
         """
         Check if this invoice PAID or UNPAID
         """
-        if self.term.terms == 0 or (self.check_net_purchase() == self.check_total_amount_paid()):
+        net_purchases = self.check_net_purchase() 
+        total_amount_paid = self.check_total_amount_paid()
+        # if there is dicount
+        try:
+            last_paid_date = self.payinvoice_set.order_by('-date').first().date
+        except AttributeError:
+            last_paid_date = None
+    
+        is_there_is_dicount, amount_if_there_is_dicount=  None, None
+        try:
+            amount_if_there_is_dicount =    self.net_purchases * ( (100 - self.term.discount_percentage) /100) 
+        except TypeError:
+            pass
+
+        if (last_paid_date != None and  self.due_date != None and last_paid_date <= self.due_date and
+             self.term.discount_percentage > 0 and
+               total_amount_paid == amount_if_there_is_dicount):
+            is_there_is_dicount = True
+        
+        if is_there_is_dicount and amount_if_there_is_dicount == total_amount_paid:
+            return "PAID"
+
+        if self.term.terms == PaymentSalesTerm.Term.CASH.value or (net_purchases ==  total_amount_paid and (total_amount_paid!= 0 and net_purchases != 0 )) or self.status == 1:
             return "PAID"
         else:
             return  "UNPAID"
@@ -468,13 +489,14 @@ class PurchaseInventory(models.Model):
                         F("cost_per_unit")*F("number_of_unit"), output_field=FloatField()
                         )).aggregate(total_amount=Sum("total_cost"))
 
-        
+        print('total_amount',query["total_amount"])
         return query["total_amount"] if query["total_amount"] != None else 0
 
     
     def check_net_purchase(self):
         """
         return amount of purchase take into our account if we return some inventory
+        
         """
         return self.check_total_amount() - self.check_num_cost_of_returned_inventory()[1]
 
@@ -485,13 +507,15 @@ class PurchaseInventory(models.Model):
         """
         query = self.payinvoice_set.aggregate(Sum("amount_paid"))["amount_paid__sum"]
         if query == None:
-            if self.status == "PAID":
+            if self.status == PurchaseInventory.Status.PAID.value:
                 return self.total_purchases
             else:
                 return 0
         return query
 
- 
+    def save(self, *args, **kwargs):
+        self.due_date = self.check_due_date()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"invoice number:{self.pk}"
@@ -500,14 +524,32 @@ class PurchaseInventory(models.Model):
 
 class PayInvoice(models.Model):
     purchase_inventory = models.ForeignKey(PurchaseInventory , on_delete=models.CASCADE)
+    date = models.DateField()
     amount_paid = models.FloatField()
 
-    def clean(self):
+    def check_amount_you_will_pay(self):
+        amount_you_will_pay, discount = None, None
         amount_paid = self.purchase_inventory.total_amount_paid
-        invoice_cost = self.purchase_inventory.net_purchases - amount_paid
-        if self.amount_paid > invoice_cost:
+        if self.purchase_inventory.status == PurchaseInventory.Status.PAID.value:
+            amount_you_will_pay = 0
+        else:
+            if self.date <= self.purchase_inventory.due_date and self.purchase_inventory.term.discount_percentage > 0:
+                amount_you_will_pay = self.purchase_inventory.net_purchases * ( (100 - self.purchase_inventory.term.discount_percentage) /100) - amount_paid
+                discount = True
+            else:
+                amount_you_will_pay = self.purchase_inventory.net_purchases - amount_paid
+                discount = False
+        return  amount_you_will_pay, discount
+
+
+    def clean(self):
+        amount_you_will_pay, discount = self.check_amount_you_will_pay()
+        warning_message = f"""
+        Paid amount can't be greater than invoice cost {amount_you_will_pay} {'after applying dicount' if discount else '' }
+        """
+        if self.amount_paid > amount_you_will_pay:
             raise ValidationError({
-        "amount_paid":ValidationError(_("Paid amount can't be greater than invoice cost") , code="invaild") , 
+        "amount_paid":ValidationError(_(warning_message) , code="invaild") , 
         })
        
 

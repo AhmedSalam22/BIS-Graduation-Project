@@ -1,7 +1,10 @@
 {% extends "home/base.html" %}
 {% load static %}
 
+
 {% block content %}
+{% include 'home/filter_form.html' %}
+
    <div class="container-fluid">
     <h3 class="text-dark mb-4">purchases</h3>
     <div class="card shadow">
@@ -13,6 +16,9 @@
             
             <a href="{% url 'inventory:purchases_dashboard' %}">
               <button class="btn btn-primary">Dashboard</button>
+            </a> 
+            <a href="{% url 'inventory:create_purchase' %}">
+                <button class="btn btn-primary">create new purchase</button>
             </a> 
           
 
@@ -48,7 +54,13 @@
                                 <td><strong>{{ purchase.total_purchases }}</strong></td>
                                 <td><strong>{{ purchase.num_returend }}</strong></td>
                                 <td><strong>{{ purchase.cost_returned }}</strong></td>
-                                <td><a href="{% url "inventory:detail_purchase" purchase.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a><td/>
+                                <td><a href="{% url "inventory:detail_purchase" purchase.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a></td>
+                                <td>
+                                    <a href="{% url 'inventory:delete_purchase' purchase.id %}">
+                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    </a>
+                                </td>
+                            
                             </tr>
                             {% endfor %}
                           {% else %}
@@ -60,6 +72,7 @@
                     </tfoot>
                 </table>
             </div>
+            {% load sole_proprietorship_extras %}
             {% include 'home/pagination.html' %}
         </div>
     </div>

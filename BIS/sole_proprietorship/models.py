@@ -28,7 +28,6 @@ class TransactionSignal:
                 ).delete()
         
         transaction = Transaction.objects.create(
-            owner=owner,
             date = purchase_inventory.purchase_date ,
             purchase_inventory = purchase_inventory,
             inventory_price = inventory_price,
@@ -36,9 +35,8 @@ class TransactionSignal:
             comment=f"purchase inventory {inventory_price.inventory}, number of units purchased{inventory_price.number_of_unit}")
 
 
-        Journal.objects.create(owner=owner,
+        Journal.objects.create(
         account = inventory_price.inventory.general_ledeger_account,
-        date = purchase_inventory.purchase_date ,
         balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
         transaction_type="Debit",
         transaction= transaction
@@ -46,9 +44,8 @@ class TransactionSignal:
         )
         
         
-        Journal.objects.create(owner=owner,
+        Journal.objects.create(
                     account = Helper.cash_or_accounts_payable(purchase_inventory),
-                    date = purchase_inventory.purchase_date ,
                     balance= inventory_price.number_of_unit *  inventory_price.cost_per_unit ,
                     transaction_type="Credit" , 
                     transaction= transaction
@@ -74,7 +71,6 @@ class TransactionSignal:
             ).delete()
 
         transaction = Transaction.objects.create(
-            owner=owner,
             date = date ,
             inventory_return = instance,
             status=Journal.Status.PURCHASE_RETURN.value,
@@ -82,17 +78,14 @@ class TransactionSignal:
         )
 
         Journal.objects.create(
-                owner=owner,
                 account = instance.inventory_price.inventory.general_ledeger_account,
-                date = date ,
                 balance= balance,
                 transaction_type="Credit" ,
                 transaction = transaction 
               
                 )
-        Journal.objects.create(owner=owner,
+        Journal.objects.create(
                     account = Helper.cash_or_accounts_payable(instance.inventory_price.purchase_inventory),
-                    date = date ,
                     balance=  balance ,
                     transaction_type="Debit" , 
                     transaction = transaction 
@@ -118,23 +111,20 @@ class TransactionSignal:
 
         if not exists and balance != 0:
             transaction = Transaction.objects.create(
-                owner=owner,
                 date = date,
                 comment=f"freight in cost {instance.inventory}",
                 status= Transaction.Status.FREIGHT_IN.value,
                 purchase_inventory = instance.purchase_inventory, 
 
             )
-            Journal.objects.create(owner=owner,
+            Journal.objects.create(
                     account = instance.inventory.general_ledeger_account,
-                    date = date ,
                     balance= balance ,
                     transaction_type="Debit" , 
                     transaction= transaction
                     )
-            Journal.objects.create(owner=owner,
+            Journal.objects.create(
                         account = instance.purchase_inventory.term.freight_in_account,
-                        date = date ,
                         balance=  balance ,
                         transaction_type="Credit" ,
                         transaction= transaction
@@ -225,7 +215,7 @@ class Transaction(models.Model):
     signal = TransactionSignal()    
 
     def __str__(self):
-        return f'Transaction Num:{self.num}'
+        return f'Transaction Num:{self.pk}'
 
 
 class Journal(models.Model):

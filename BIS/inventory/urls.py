@@ -14,6 +14,7 @@ urlpatterns = [
     path('create_purchase_return/<int:pk>' , views.CreatePurchaseReturnView.as_view() , name="create_purchase_return"),
     path('list_purchase' , views.ListPurchaseInventoryView.as_view() , name="list_purchase") ,
     path('detail_purchase/<int:pk>' , views.DetailPurchaseInventoryView.as_view() , name="detail_purchase") , 
+    path('delete_purchase/<int:pk>', views.DeletePurchaseInventoryView.as_view(success_url=reverse_lazy('inventory:list_purchase')), name='delete_purchase'),
     path('purchases_dashboard' , views.PurchasesDashboard.as_view() , name="purchases_dashboard") , 
     path('pay_invoice/<int:pk>' , views.PayInvoicePayView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice"),
     path('test' , views.Test.as_view() , name="test"),

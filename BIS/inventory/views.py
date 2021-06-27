@@ -5,7 +5,9 @@ from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , In
 from django.views.generic import View , TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
-                                 InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm )
+                                 InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
+                                 PurchaseFilter
+                                  )
 from sole_proprietorship.models import Journal
 from django.utils import timezone
 from django.contrib import messages
@@ -16,6 +18,8 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 from django.http import HttpResponse
+from django_filters.views import FilterView
+from inventory.crispy_forms import PurchaseFilterHelper
 
 def get_graph():
     """
@@ -87,6 +91,7 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
         if purchase_inventory_form.is_valid() and inventory_price_formset.is_valid():
             purchase_inventory = purchase_inventory_form.save(commit=False)
             purchase_inventory.owner = owner
+            print('status in view',purchase_inventory.status)
             purchase_inventory.status = 0 if purchase_inventory.check_status() =="UNPAID" else 1 
             purchase_inventory.save()
     
@@ -152,17 +157,32 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
         return render(request , self.template_name , {"form": form} )
 
     
-class ListPurchaseInventoryView(OwnerListView):
+class ListPurchaseInventoryView(LoginRequiredMixin, FilterView):
     model = PurchaseInventory
     template_name = "inventory/purchase_list.html"
     paginate_by = 30
     ordering = ["-purchase_date"]
+    filterset_class = PurchaseFilter
+    helper = PurchaseFilterHelper()
 
+    def get_queryset(self):
+        qs = super().get_queryset().filter(owner=self.request.user)
+        print('query', qs.query)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['helper'] = self.helper
+        return ctx
 
 class DetailPurchaseInventoryView(OwnerDetailView):
     model = PurchaseInventory
     template_name = "inventory/purchase_detail.html"
     
+
+
+class DeletePurchaseInventoryView(OwnerDeleteView):
+    model = PurchaseInventory
 
 class PurchasesDashboard(LoginRequiredMixin , View):
     template_name = "inventory/purchases_dashboard.html"

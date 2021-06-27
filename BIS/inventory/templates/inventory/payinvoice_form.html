@@ -2,5 +2,5 @@
 {% block cardheader %} Pay your Invoice {% endblock %}
 {% block formblock %}
     {% load crispy_forms_tags %}
-    {% crispy form %}
+    {{ form|crispy }}
 {% endblock %}

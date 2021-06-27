@@ -1,0 +1,9 @@
+<div class="card">
+    <div class="card-body">
+        <form method="get">
+            {% load crispy_forms_tags %}  
+            {% crispy  filter.form  helper %}
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+</div>

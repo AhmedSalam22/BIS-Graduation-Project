@@ -7,6 +7,31 @@ from suppliers.models import Supplier
 from django.forms import formset_factory
 from django.utils import timezone
 from sole_proprietorship.models import Accounts
+import django_filters
+from django.utils import timezone
+
+class PurchaseFilter(django_filters.FilterSet):
+    class Meta:
+        model = PurchaseInventory
+        fields = {
+                'status': ['exact'],
+                'purchase_date': ['gte', 'lte'],
+                'due_date': ['gte', 'lte'],
+                'term': ['exact'],
+                'supplier': ['exact'],
+                'num_returend': ['gte', 'lte'],  
+                'cost_returned': ['gte', 'lte'],  
+                'total_purchases': ['gte', 'lte'],  
+                'net_purchases': ['gte', 'lte'],  
+                'total_amount_paid': ['gte', 'lte'],  
+                }
+
+    def __init__(self,   **kwargs):
+        super().__init__(**kwargs)
+        date_fields = ['purchase_date__gte', 'purchase_date__lte', 'due_date__gte', 'due_date__lte']
+        for date_field in date_fields:
+            self.form.fields[date_field].widget =forms.widgets.DateInput(attrs={'type': 'date'})
+
 
 class PaymentSalesTermForm(forms.ModelForm):
     class Meta:
@@ -39,7 +64,7 @@ class PaymentSalesTermForm(forms.ModelForm):
 class PurchaseInventoryForm(forms.ModelForm):
     class Meta:
         model = PurchaseInventory
-        fields = ['supplier' , 'num' , 'purchase_date' ,'term', 'due_date' , 'frieght_in']
+        fields = ['supplier' , 'purchase_date' ,'term', 'due_date' , 'frieght_in']
         widgets = {
             'purchase_date': forms.widgets.DateInput(attrs={'type': 'date'}),
             'due_date': forms.widgets.DateInput(attrs={'type': 'date'}),
@@ -54,7 +79,7 @@ class PurchaseInventoryForm(forms.ModelForm):
         self.helper.layout = Layout( 
             Row( 
                 Column('supplier'),
-                Column('num' , 'purchase_date' , 'term' ,'due_date' , 'frieght_in') )
+                Column('purchase_date' , 'term' ,'due_date' , 'frieght_in') )
         )
         self.helper.form_tag = False
     
@@ -72,7 +97,7 @@ class InventoryPriceFormsetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layout = Layout( 
-            Div(Row( 'inventory' , 'cost_per_unit' , 'number_of_unit' ) , css_class="link-formset" )
+            Div(Row(Column('inventory') , Column('cost_per_unit') , Column('number_of_unit') ) , css_class="link-formset" )
         )
         self.form_tag = False
 
@@ -91,6 +116,8 @@ class InventoryReturnForm(forms.ModelForm):
         super().__init__(*args, **kwargs)        
         self.fields["date"].initial = timezone.localdate()
         
+class DateInput(forms.DateInput):
+    input_type = 'date'
 
 class PayInvoiceForm(forms.ModelForm):
     class Meta:
@@ -101,11 +128,11 @@ class PayInvoiceForm(forms.ModelForm):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
         self.fields["purchase_inventory"].queryset = PurchaseInventory.objects.filter(owner=self.owner , status=0)
+        self.fields['date'].widget = DateInput()
+        self.fields['date'].initial = timezone.now()
 
 
 
-class DateInput(forms.DateInput):
-    input_type = 'date'
 
 class ReportingPeriodConfigForm(forms.Form):
     start_date = forms.DateField(widget = DateInput)

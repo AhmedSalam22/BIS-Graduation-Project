@@ -14,12 +14,10 @@ def purchase_inventory_update(sender, instance , created=None,  **kwargs):
     instance: InventoryPrice
     """
     purchase_inventory = instance.purchase_inventory
-
     purchase_inventory.total_purchases =  purchase_inventory.check_total_amount()
     purchase_inventory.net_purchases = purchase_inventory.check_net_purchase()
     purchase_inventory.total_amount_paid = purchase_inventory.check_total_amount_paid()
     purchase_inventory.status = 0 if purchase_inventory.check_status() =="UNPAID" else 1
-    # self.due_date = self.check_due_date()
     purchase_inventory.save()
 
 

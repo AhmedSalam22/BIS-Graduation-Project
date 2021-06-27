@@ -109,9 +109,9 @@ class AccountsDeleteView(OwnerDeleteView):
 
 
 class TransactionListView(LoginRequiredMixin, FilterView):
-    paginate_by = 25
+    paginate_by = 10
     model = Transaction
-    ordering = ["-date", 'journal__transaction_type']
+    ordering = ["-date"]
     template_name = "sole_proprietorship/transaction_list.html"
     filterset_class = TransactionFilter
     helper = TransactionFilterHelper()
@@ -122,6 +122,11 @@ class TransactionListView(LoginRequiredMixin, FilterView):
         print('query', qs.query)
         return qs
 
+
+    # def get_filterset(self, filterset_class):
+    #     qs = super().get_filterset(filterset_class).qs.filter(journal__account__owner=self.request.user).distinct()
+    #     return qs
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         query = Transaction.my_objects.total_debit_and_total_credit(self.request.user.id,
@@ -129,6 +134,7 @@ class TransactionListView(LoginRequiredMixin, FilterView):
         ctx['Debit'], ctx['Credit'] = query.get('Debit') , query.get('Credit')
         ctx['helper'] = self.helper
         return ctx
+
 
 
 
@@ -617,7 +623,9 @@ class PivotTable(LoginRequiredMixin , View):
                                             FROM sole_proprietorship_journal as j
                                             JOIN sole_proprietorship_accounts as a
                                             on j.account_id = a.id
-                                            where j.owner_id = %s			
+                                            Join sole_proprietorship_transaction as t
+                                            ON t.id = j.transaction_id
+                                            where a.owner_id = %s			
                                                                                                         )
                             GROUP by date , account """ , [request.user.id] )
             df = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "Balance" , "normal_balance" , "transaction_type" , "account_type"])
