@@ -2,9 +2,18 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column , Submit , Div
 from crispy_forms.bootstrap import TabHolder, Tab
 
-# Row(Column('purchase_date__gte', 'purchase_date__lte', 'due_date__gte', 'due_date__lte'), 
-#                     Column('status', 'term'),
-#                 ),
+
+
+class InventoryFilterHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout = Layout(
+            Row(
+                Column('item_name__icontains'), Column('description__icontains')
+            )
+        )
+        self.form_tag = False
+
 
 class PurchaseFilterHelper(FormHelper):
     def __init__(self, *args, **kwargs):

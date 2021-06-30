@@ -6,7 +6,7 @@ from django.views.generic import View , TemplateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
                                  InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
-                                 PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper
+                                 PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet
                                   )
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
@@ -19,9 +19,9 @@ import base64
 from io import BytesIO
 from django.http import HttpResponse
 from django_filters.views import FilterView
-from inventory.crispy_forms import PurchaseFilterHelper
+from inventory.crispy_forms import PurchaseFilterHelper, InventoryFilterHelper
 from django.db import transaction
-
+from inventory.filter_forms import InventoryFilter
 def get_graph():
     """
     reference :https://www.youtube.com/watch?v=jrT6NiM46jk
@@ -36,6 +36,13 @@ def get_graph():
     return graph
 
 # Create your views here.
+
+class FilterContextMixin:
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['helper'] = self.helper
+        return ctx
+
 class FormKwargsMixin:
     def get_form_kwargs(self):
         """override get_form_kwargs from CREATE or UPDATE View to accept owner as argument"""
@@ -155,15 +162,61 @@ class CreateInventoryView(LoginRequiredMixin, View):
 
 
 
-class ListInventoryView(OwnerListView):
+class UpdateInventoryView(LoginRequiredMixin, View):
+    template_name = 'inventory/inventory_create.html'
+    success_url = None
+    imageHelper =  ImageFormsetHelper()
+
+    def get(self, request, pk, *args, **kwargs):
+        inventory = get_object_or_404(Inventory, pk=pk, owner=request.user)
+        inventoryForm, imageFormset = InventoryForm(instance=inventory) ,  ImageFormSet(instance=inventory)
+        inventoryForm.fields['general_ledeger_account'].queryset = Accounts.objects.filter(owner= request.user).all()
+        ctx = {
+            'inventoryForm': inventoryForm,
+            'imageFormset': imageFormset, 
+            'imageHelper': self.imageHelper
+        }
+        return render(request, self.template_name, ctx)
+
+    def post(self, request, pk,  *args, **kwargs):
+
+        inventory = get_object_or_404(Inventory, pk=pk, owner=request.user)
+        inventoryForm, imageFormset = InventoryForm(request.POST, instance=inventory) ,  ImageFormSet(request.POST, request.FILES, instance=inventory)
+        if inventoryForm.is_valid() and imageFormset.is_valid():
+            inventory = inventoryForm.save(commit=False)
+            inventory.owner = request.user
+            inventory.save()
+            for imageForm in imageFormset:
+                image = imageForm.save(commit=False)
+                print("img",image.img)
+                if image.img != None:
+                    image.inventory = inventory
+                    image.save()
+            messages.success(request, 'Your Inventory has been updated Successfuly')
+            return redirect(reverse_lazy(self.success_url , args=[
+                inventory.pk
+            ]))
+        return (request, self.template_name, {
+            'inventoryForm': inventoryForm,
+            'imageFormset': imageFormset,
+            'imageHelper': self.imageHelper
+
+        })
+
+class ListInventoryView(LoginRequiredMixin, FilterContextMixin, FilterView):
     model = Inventory
     template_name = "inventory/inventory_list.html"
     paginate_by = 20
+    ordering = ['item_name']
+    filterset_class = InventoryFilter
+    helper = InventoryFilterHelper()
+
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().filter(owner= self.request.user)
         # selected related used to cash the result from FK without hit the database
-        return qs.select_related().all()
+        return qs
+
 
     
 class DetailInventoryView(OwnerDetailView):
@@ -177,6 +230,10 @@ class DetailInventoryView(OwnerDetailView):
         context["prices"] = context["inventory"].inventoryprice_set.order_by("-purchase_inventory__purchase_date").select_related()
         return context
     
+
+
+class DeleteInventoryView(OwnerDeleteView):
+    model = Inventory
 
 class HomeView(TemplateView):
     template_name = "inventory/index.html"
@@ -208,7 +265,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
         return render(request , self.template_name , {"form": form} )
 
     
-class ListPurchaseInventoryView(LoginRequiredMixin, FilterView):
+class ListPurchaseInventoryView(LoginRequiredMixin, FilterContextMixin, FilterView):
     model = PurchaseInventory
     template_name = "inventory/purchase_list.html"
     paginate_by = 30
@@ -221,10 +278,6 @@ class ListPurchaseInventoryView(LoginRequiredMixin, FilterView):
         print('query', qs.query)
         return qs
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['helper'] = self.helper
-        return ctx
 
 class DetailPurchaseInventoryView(OwnerDetailView):
     model = PurchaseInventory

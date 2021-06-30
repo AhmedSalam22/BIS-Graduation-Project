@@ -8,7 +8,11 @@
 {% endblock %}
 
 {% block content %}
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <a class="btn btn-danger btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:delete_inventory' inventory.pk %}"><i class="fa fa-trash fa-sm text-white-50"></i>&nbsp;Delete this inventory</a>
+    <a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:update_inventory' inventory.pk %}"><i class="fa fa-edit fa-sm text-white-50"></i>&nbsp;Edit this inventory</a>
 
+</div>
 <div class="card">
     <div class="card-body" style="background-color:white;">
          <section id="model-details"><i class="icon ion-android-microphone"></i>

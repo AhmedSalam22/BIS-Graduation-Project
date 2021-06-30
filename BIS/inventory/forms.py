@@ -9,6 +9,12 @@ from django.utils import timezone
 from sole_proprietorship.models import Accounts
 import django_filters
 from django.utils import timezone
+from django.forms import inlineformset_factory
+
+ImageFormSet = inlineformset_factory(
+    Inventory, InventoryImag, fields=('img',), extra = 3
+    )
+
 
 class PurchaseFilter(django_filters.FilterSet):
     class Meta:
