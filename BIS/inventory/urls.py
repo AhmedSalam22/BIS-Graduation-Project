@@ -8,7 +8,7 @@ urlpatterns = [
     path('update_term/<int:pk>' , views.UpdateTermView.as_view(success_url=reverse_lazy('inventory:list_term')) , name="update_term" ),
     path('list_term' , views.ListTermView.as_view() , name="list_term" ), 
     path('delete_term/<int:pk>' , views.DeleteTermView.as_view(success_url=reverse_lazy('inventory:list_term')) , name="delete_term" ),
-    path('create_purchase' , views.CreatePurchaseInventoryView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="create_purchase" ),
+    path('create_purchase' , views.CreatePurchaseInventoryView.as_view(success_url='inventory:detail_purchase') , name="create_purchase" ),
     path('list_inventory' , views.ListInventoryView.as_view() , name="list_inventory") , 
     path('detail_inventory/<int:pk>' , views.DetailInventoryView.as_view() , name="detail_inventory" ),
     path('create_purchase_return/<int:pk>' , views.CreatePurchaseReturnView.as_view() , name="create_purchase_return"),
@@ -17,6 +17,8 @@ urlpatterns = [
     path('delete_purchase/<int:pk>', views.DeletePurchaseInventoryView.as_view(success_url=reverse_lazy('inventory:list_purchase')), name='delete_purchase'),
     path('purchases_dashboard' , views.PurchasesDashboard.as_view() , name="purchases_dashboard") , 
     path('pay_invoice/<int:pk>' , views.PayInvoicePayView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice"),
+    path('pay_invoice_delete/<int:pk>' , views.PayInvoiceDeleteView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice_delete"),
+
     path('test' , views.Test.as_view() , name="test"),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 

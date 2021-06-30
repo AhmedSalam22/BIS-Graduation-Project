@@ -1,7 +1,7 @@
 from sole_proprietorship.models import Journal
 from django.db.models import Q 
 from inventory.helper import Helper
-
+from sole_proprietorship.models import Transaction
 
 
 
@@ -44,6 +44,15 @@ def update_purchase_after_pay_invoice(sender, instance , created,  **kwargs):
     purchase_inventory = instance.purchase_inventory
     purchase_inventory.total_amount_paid = purchase_inventory.check_total_amount_paid()
     purchase_inventory.status = 1 if purchase_inventory.check_status() == "PAID" else 0
+    purchase_inventory.save()
+    Transaction.signal.pay_invoice(sender, instance , created,  **kwargs)
+
+
+def update_purchase_after_pay_invoice_delete(sender, instance, **kwargs):
+    purchase_inventory = instance.purchase_inventory
+    purchase_inventory.status =  0
+
+    purchase_inventory.total_amount_paid = purchase_inventory.check_total_amount_paid()
     purchase_inventory.save()
 
 

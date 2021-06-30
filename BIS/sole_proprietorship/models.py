@@ -133,17 +133,66 @@ class TransactionSignal:
 
 
 
-    def pay_invoice(sender, instance, create, **kwargs):
+    def pay_invoice(self, sender, instance, create, **kwargs):
         """
         Journal Entry to record paid Invoice
         A/p Debit by  xxxx
             Cash Credit by xxxxx
+            Inventory[dicount] credit by xxxx
         """
         
-        if not created:
+        if not create:
             Transaction.objects.filter(
                 Q(pay_invoice=instance) & Q(status=Transaction.Status.PAY_INVOICE.value) 
             ).delete()
+
+        transaction = Transaction.objects.create(
+            date = instance.date ,
+            pay_invoice = instance,
+            status=Transaction.Status.PAY_INVOICE.value,
+            comment=f"PAY invoice"
+        )
+
+        day_of_payment, due_date, dicount_percentage = instance.date , instance.purchase_inventory.due_date,instance.purchase_inventory.term.discount_percentage
+        if due_date != None and day_of_payment <= due_date and  dicount_percentage > 0:
+            total_amount = instance.amount_paid/ ( (100 - dicount_percentage) / 100)
+            Journal.objects.create(
+                                account = instance.purchase_inventory.term.accounts_payable,
+                                balance=  total_amount ,
+                                transaction_type="Debit" ,
+                                transaction= transaction
+                                ) 
+            #Cash credit by amount Paid
+            Journal.objects.create(
+                    account = instance.purchase_inventory.term.cash_account,
+                    balance=  instance.amount_paid ,
+                    transaction_type="Credit" ,
+                    transaction= transaction
+                    ) 
+            #Discount
+            Journal.objects.create(
+                account = instance.purchase_inventory.inventoryprice_set.first().inventory.general_ledeger_account,
+                balance=  total_amount * (dicount_percentage / 100) ,
+                transaction_type="Credit" ,
+                transaction= transaction
+                ) 
+        else:
+            Journal.objects.create(
+                        account = instance.purchase_inventory.term.accounts_payable,
+                        balance=  instance.amount_paid ,
+                        transaction_type="Debit" ,
+                        transaction= transaction
+                        )
+            Journal.objects.create(
+                    account = instance.purchase_inventory.term.cash_account,
+                    balance=  instance.amount_paid ,
+                    transaction_type="Credit" ,
+                    transaction= transaction
+                    ) 
+
+
+        
+        
 
 
 

@@ -79,8 +79,8 @@
                 <h5 class="text-primary p-0 m-0 pb-2"><strong>Payment History and other info</strong></h5>
                 <p class="p-0 m-0 pb-2"></p>
                 <div class="table-responsive">
-                    <table class="table">
-                        <thead>
+                    <table class="table table-hover table-borderless">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Date</th>
                                 <th>Amount</th>
@@ -92,7 +92,11 @@
                             <tr>
                                 <td>{{ payment.date }}</td>
                                 <td>{{ payment.amount_paid }}</td>
-                                <td><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button><span>&nbsp;</span></td>
+                                <td>
+                                    <a href="{% url 'inventory:pay_invoice_delete' payment.id %}">
+                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -110,7 +114,7 @@
     <section >
         <h5 class="text-center text-primary p-0 m-0 pb-3"><strong>List of Purchased Item</strong></h5>
         <div>
-            <table class="table">
+            <table class="table table-hover table-borderless">
                 <thead class="table-dark">
                     <tr>
                         <th>#</th>

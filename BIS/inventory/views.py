@@ -1,8 +1,8 @@
 from django.shortcuts import render , redirect , get_object_or_404 
 from django.urls import reverse_lazy
 from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerUpdateView , OwnerDetailView
-from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice , PurchaseInventory
-from django.views.generic import View , TemplateView
+from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice , PurchaseInventory, PayInvoice
+from django.views.generic import View , TemplateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
                                  InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
@@ -20,6 +20,7 @@ from io import BytesIO
 from django.http import HttpResponse
 from django_filters.views import FilterView
 from inventory.crispy_forms import PurchaseFilterHelper
+from django.db import transaction
 
 def get_graph():
     """
@@ -81,6 +82,7 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
         }
         return render(request , self.template_name , ctx )
 
+    @transaction.atomic
     def post(self , request , *args , **kwargs):
         """
             save the form data if is vaild
@@ -91,7 +93,8 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
         if purchase_inventory_form.is_valid() and inventory_price_formset.is_valid():
             purchase_inventory = purchase_inventory_form.save(commit=False)
             purchase_inventory.owner = owner
-            print('status in view',purchase_inventory.status)
+            purchase_inventory.due_date = purchase_inventory.check_due_date()
+
             purchase_inventory.status = 0 if purchase_inventory.check_status() =="UNPAID" else 1 
             purchase_inventory.save()
     
@@ -100,7 +103,9 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
                 inventory_price.purchase_inventory = purchase_inventory
                 inventory_price.save()
 
-            return redirect(self.success_url)
+            return redirect(reverse_lazy(self.success_url , args=[
+                purchase_inventory.pk
+            ]))
         ctx = {
                     "purchase_inventory_form":purchase_inventory_form,
                     "inventory_price_formset":inventory_price_formset,
@@ -145,6 +150,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
         form.fields['inventory_price'].initial = inventory_price
         return render(request , self.template_name , {"form": form} )
 
+    @transaction.atomic
     def post(self, request, pk , *args, **kwargs):
         owner = request.user
         query = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
@@ -166,7 +172,7 @@ class ListPurchaseInventoryView(LoginRequiredMixin, FilterView):
     helper = PurchaseFilterHelper()
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(owner=self.request.user)
+        qs = super().get_queryset().filter(owner=self.request.user).all()
         print('query', qs.query)
         return qs
 
@@ -178,6 +184,8 @@ class ListPurchaseInventoryView(LoginRequiredMixin, FilterView):
 class DetailPurchaseInventoryView(OwnerDetailView):
     model = PurchaseInventory
     template_name = "inventory/purchase_detail.html"
+
+
     
 
 
@@ -281,6 +289,20 @@ class PayInvoicePayView(FormKwargsMixin, OwnerCreateView):
             return {'purchase_inventory': invoice}
         except PurchaseInventory.DoesNotExist:
             messages.warning(self.request , "Warning:the pk in your url is not vaild.") 
+
+    @transaction.atomic
+    def post(self, *args, **kwargs):
+        return super().post(*args, **kwargs)
+
+
+
+class PayInvoiceDeleteView(LoginRequiredMixin, DeleteView):
+    template_name = 'inventory/pay_invoice_delete.html'
+    model = PayInvoice
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(purchase_inventory__owner=self.request.user).distinct()
+        return qs
 
 
 

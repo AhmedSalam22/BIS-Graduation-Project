@@ -426,9 +426,6 @@ class PurchaseInventory(models.Model):
         """
         retrun due date if user don't specify it's directly and used terms instead
         """
-        if self.check_status() == "PAID":
-            return None
-
         if self.due_date:
             return self.due_date
         else:
