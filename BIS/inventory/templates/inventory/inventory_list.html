@@ -1,8 +1,9 @@
 {% extends 'home/base.html' %}
 {% block content %}
-    <div class="container">
-    <h3 class="" align="center">Inventory items</h3>
-    
+<div class="container">
+    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-dark mb-0">Inventory items</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:create_inventory'%}"><i class="fa fa-plus fa-sm text-white-50"></i>&nbsp;Create New Inventory</a>
+    </div>    
     {% if inventory_list %}    
         <div class="row">
         {% for inventory in inventory_list %}

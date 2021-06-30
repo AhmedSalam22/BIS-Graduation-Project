@@ -1,10 +1,10 @@
 from django import forms
-from inventory.models import PurchaseInventory , PaymentSalesTerm , InventoryPrice , Inventory, InventoryReturn , PayInvoice
+from inventory.models import PurchaseInventory , PaymentSalesTerm , InventoryPrice , Inventory, InventoryReturn , PayInvoice, InventoryImag
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
 from crispy_forms.bootstrap import InlineRadios
 from suppliers.models import Supplier
-from django.forms import formset_factory
+from django.forms import formset_factory, modelformset_factory
 from django.utils import timezone
 from sole_proprietorship.models import Accounts
 import django_filters
@@ -102,7 +102,23 @@ class InventoryPriceFormsetHelper(FormHelper):
         self.form_tag = False
 
 
+class ImageFormsetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout = Layout( 
+            Div(Row(Column('img') ,  css_class="link-formset" ))
+        )
+        self.form_tag = False
+
+
+class ImageForm(forms.ModelForm):
+    class Meta:
+        model = InventoryImag
+        exclude = ('inventory', )
+
+
 InventoryPriceFormset = formset_factory(InventoryPriceForm)
+ImageFormest = formset_factory(ImageForm)
 
 class InventoryReturnForm(forms.ModelForm):
     class Meta:
@@ -150,4 +166,7 @@ class ReportingPeriodConfigForm(forms.Form):
 
 
         
-
+class InventoryForm(forms.ModelForm):
+    class Meta:
+        model = Inventory
+        exclude = ('owner',)

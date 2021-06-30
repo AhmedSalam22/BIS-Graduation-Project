@@ -29,3 +29,7 @@ def validate_username(request):
         'is_taken' : User.objects.filter(username__iexact=user_name).exists()
     }
     return JsonResponse(data)
+
+
+def my_custom_page_not_found_view(request, exception):
+    return render(request, 'home/404.html')

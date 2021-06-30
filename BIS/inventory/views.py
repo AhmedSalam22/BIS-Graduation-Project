@@ -1,14 +1,14 @@
 from django.shortcuts import render , redirect , get_object_or_404 
 from django.urls import reverse_lazy
 from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerUpdateView , OwnerDetailView
-from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice , PurchaseInventory, PayInvoice
+from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice , PurchaseInventory, PayInvoice, InventoryImag
 from django.views.generic import View , TemplateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
                                  InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
-                                 PurchaseFilter
+                                 PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper
                                   )
-from sole_proprietorship.models import Journal
+from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Sum , Q
@@ -113,6 +113,48 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
                 }
         return render(request , self.template_name , ctx )
 
+
+class CreateInventoryView(LoginRequiredMixin, View):
+
+    template_name = 'inventory/inventory_create.html'
+    success_url = None
+    imageHelper =  ImageFormsetHelper()
+    
+    def get(self, request, *args, **kwargs):
+        inventoryForm, imageFormset = InventoryForm() ,  ImageFormest()
+        inventoryForm.fields['general_ledeger_account'].queryset = Accounts.objects.filter(owner= request.user).all()
+        ctx = {
+            'inventoryForm': inventoryForm,
+            'imageFormset': imageFormset, 
+            'imageHelper': self.imageHelper
+        }
+        return render(request, self.template_name, ctx)
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        inventoryForm, imageFormset = InventoryForm(request.POST) ,  ImageFormest(request.POST, request.FILES)
+        if inventoryForm.is_valid() and imageFormset.is_valid():
+            inventory = inventoryForm.save(commit=False)
+            inventory.owner = request.user
+            inventory.save()
+            for imageForm in imageFormset:
+                image = imageForm.save(commit=False)
+                print("img",image.img)
+                image.inventory = inventory
+                image.save()
+            messages.success(request, 'Your Inventory has been created Successfuly')
+            return redirect(reverse_lazy(self.success_url , args=[
+                inventory.pk
+            ]))
+        return (request, self.template_name, {
+            'inventoryForm': inventoryForm,
+            'imageFormset': imageFormset,
+            'imageHelper': self.imageHelper
+
+        })
+
+
+
 class ListInventoryView(OwnerListView):
     model = Inventory
     template_name = "inventory/inventory_list.html"
@@ -145,9 +187,12 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
     success_url = "inventory:detail_inventory"
 
     def get(self,request,*args, **kwargs):
-        inventory_price = get_object_or_404(InventoryPrice , pk=kwargs.get('pk') , inventory__owner=request.user)
         form = InventoryReturnForm()
-        form.fields['inventory_price'].initial = inventory_price
+        form.fields['inventory_price'].queryset = InventoryPrice.objects.filter(inventory__owner=request.user).all()
+        if kwargs.get('pk', None) != None: 
+            inventory_price = get_object_or_404(InventoryPrice , pk=kwargs.get('pk') , inventory__owner=request.user)
+            form.fields['inventory_price'].initial = inventory_price
+        
         return render(request , self.template_name , {"form": form} )
 
     @transaction.atomic
