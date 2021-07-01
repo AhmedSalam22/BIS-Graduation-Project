@@ -631,4 +631,17 @@ class InventoryReturn(models.Model):
         return f"return {self.num_returned} of {self.inventory_price.inventory.item_name}"
 
 
+class InventoryAllowance(models.Model):
+    """
+     Allowance Model it's like Purchase Return Except the inventory keep with you
+    """
+    purchase_inventory =   models.ForeignKey(PurchaseInventory, on_delete=models.CASCADE)
+    inventory_price = models.ForeignKey(InventoryPrice, on_delete=models.CASCADE)
+    date = models.DateField()
+    amount = models.FloatField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{purchase_inventory} Return ${amount}"
+
+
 

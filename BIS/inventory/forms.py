@@ -1,5 +1,7 @@
 from django import forms
-from inventory.models import PurchaseInventory , PaymentSalesTerm , InventoryPrice , Inventory, InventoryReturn , PayInvoice, InventoryImag
+from inventory.models import (PurchaseInventory , PaymentSalesTerm , InventoryPrice ,
+    Inventory, InventoryReturn , PayInvoice, InventoryImag, InventoryAllowance
+    )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
 from crispy_forms.bootstrap import InlineRadios
@@ -176,3 +178,15 @@ class InventoryForm(forms.ModelForm):
     class Meta:
         model = Inventory
         exclude = ('owner',)
+
+
+class InventoryAllowanceForm(forms.ModelForm):
+    class Meta:
+        model = InventoryAllowance
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].widget =  DateInput()
+        self.fields['date'].initial = timezone.now()
+        

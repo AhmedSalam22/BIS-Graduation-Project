@@ -5,9 +5,9 @@ from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , In
 from django.views.generic import View , TemplateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
-                                 InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
-                                 PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet
-                                  )
+    InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
+    PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm
+    )
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
 from django.contrib import messages
@@ -17,11 +17,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django_filters.views import FilterView
 from inventory.crispy_forms import PurchaseFilterHelper, InventoryFilterHelper
 from django.db import transaction
 from inventory.filter_forms import InventoryFilter
+from django.core import serializers
+
 def get_graph():
     """
     reference :https://www.youtube.com/watch?v=jrT6NiM46jk
@@ -109,7 +111,8 @@ class CreatePurchaseInventoryView(LoginRequiredMixin, View):
                 inventory_price = form.save(commit=False)
                 inventory_price.purchase_inventory = purchase_inventory
                 inventory_price.save()
-
+            
+            messages.success(request, 'Your Purchase has been created Successfuly')
             return redirect(reverse_lazy(self.success_url , args=[
                 purchase_inventory.pk
             ]))
@@ -409,7 +412,53 @@ class PivotTableView(LoginRequiredMixin , View):
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
 
+class PurchaseAllowanceView(LoginRequiredMixin, View):
+    template_name = 'inventory/purchase_allowance_form.html'
+    success_url = None
+
+    def get(self, request, *args, **kwargs):
+        form = InventoryAllowanceForm()
+        form.fields['purchase_inventory'].queryset = PurchaseInventory.objects.filter(owner=request.user).all()
+        form.fields['purchase_inventory'].initial = PurchaseInventory.objects.filter(owner=request.user, pk= kwargs.get('pk', None)).first()
+        
+        if kwargs.get('pk', None) != None:
+            purchase =  get_object_or_404(PurchaseInventory, owner=request.user, pk= kwargs['pk'])
+            form.fields['inventory_price'].queryset =  InventoryPrice.objects.filter(purchase_inventory=purchase)
+        else:
+            purchase =  PurchaseInventory.objects.filter(owner=request.user).first()
+            form.fields['inventory_price'].queryset =  InventoryPrice.objects.none()
+        ctx = {
+            'form': form
+        }
+        return render(request, self.template_name, ctx)
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        form = InventoryAllowanceForm(request.POST)
+        if form.is_valid():
+            obj = form.save()
+            messages.success(request, 'Your Allowance has been created Successfuly')
+            return redirect(reverse_lazy(self.success_url , args=[
+                obj.purchase_inventory.pk
+            ]))
+        return render(request , self.template_name , {"form": form} ) 
+
+
+
+class FetchInventoryPriceView(LoginRequiredMixin , View):
+    def get(self, request, *args, **kwargs):
+        inventory_prices = InventoryPrice.objects.select_related('inventory').filter(purchase_inventory__owner= request.user,
+                            purchase_inventory=request.GET.get('purchase_inventory')
+                            ).distinct().values('pk', 'inventory__item_name', 'cost_per_unit')
+
+        return JsonResponse(
+                 list(inventory_prices), safe = False
+            )
+
+
 class Test(LoginRequiredMixin , View):
+
+
     def get(self , request , *args , **kwargs):
         import json
 

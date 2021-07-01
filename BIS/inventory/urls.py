@@ -23,7 +23,9 @@ urlpatterns = [
     path('purchases_dashboard' , views.PurchasesDashboard.as_view() , name="purchases_dashboard") , 
     path('pay_invoice/<int:pk>' , views.PayInvoicePayView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice"),
     path('pay_invoice_delete/<int:pk>' , views.PayInvoiceDeleteView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice_delete"),
-
+    path('create_purchase_allowance', views.PurchaseAllowanceView.as_view(success_url='inventory:detail_purchase'), name='create_purchase_allowance'),
+    path('create_purchase_allowance/<int:pk>', views.PurchaseAllowanceView.as_view(success_url='inventory:detail_purchase'), name='create_purchase_allowance'),
+    path('fetch_inventory_price', views.FetchInventoryPriceView.as_view(), name='fetch_inventory_price'),
     path('test' , views.Test.as_view() , name="test"),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 
