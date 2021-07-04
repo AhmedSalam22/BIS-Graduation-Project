@@ -45,24 +45,29 @@ class PaymentSalesTermForm(forms.ModelForm):
     class Meta:
         model = PaymentSalesTerm
         fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' ,
-                 "accounts_payable", 'freight_in_account', 'cash_account'
+                 "accounts_payable",'pay_freight_out', 'freight_in_account', 'cash_account','freight_out_account', 'COGS'
                  ]
 
     def __init__(self, *args, **kwargs):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        for account in ['cash_account', 'accounts_payable', 'freight_in_account']:
+        for account in ['cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
             self.fields[account].queryset = Accounts.objects.filter(owner=self.owner)
           
         self.helper = FormHelper()
         self.helper.layout = Layout(
-            'config', 
-            'cash_account',
-            'accounts_payable',
+            'config',
             Row( 
                 Column(InlineRadios('terms') , css_class="col-4"),
-                Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage') ),
-            'freight_in_account'
+                Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage')
+            ),
+            Row(
+                Column('freight_in_account', 'freight_out_account'), 
+                Column('COGS', 'cash_account', 'accounts_payable')
+            ),
+            Row(
+                'pay_freight_out'
+            )
             
         )
         

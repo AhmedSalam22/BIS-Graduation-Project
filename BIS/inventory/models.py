@@ -9,7 +9,7 @@ import calendar
 from django.core.exceptions import ValidationError
 from django.db import connection
 import datetime
-
+from django.utils import timezone 
 # Create your models here.
 class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):
@@ -19,6 +19,10 @@ class PaymentSalesTerm(models.Model):
         END_OF_MONTH = 3,_("Due at the end of month")
         NEXT_MONTH = 4,_("Due on the next Month")
         OTHER = 5, _("let me specify the due date DD-MM-YYY")
+
+    class PAY_METHOD(models.IntegerChoices):
+        CASH = 1
+        ACCOUNTS_PAYABLE = 2
 
 
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -45,10 +49,25 @@ class PaymentSalesTerm(models.Model):
     freight_in_account = models.ForeignKey('sole_proprietorship.Accounts',
                                     on_delete=models.CASCADE,
                                     related_name='freight_in_account',
-                                    null=True,
-                                    blank=True,
                                     help_text='choose A/p or Cash to determine if you paid this cost cash or not')
 
+    freight_out_account = models.ForeignKey('sole_proprietorship.Accounts',
+        on_delete= models.CASCADE,
+        help_text = 'choose frieght out expense account',
+        related_name = 'freight_out_account'
+    )
+    pay_freight_out = models.IntegerField(choices=PAY_METHOD.choices,
+        help_text = 'How You will pay frieht-out?',
+    )
+
+    COGS =  models.ForeignKey('sole_proprietorship.Accounts',
+    on_delete=models.CASCADE,
+    help_text='Select Cost of goods sold Account',
+    related_name = 'COGS'
+    )
+
+    
+    
     def __str__(self):
         return self.config
 
@@ -381,11 +400,12 @@ class PurchaseInventory(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
     frieght_in = models.FloatField(default=0)
-    num_returend = models.IntegerField(blank=True, null=True)
-    cost_returned =  models.FloatField(blank=True, null=True)
+    num_returend = models.IntegerField(blank=True, null=True, default=0)
+    cost_returned =  models.FloatField(blank=True, null=True, default=0)
     total_purchases = models.FloatField(blank=True, null=True)
     net_purchases = models.FloatField(blank=True, null=True)
-    total_amount_paid = models.FloatField(blank=True, null=True)
+    total_amount_paid = models.FloatField(blank=True, null=True, default=0)
+    allowance = models.FloatField(blank=True, null=True, default=0)
     objects = models.Manager() # the default_managers
     purchases = PurchaseManager()
 
@@ -458,7 +478,9 @@ class PurchaseInventory(models.Model):
 
 
 
-
+    def check_allowance(self) -> float:
+        query = self.inventoryallowance_set.aggregate(Sum('amount'))
+        return query['amount__sum'] if query['amount__sum']  != None else 0
 
     
     def check_num_cost_of_returned_inventory(self) -> tuple:
@@ -495,7 +517,7 @@ class PurchaseInventory(models.Model):
         return amount of purchase take into our account if we return some inventory
         
         """
-        return self.check_total_amount() - self.check_num_cost_of_returned_inventory()[1]
+        return self.check_total_amount() - self.check_num_cost_of_returned_inventory()[1] - self.check_allowance()
 
     
     def check_total_amount_paid(self):
@@ -640,8 +662,78 @@ class InventoryAllowance(models.Model):
     date = models.DateField()
     amount = models.FloatField(blank=True, null=True)
 
+    def clean(self):
+        invoice_cost = self.purchase_inventory.check_net_purchase()
+        warning_message = f"""
+        Allowance amount can't be greater than invoice cost {invoice_cost}
+        """
+        if self.amount > invoice_cost:
+            raise ValidationError({
+        "amount":ValidationError(_(warning_message) , code="invaild") , 
+        })
+       
+
     def __str__(self):
-        return f"{purchase_inventory} Return ${amount}"
+        return f"{self.date}: {self.purchase_inventory} Return ${self.amount}"
 
 
 
+class Sale(models.Model):
+    customer = model.ForeignKey('Customers_Sales.Customer', on_delete=models.CASCADE)
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
+
+    frieght_out = models.FloatField(default=0)
+    sales_date = models.DateField(default=lambda: timezone.now().date())
+    due_date = models.DateField(
+        help_text="optional if you want to specify it by yourself",
+        null = True ,
+        blank = True,
+    )
+
+    sub_total = models.FloatField(default=0)
+
+
+    def __str__(self):
+        return f'Sales id: {self.pk}'
+
+
+class Sold_Item(models.Model):
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    item = models.ForeignKey(InventoryPrice, on_delete=models.CASCADE)
+    sale_price = models.FloatField()
+    quantity = models.FloatField()
+
+
+    def units_sold(self):
+        query = self.item.sold_item_set.aggregate(Sum('quantity'))
+        return query['quantity__sum'] if query['quantity__sum'] != None else 0
+
+    def num_of_purchase_return(self):
+        purchase_return_q = self.item.inventoryreturn_set.aggregate(Sum('num_returned'))
+        return purchase_return_q['num_returned__sum'] if purchase_return_q['num_returned__sum'] != None else 0
+
+
+    def units_available_for_sales(self):
+        return self.item.number_of_unit - self.num_of_purchase_return() - self.units_sold()
+
+    def quantity_g_units_available_for_sales(self) -> tuple:
+        """
+         return True if the number of item sold greater than  units availble for sales
+        """
+        units_available_for_sales = self.units_available_for_sales()
+        Message = f'The Quantity {self.quantity} cannot be greater than units available for sales {units_available_for_sales}'
+        return self.quantity > units_available_for_sales , Message
+
+
+    def clean(self):
+        invaild, MESSAGE =  self.quantity_g_units_available_for_sales()
+        if invaild:
+            raise ValidationError({
+                    "quantity":ValidationError(_(MESSAGE) , code="invaild") , 
+                    })
+
+    
+
+    def __str__(self):
+        return f'{self.item}'

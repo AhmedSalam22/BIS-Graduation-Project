@@ -73,7 +73,7 @@ class TransactionSignal:
         transaction = Transaction.objects.create(
             date = date ,
             inventory_return = instance,
-            status=Journal.Status.PURCHASE_RETURN.value,
+            status=Transaction.Status.PURCHASE_RETURN.value,
             comment=f"return {instance.num_returned} from {instance.inventory_price.inventory} to {instance.inventory_price.purchase_inventory.supplier}"
         )
 
@@ -189,9 +189,43 @@ class TransactionSignal:
                     transaction_type="Credit" ,
                     transaction= transaction
                     ) 
+    
+    
+    def purchase_allowance(self, sender, instance, created, **kwargs):
+        """
+        Journal Entry to record Purchase Allowance
+        A/p (cash) Debit by  xxxx
+            Inventory Credit by xxxxx
 
-
+        instance: InventoryAllowance
+        """
         
+        if not created:
+            Transaction.objects.filter(
+                Q(purchase_allowance=instance) & Q(status=Transaction.Status.PURCHASE_ALLOWANCE.value) 
+            ).delete()
+
+        transaction = Transaction.objects.create(
+            date = instance.date ,
+            purchase_allowance = instance,
+            status=Transaction.Status.PURCHASE_ALLOWANCE.value,
+            comment=f"Purcase Allowance"
+        )
+
+        Journal.objects.create(
+                account = Helper.cash_or_accounts_payable(instance.purchase_inventory),
+                balance= instance.amount,
+                transaction_type="Debit" ,
+                transaction = transaction 
+              
+                )
+        Journal.objects.create(
+                account = instance.inventory_price.inventory.general_ledeger_account,
+                balance= instance.amount,
+                transaction_type="Credit" ,
+                transaction = transaction 
+              
+                )
         
 
 
@@ -256,6 +290,7 @@ class Transaction(models.Model):
     inventory_price = models.ForeignKey('inventory.InventoryPrice', null=True , blank=True, on_delete=models.CASCADE)
     inventory_return = models.ForeignKey('inventory.InventoryReturn' , null=True, blank=True, on_delete=models.CASCADE)
     pay_invoice = models.ForeignKey('inventory.PayInvoice' , null=True, blank=True, on_delete=models.CASCADE)
+    purchase_allowance = models.ForeignKey('inventory.InventoryAllowance', null=True, blank=True, on_delete= models.CASCADE)
     status = models.IntegerField(choices=Status.choices , null=True, blank=True)
 
     objects = models.Manager() # The default manager.

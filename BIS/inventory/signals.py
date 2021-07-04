@@ -56,3 +56,21 @@ def update_purchase_after_pay_invoice_delete(sender, instance, **kwargs):
     purchase_inventory.save()
 
 
+
+
+def update_purchase_after_allowance(sender, instance, created, **kwargs):
+    purchase_inventory = instance.purchase_inventory
+    purchase_inventory.allowance = purchase_inventory.check_allowance()
+    purchase_inventory.net_purchases = purchase_inventory.check_net_purchase()
+
+    purchase_inventory.save()
+
+
+def update_purchase_after_allowance_delete(sender, instance, **kwargs):
+    purchase_inventory = instance.purchase_inventory
+    purchase_inventory.allowance = purchase_inventory.check_allowance()
+    purchase_inventory.net_purchases = purchase_inventory.check_net_purchase()
+
+    purchase_inventory.save()
+
+

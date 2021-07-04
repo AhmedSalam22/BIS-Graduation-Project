@@ -57,6 +57,12 @@
                                 <td>Total Purchase amount:</td>
                                 <td class="p-0 m-0 p-1"><strong>{{ purchaseinventory.total_purchases }}</strong></td>
                             </tr>
+                            {% if purchaseinventory.allowance > 0%}
+                                <tr>
+                                    <td>Allowance</td>
+                                    <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.allowance }}</strong></td>
+                                </tr>
+                            {% endif %}
                             {% if purchaseinventory.num_returend > 0 %}
                             <tr>
                                 <td>Number of unit's returned:</td>
@@ -66,10 +72,13 @@
                                 <td>Cost of unit's returned:</td>
                                 <td class="p-0 m-0 p-1 text-danger"><strong>{{ purchaseinventory.cost_returned }}</strong></td>
                             </tr>
-                            <tr>
-                                <td>Net Purchase:</td>
-                                <td class="p-0 m-0 p-1 text-success"><strong>{{ purchaseinventory.net_purchases }}</strong></td>
-                            </tr>
+                            {% endif %}
+
+                            {% if purchaseinventory.allowance > 0 or purchaseinventory.num_returend > 0 %}
+                                <tr>
+                                    <td>Net Purchases:</td>
+                                    <td class="p-0 m-0 p-1 text-success"><strong>{{ purchaseinventory.net_purchases }}</strong></td>
+                                </tr>
                             {% endif %}
                         </tbody>
                     </table>

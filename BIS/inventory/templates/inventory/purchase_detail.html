@@ -1,13 +1,22 @@
 
 {% extends "home/base.html" %}
-
+  {% block javascript_top %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/printThis/1.15.0/printThis.min.js" integrity="sha512-d5Jr3NflEZmFDdFHZtxeJtBzk0eB+kkRXWFQqEc1EKmolXjHm2IKCA7kTvXBNjIYzjXfD5XzIjaaErpkZHCkBg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  {% endblock %}
 {% block content %}
 <div class="d-grid gap-2 col-6 mx-auto">
-  <button class="btn btn-light" type="button"><i class="far fa-file-pdf"> PDF</i></button>
+  <button class="btn btn-light" type="button" onclick="printMe()"><i class="far fa-file-pdf"> PDF</i></button>
   <button class="btn btn-light" type="button"><i class="far fa-file-excel"> Excel</i></button>
   {% if purchaseinventory.status == 0 %}
     <button class="btn btn-light" type="button"><strong><a href="{% url "inventory:pay_invoice" purchaseinventory.pk %}" target="blank"><i class="fab fa-amazon-pay"> Pay Invoice</i></a></strong></button>
   {% endif %}
 </div>
- {% include 'inventory/purchase_detail_abstract.html'%}
+<div class="invoice-receipt">
+  {% include 'inventory/purchase_detail_abstract.html'%}
+</div>
+<script>
+  function printMe() {
+    $('.invoice-receipt').printThis();
+  }
+</script>
 {% endblock %}
