@@ -1,6 +1,6 @@
 from django import forms
 from inventory.models import (PurchaseInventory , PaymentSalesTerm , InventoryPrice ,
-    Inventory, InventoryReturn , PayInvoice, InventoryImag, InventoryAllowance
+    Inventory, InventoryReturn , PayInvoice, InventoryImag, InventoryAllowance, Sale, Sold_Item
     )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
@@ -12,6 +12,8 @@ from sole_proprietorship.models import Accounts
 import django_filters
 from django.utils import timezone
 from django.forms import inlineformset_factory
+from django.db.models.expressions import RawSQL
+from Customers_Sales.models import Customer
 
 ImageFormSet = inlineformset_factory(
     Inventory, InventoryImag, fields=('img',), extra = 3
@@ -44,14 +46,15 @@ class PurchaseFilter(django_filters.FilterSet):
 class PaymentSalesTermForm(forms.ModelForm):
     class Meta:
         model = PaymentSalesTerm
-        fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' ,
-                 "accounts_payable",'pay_freight_out', 'freight_in_account', 'cash_account','freight_out_account', 'COGS'
+        fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' , 'sales_revenue',
+                 "accounts_payable",'pay_freight_out', 'freight_in_account', 'cash_account','freight_out_account', 'COGS',
+                 'accounts_receivable'
                  ]
 
     def __init__(self, *args, **kwargs):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        for account in ['cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
+        for account in ['sales_revenue','accounts_receivable', 'cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
             self.fields[account].queryset = Accounts.objects.filter(owner=self.owner)
           
         self.helper = FormHelper()
@@ -62,7 +65,7 @@ class PaymentSalesTermForm(forms.ModelForm):
                 Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage')
             ),
             Row(
-                Column('freight_in_account', 'freight_out_account'), 
+                Column('freight_in_account', 'freight_out_account', 'sales_revenue'), 
                 Column('COGS', 'cash_account', 'accounts_payable')
             ),
             Row(
@@ -95,6 +98,29 @@ class PurchaseInventoryForm(forms.ModelForm):
                 Column('purchase_date' , 'term' ,'due_date' , 'frieght_in') )
         )
         self.helper.form_tag = False
+
+
+class SalesForm(forms.ModelForm):
+    class Meta:
+        model = Sale
+        exclude = ('owner', 'sub_total')
+        widgets = {
+            'sales_date': forms.widgets.DateInput(attrs={'type': 'date'}),
+            'due_date': forms.widgets.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self,owner, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["customer"].queryset = Customer.objects.filter(owner=owner)
+        self.fields["term"].queryset = PaymentSalesTerm.objects.filter(owner=owner)
+
+        self.helper = FormHelper()
+        self.helper.layout = Layout( 
+            Row( 
+                Column('customer'),
+                Column('sales_date' , 'term' ,'due_date' , 'frieght_out') )
+        )
+        self.helper.form_tag = False
     
 class InventoryPriceForm(forms.ModelForm):
     class Meta:
@@ -105,6 +131,33 @@ class InventoryPriceForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.owner = owner
         self.fields["inventory"].queryset = Inventory.objects.filter(owner=owner)
+
+
+
+
+class SoldItemForm(forms.ModelForm):
+    class Meta:
+        model = Sold_Item
+        exclude = ('sale',)
+    
+    def __init__(self, owner_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print('owner_id', owner_id)
+        SQL_LITE = """
+            SELECT  p.id
+            FROM inventory_inventoryprice as p
+            LEFT JOIN inventory_purchaseinventory 
+            ON inventory_purchaseinventory.id = p.purchase_inventory_id
+            LEFT JOIN inventory_inventoryreturn as r
+            ON p.id = r.inventory_price_id
+            LEFT JOIN inventory_sold_item as s
+            ON s.item_id = p.id
+            WHERE inventory_purchaseinventory.owner_id = %s
+            GROUP BY p.id
+            HAVING (number_of_unit - ifnull(Sum(r.num_returned) ,0) - ifnull(Sum(s.quantity), 0) )  > 0
+         """
+
+        self.fields['item'].queryset = InventoryPrice.objects.filter(id__in =RawSQL(SQL_LITE, [owner_id])).all()
 
 class InventoryPriceFormsetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
@@ -131,6 +184,7 @@ class ImageForm(forms.ModelForm):
 
 
 InventoryPriceFormset = formset_factory(InventoryPriceForm)
+SoldItemFormset =  formset_factory(SoldItemForm)
 ImageFormest = formset_factory(ImageForm)
 
 class InventoryReturnForm(forms.ModelForm):

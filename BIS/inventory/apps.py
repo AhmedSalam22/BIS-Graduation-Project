@@ -30,3 +30,4 @@ class InventoryConfig(AppConfig):
         post_save.connect(update_purchase_after_allowance, sender='inventory.InventoryAllowance')
 
         post_delete.connect(update_purchase_after_allowance_delete, sender='inventory.InventoryAllowance')
+        post_save.connect(Transaction.signal.sale, sender='inventory.Sold_Item')

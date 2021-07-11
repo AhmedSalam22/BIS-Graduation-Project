@@ -10,7 +10,45 @@ from django.core.exceptions import ValidationError
 from django.db import connection
 import datetime
 from django.utils import timezone 
+
 # Create your models here.
+class DueDateMixin:
+    def check_due_date(self):
+        """
+        retrun due date if user don't specify it's directly and used terms instead
+        """
+        if self.due_date:
+            return self.due_date
+        else:
+            # Due in number of days
+            if self.term.terms == PaymentSalesTerm.Term.DAYS.value:
+                return self.purchase_date + timezone.timedelta(days=self.term.num_of_days_due)
+            elif self.term.terms == PaymentSalesTerm.Term.END_OF_MONTH.value:
+                return timezone.datetime(
+                    year = self.purchase_date.year , 
+                    month = self.purchase_date.month , 
+                    day = calendar.monthrange(
+                            year= self.purchase_date.year ,
+                            month = self.purchase_date.month
+                    )[1]
+                )
+            # we mean by next month ex purchase date was feb-02-2021 so due date march-02-2021
+            elif self.term.terms == PaymentSalesTerm.Term.NEXT_MONTH.value:
+                if self.purchase_date.month == 12:
+                    return timezone.datetime(
+                            year = self.purchase_date.year + 1 , 
+                            month = 1 , 
+                            day = self.purchase_date.day
+                )
+                else:
+                    return timezone.datetime(
+                        year = self.purchase_date.year , 
+                        month = self.purchase_date.month + 1, 
+                        day = self.purchase_date.day
+                    )
+
+
+
 class PaymentSalesTerm(models.Model):
     class Term(models.IntegerChoices):
         CASH = 0 , _("Pay CASH")
@@ -66,6 +104,17 @@ class PaymentSalesTerm(models.Model):
     related_name = 'COGS'
     )
 
+    sales_revenue = models.ForeignKey('sole_proprietorship.Accounts',
+        on_delete=models.CASCADE,
+        help_text='Select Sales revenue account',
+        related_name = 'sales_revenue'
+    )
+
+    accounts_receivable = models.ForeignKey('sole_proprietorship.Accounts',
+        on_delete=models.CASCADE,
+        help_text='Select Accounts receivable account',
+        related_name = 'accounts_receivable'
+    )
     
     
     def __str__(self):
@@ -379,7 +428,7 @@ class PurchaseManager(models.Manager):
         return result
 
 
-class PurchaseInventory(models.Model):
+class PurchaseInventory(DueDateMixin, models.Model):
     """
     Note freight in cost which inccure when you purchase your inventory will charge only on the first
     form inventory in formset
@@ -442,39 +491,6 @@ class PurchaseInventory(models.Model):
             return  "UNPAID"
 
     
-    def check_due_date(self):
-        """
-        retrun due date if user don't specify it's directly and used terms instead
-        """
-        if self.due_date:
-            return self.due_date
-        else:
-            # Due in number of days
-            if self.term.terms == PaymentSalesTerm.Term.DAYS.value:
-                return self.purchase_date + timezone.timedelta(days=self.term.num_of_days_due)
-            elif self.term.terms == PaymentSalesTerm.Term.END_OF_MONTH.value:
-                return timezone.datetime(
-                    year = self.purchase_date.year , 
-                    month = self.purchase_date.month , 
-                    day = calendar.monthrange(
-                            year= self.purchase_date.year ,
-                            month = self.purchase_date.month
-                    )[1]
-                )
-            # we mean by next month ex purchase date was feb-02-2021 so due date march-02-2021
-            elif self.term.terms == PaymentSalesTerm.Term.NEXT_MONTH.value:
-                if self.purchase_date.month == 12:
-                    return timezone.datetime(
-                            year = self.purchase_date.year + 1 , 
-                            month = 1 , 
-                            day = self.purchase_date.day
-                )
-                else:
-                    return timezone.datetime(
-                        year = self.purchase_date.year , 
-                        month = self.purchase_date.month + 1, 
-                        day = self.purchase_date.day
-                    )
 
 
 
@@ -678,21 +694,42 @@ class InventoryAllowance(models.Model):
 
 
 
-class Sale(models.Model):
-    customer = model.ForeignKey('Customers_Sales.Customer', on_delete=models.CASCADE)
+def current_date():
+    return timezone.now().date()
+
+class Sale(DueDateMixin, models.Model):
+    customer = models.ForeignKey('Customers_Sales.Customer', on_delete=models.CASCADE)
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     term = models.ForeignKey(PaymentSalesTerm, on_delete=models.CASCADE)
 
     frieght_out = models.FloatField(default=0)
-    sales_date = models.DateField(default=lambda: timezone.now().date())
+    sales_date = models.DateField(default=current_date)
     due_date = models.DateField(
         help_text="optional if you want to specify it by yourself",
         null = True ,
         blank = True,
     )
 
-    sub_total = models.FloatField(default=0)
 
+    def ARorCash(self):
+        """
+        check if you sell service or invenotry bu cash or on account
+        """
+        if self.term.terms  ==  PaymentSalesTerm.Term.CASH.value:
+            return self.term.cash_account
+        return self.term.accounts_receivable
+
+    @property
+    def sub_total(self):
+        """
+        return sub total for the sales without considering sales return and allowance
+        """
+        pass
+
+
+    def save(self, *args, **kwargs):
+        self.due_date = self.check_due_date()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Sales id: {self.pk}'

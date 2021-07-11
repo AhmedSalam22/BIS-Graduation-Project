@@ -6,7 +6,8 @@ from django.views.generic import View , TemplateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
-    PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm
+    PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm,
+    SalesForm, SoldItemFormset
     )
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
@@ -19,7 +20,7 @@ import base64
 from io import BytesIO
 from django.http import HttpResponse, JsonResponse
 from django_filters.views import FilterView
-from inventory.crispy_forms import PurchaseFilterHelper, InventoryFilterHelper
+from inventory.crispy_forms import (PurchaseFilterHelper, InventoryFilterHelper, SalesFormsetHelper)
 from django.db import transaction
 from inventory.filter_forms import InventoryFilter
 from django.core import serializers
@@ -74,13 +75,56 @@ class DeleteTermView(OwnerDeleteView):
     template_name = "inventory/term_delete.html"
 
 
+
+class CreateSalesView(LoginRequiredMixin, View):
+    template_name = "inventory/sales_form.html"
+    success_url = None
+    salesFormsetHelper = SalesFormsetHelper()
+
+    def get(self, request, *args, **kwargs):
+        sales_form = SalesForm(owner=request.user)
+        sold_item_formset = SoldItemFormset(form_kwargs = {'owner_id': request.user.id})
+
+        ctx = {
+            'sales_form': sales_form, 
+            'salesFormsetHelper': self.salesFormsetHelper,
+            'sold_item_formset': sold_item_formset
+        }
+
+        return render(request, self.template_name, ctx)
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        sales_form = SalesForm(data= request.POST, owner=request.user)
+        sold_item_formset = SoldItemFormset(data= request.POST, form_kwargs = {'owner_id': request.user.id})
+        if sales_form.is_valid() and sold_item_formset.is_valid():
+            sales = sales_form.save(commit=False)
+            sales.owner = request.user
+            sales.save()
+            for sold_item_form in sold_item_formset:
+                sold_item = sold_item_form.save(commit=False)
+                sold_item.sale = sales
+                sold_item.save()
+            messages.success(request, 'Your Sales has been created Successfuly')
+            return redirect(reverse_lazy('inventory:home'))
+        ctx = {
+            'sales_form': sales_form, 
+            'salesFormsetHelper': self.salesFormsetHelper,
+            'sold_item_formset': sold_item_formset
+        }
+        return render(request , self.template_name , ctx )
+
+
+
+
+
 class CreatePurchaseInventoryView(LoginRequiredMixin, View):
     template_name = "inventory/purchase_form.html"
     success_url = None
     inventory_price_formset_helper = InventoryPriceFormsetHelper()
         
     def get(self , request , *args, **kwargs):
-        owner = self.request.user
+        owner = request.user
         purchase_inventory_form = PurchaseInventoryForm(owner)
         inventory_price_formset = InventoryPriceFormset(form_kwargs={'owner': owner})
 
@@ -454,6 +498,10 @@ class FetchInventoryPriceView(LoginRequiredMixin , View):
         return JsonResponse(
                  list(inventory_prices), safe = False
             )
+
+
+
+
 
 
 class Test(LoginRequiredMixin , View):

@@ -282,7 +282,6 @@ class Customer(models.Model):
         return self.full_name
 
 class CustomerCommonFields(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
     class Meta:

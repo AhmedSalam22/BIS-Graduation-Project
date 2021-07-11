@@ -26,6 +26,7 @@ urlpatterns = [
     path('create_purchase_allowance', views.PurchaseAllowanceView.as_view(success_url='inventory:detail_purchase'), name='create_purchase_allowance'),
     path('create_purchase_allowance/<int:pk>', views.PurchaseAllowanceView.as_view(success_url='inventory:detail_purchase'), name='create_purchase_allowance'),
     path('fetch_inventory_price', views.FetchInventoryPriceView.as_view(), name='fetch_inventory_price'),
+    path('create_sales', views.CreateSalesView.as_view(), name='create_sales'),
     path('test' , views.Test.as_view() , name="test"),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 

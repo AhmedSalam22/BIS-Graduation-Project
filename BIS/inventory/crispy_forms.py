@@ -49,3 +49,12 @@ class PurchaseFilterHelper(FormHelper):
             )
         )
         self.form_tag = False
+
+
+class SalesFormsetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout = Layout( 
+            Div(Row(Column('item') , Column('sale_price') , Column('quantity') ) , css_class="link-formset" )
+        )
+        self.form_tag = False

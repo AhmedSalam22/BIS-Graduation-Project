@@ -227,8 +227,61 @@ class TransactionSignal:
               
                 )
         
+    def sale(self, sender, instance, created, **kwargs):
+        """
+        Journal Entry to record Sale
+        A/R or Cash Debit by xxx
+            Sales Revenue Credit by xxx
+
+        Journal Entry to record Cost of Goods Sold
+        COGS Debit by xxx
+            Inventory Credit by xxx
+
+        instance:Sold_Item
+        """
+
+        if not created:
+            Transaction.objects.filter(
+                Q(sold_item=instance) & Q(status=Transaction.Status.SALES.value) 
+            ).delete()
 
 
+        transaction = Transaction.objects.create(
+            date = instance.sale.sales_date ,
+            sold_item = instance,
+            status=Transaction.Status.SALES.value,
+            comment=f"Sales Item"
+        )
+
+       
+                       
+        Journal.objects.create(
+                account = instance.sale.ARorCash(),
+                balance=  instance.sale_price * instance.quantity ,
+                transaction_type="Debit" ,
+                transaction= transaction
+                ) 
+
+        Journal.objects.create(
+                    account = instance.sale.term.sales_revenue,
+                    balance=  instance.sale_price * instance.quantity ,
+                    transaction_type="Credit" ,
+                    transaction= transaction
+                    ) 
+
+        Journal.objects.create(
+                        account = instance.sale.term.COGS,
+                        balance=  instance.item.cost_per_unit * instance.quantity ,
+                        transaction_type="Debit" ,
+                        transaction= transaction
+        ) 
+
+        Journal.objects.create(
+                    account = instance.item.inventory.general_ledeger_account,
+                    balance=  instance.item.cost_per_unit * instance.quantity ,
+                    transaction_type="Credit" ,
+                    transaction= transaction
+        ) 
 
 
 # Create your models here.
@@ -277,6 +330,7 @@ class Transaction(models.Model):
         PURCHASE_ALLOWANCE = 3, _("Purchase Allowance")
         FREIGHT_IN = 4, _("Freight in")
         PAY_INVOICE = 5, _("Pay Invoice")
+        SALES = 6, _('Sales')
     
     @classmethod
     def num_of_transaction(cls, owner):
@@ -289,8 +343,10 @@ class Transaction(models.Model):
     purchase_inventory = models.ForeignKey('inventory.PurchaseInventory', null=True, blank=True, on_delete=models.CASCADE)
     inventory_price = models.ForeignKey('inventory.InventoryPrice', null=True , blank=True, on_delete=models.CASCADE)
     inventory_return = models.ForeignKey('inventory.InventoryReturn' , null=True, blank=True, on_delete=models.CASCADE)
-    pay_invoice = models.ForeignKey('inventory.PayInvoice' , null=True, blank=True, on_delete=models.CASCADE)
+    pay_invoice = models.ForeignKey('inventory.PayInvoice' , null=True, blank=True, on_delete=models.CASCADE)  
     purchase_allowance = models.ForeignKey('inventory.InventoryAllowance', null=True, blank=True, on_delete= models.CASCADE)
+    # sale = models.ForeignKey('inventory.Sale', null=True, blank=True, on_delete=models.CASCADE)
+    sold_item = models.ForeignKey('inventory.Sold_Item', null=True, blank=True, on_delete=models.CASCADE)
     status = models.IntegerField(choices=Status.choices , null=True, blank=True)
 
     objects = models.Manager() # The default manager.
