@@ -1,13 +1,15 @@
 from django.shortcuts import render , redirect , get_object_or_404 
 from django.urls import reverse_lazy
 from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerUpdateView , OwnerDetailView
-from inventory.models import PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice , PurchaseInventory, PayInvoice, InventoryImag
+from inventory.models import (PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice,
+    PurchaseInventory, PayInvoice, InventoryImag, Sold_Item, Sale
+    )
 from django.views.generic import View , TemplateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
     PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm,
-    SalesForm, SoldItemFormset
+    SalesForm, SoldItemFormset, SalesReturnForm
     )
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
@@ -311,7 +313,29 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
             ]))
         return render(request , self.template_name , {"form": form} )
 
-    
+
+class CreateSalesReturnView(LoginRequiredMixin , View):
+    template_name = 'inventory/sales_return_form.html'
+
+
+
+    def get(self, request, sales_pk, sales_item_pk, *args, **kwargs):
+        form = SalesReturnForm(sales_pk=sales_pk, sales_item_pk=sales_item_pk, owner=request.user)
+
+        return render(request, self.template_name, {'form': form})
+
+    @transaction.atomic
+    def post(self, request, sales_pk, sales_item_pk, *args, **kwargs):
+        form = SalesReturnForm(data= request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your Sales return has been created Successfuly')
+            return redirect(reverse_lazy('inventory:home'))
+        return render(request, self.template_name, {'form': form})
+
+
+
+
 class ListPurchaseInventoryView(LoginRequiredMixin, FilterContextMixin, FilterView):
     model = PurchaseInventory
     template_name = "inventory/purchase_list.html"

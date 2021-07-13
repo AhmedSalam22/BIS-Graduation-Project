@@ -1,6 +1,7 @@
 from django import forms
 from inventory.models import (PurchaseInventory , PaymentSalesTerm , InventoryPrice ,
-    Inventory, InventoryReturn , PayInvoice, InventoryImag, InventoryAllowance, Sale, Sold_Item
+    Inventory, InventoryReturn , PayInvoice, InventoryImag, InventoryAllowance, Sale, Sold_Item,
+    SalesReturn
     )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
@@ -14,13 +15,16 @@ from django.utils import timezone
 from django.forms import inlineformset_factory
 from django.db.models.expressions import RawSQL
 from Customers_Sales.models import Customer
+from home.utils import DateField, DateMixin
+from django.shortcuts import get_object_or_404 
 
 ImageFormSet = inlineformset_factory(
     Inventory, InventoryImag, fields=('img',), extra = 3
     )
 
 
-class PurchaseFilter(django_filters.FilterSet):
+
+class PurchaseFilter(django_filters.FilterSet, DateMixin):
     class Meta:
         model = PurchaseInventory
         fields = {
@@ -38,9 +42,17 @@ class PurchaseFilter(django_filters.FilterSet):
 
     def __init__(self,   **kwargs):
         super().__init__(**kwargs)
-        date_fields = ['purchase_date__gte', 'purchase_date__lte', 'due_date__gte', 'due_date__lte']
-        for date_field in date_fields:
-            self.form.fields[date_field].widget =forms.widgets.DateInput(attrs={'type': 'date'})
+        self.date(
+            [
+                DateField(field='purchase_date__gte', initial=False),
+                DateField(field='purchase_date__lte', initial=False),
+                DateField(field='due_date__gte', initial=False),
+                DateField(field='due_date__lte', initial=False),
+
+            ],
+            django_filter=True
+        )
+       
 
 
 class PaymentSalesTermForm(forms.ModelForm):
@@ -48,13 +60,13 @@ class PaymentSalesTermForm(forms.ModelForm):
         model = PaymentSalesTerm
         fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' , 'sales_revenue',
                  "accounts_payable",'pay_freight_out', 'freight_in_account', 'cash_account','freight_out_account', 'COGS',
-                 'accounts_receivable'
+                 'accounts_receivable', 'sales_return', 'sales_allowance'
                  ]
 
     def __init__(self, *args, **kwargs):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        for account in ['sales_revenue','accounts_receivable', 'cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
+        for account in ['sales_return', 'sales_allowance','sales_revenue','accounts_receivable', 'cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
             self.fields[account].queryset = Accounts.objects.filter(owner=self.owner)
           
         self.helper = FormHelper()
@@ -66,7 +78,8 @@ class PaymentSalesTermForm(forms.ModelForm):
             ),
             Row(
                 Column('freight_in_account', 'freight_out_account', 'sales_revenue'), 
-                Column('COGS', 'cash_account', 'accounts_payable')
+                Column('COGS', 'cash_account', 'accounts_payable'),
+                Column('accounts_receivable', 'sales_return', 'sales_allowance')
             ),
             Row(
                 'pay_freight_out'
@@ -239,13 +252,38 @@ class InventoryForm(forms.ModelForm):
         exclude = ('owner',)
 
 
-class InventoryAllowanceForm(forms.ModelForm):
+class InventoryAllowanceForm(forms.ModelForm, DateMixin):
     class Meta:
         model = InventoryAllowance
         fields = '__all__'
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['date'].widget =  DateInput()
-        self.fields['date'].initial = timezone.now()
-        
+        self.date(
+                [
+                    DateField(field='date', initial=True)
+                ]
+            )
+
+
+class SalesReturnForm(forms.ModelForm, DateMixin):
+    class Meta:
+        model = SalesReturn
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        self.sales_pk = kwargs.pop('sales_pk', None)
+        self.sales_item_pk = kwargs.pop('sales_item_pk', None)
+        self.owner = kwargs.pop('owner', None)
+        super().__init__(*args, **kwargs)
+        self.date(
+                [
+                    DateField(field='date', initial=True)
+                ]
+        )
+        if self.sales_pk != None and self.sales_item_pk != None:
+            self.fields['sale'].initial = get_object_or_404(Sale, pk=self.sales_pk, owner=self.owner)
+            self.fields['sold_item'].initial = get_object_or_404(Sold_Item, pk=self.sales_item_pk, sale__owner=self.owner)
+
+        self.fields['sale'].widget.attrs['readonly'] = True
+        self.fields['sold_item'].widget.attrs['readonly'] = True

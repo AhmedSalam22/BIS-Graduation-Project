@@ -115,6 +115,20 @@ class PaymentSalesTerm(models.Model):
         help_text='Select Accounts receivable account',
         related_name = 'accounts_receivable'
     )
+
+    sales_return = models.ForeignKey('sole_proprietorship.Accounts',
+        on_delete=models.CASCADE,
+        help_text='Select Sales return account',
+        related_name = 'sales_return'
+    )
+
+    sales_allowance = models.ForeignKey('sole_proprietorship.Accounts',
+        on_delete=models.CASCADE,
+        help_text='Select Sales allowance account',
+        related_name = 'sales_allowance'
+    )
+
+    
     
     
     def __str__(self):
@@ -642,8 +656,7 @@ class InventoryReturn(models.Model):
         """
         # num of returned unit can't be greater than num units purchased
         """
-        message = None
-        status = None
+        message, status = None, None
         if self.inventory_price.inventoryreturn_set.exists():
             agg_data =self.inventory_price.inventoryreturn_set.aggregate(total_num_returned=Sum("num_returned"))
             avilable = self.inventory_price.number_of_unit - agg_data.get("total_num_returned", 0)
@@ -724,7 +737,12 @@ class Sale(DueDateMixin, models.Model):
         """
         return sub total for the sales without considering sales return and allowance
         """
-        pass
+        query = self.sold_item_set.values('sale_price', 'quantity').annotate(
+            total= F('sale_price') * F('quantity')
+            ).aggregate(
+                Sum('total')
+            )
+        return query['total__sum'] if query['total__sum'] != None else 0
 
 
     def save(self, *args, **kwargs):
@@ -751,8 +769,15 @@ class Sold_Item(models.Model):
         return purchase_return_q['num_returned__sum'] if purchase_return_q['num_returned__sum'] != None else 0
 
 
+    def units_from_sales_return(self):
+        query = self.salesreturn_set.aggregate(Sum('num_returned'))
+        return query['num_returned__sum'] if query['num_returned__sum'] !=None else 0
+
     def units_available_for_sales(self):
-        return self.item.number_of_unit - self.num_of_purchase_return() - self.units_sold()
+        return self.item.number_of_unit - self.num_of_purchase_return() - self.units_sold() + self.units_from_sales_return()
+
+
+   
 
     def quantity_g_units_available_for_sales(self) -> tuple:
         """
@@ -774,3 +799,32 @@ class Sold_Item(models.Model):
 
     def __str__(self):
         return f'{self.item}'
+
+
+class SalesReturn(models.Model):
+    """
+        Sales Return Model
+    """
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    sold_item = models.ForeignKey(Sold_Item, on_delete=models.CASCADE)
+    date = models.DateField()
+    num_returned = models.PositiveIntegerField()
+
+    def vaildate_num_returned(self):
+        available_for_return = self.sold_item.units_sold() - self.sold_item.units_from_sales_return()
+        Message = f'The Quantity {self.num_returned} return cannot be greater than units available_for_return {available_for_return}'
+        return self.num_returned > available_for_return , Message
+
+
+    def clean(self):
+        invaild, MESSAGE =  self.vaildate_num_returned()
+        if invaild:
+            raise ValidationError({
+                    "num_returned":ValidationError(_(MESSAGE) , code="invaild") , 
+                    })
+
+    
+
+
+    def __str__(self):
+        return f'return {self.num_returned} unit for {self.sold_item} on {self.date}'

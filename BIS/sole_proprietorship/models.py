@@ -284,6 +284,59 @@ class TransactionSignal:
         ) 
 
 
+
+    def sale_return(self, sender, instance, created, **kwargs):
+        """
+         Journal entry to record sales return
+         Sales Return and Allowance Debit by xxxx
+            Cash or A/R Credit by xxxx
+
+        Inventory Debit by xxx
+            COGS Credit by xxx
+
+        instance:SalesReturn
+        """
+        if not created:
+            Transaction.objects.filter(
+                Q(sales_return=instance) & Q(status=Transaction.Status.SALES_RETURN.value) 
+            ).delete()
+
+        transaction = Transaction.objects.create(
+            date = instance.date ,
+            sales_return = instance,
+            status=Transaction.Status.SALES_RETURN.value,
+            comment=f"Sales Return"
+        )  
+
+        Journal.objects.create(
+            account = instance.sale.term.sales_return,
+            balance=  instance.num_returned * instance.sold_item.sale_price ,
+            transaction_type="Debit" ,
+            transaction= transaction
+        ) 
+
+        Journal.objects.create(
+            account = instance.sale.ARorCash(),
+            balance=  instance.num_returned * instance.sold_item.sale_price ,
+            transaction_type="Credit" ,
+            transaction= transaction
+        ) 
+
+        Journal.objects.create(
+            account = instance.sold_item.item.inventory.general_ledeger_account,
+            balance=  instance.num_returned * instance.sold_item.item.cost_per_unit ,
+            transaction_type="Debit" ,
+            transaction= transaction
+        ) 
+ 
+        Journal.objects.create(
+            account = instance.sale.term.COGS,
+            balance=  instance.num_returned * instance.sold_item.item.cost_per_unit ,
+            transaction_type="Credit" ,
+            transaction= transaction
+        ) 
+
+
 # Create your models here.
 class Accounts(models.Model):
     class Meta:
@@ -331,6 +384,7 @@ class Transaction(models.Model):
         FREIGHT_IN = 4, _("Freight in")
         PAY_INVOICE = 5, _("Pay Invoice")
         SALES = 6, _('Sales')
+        SALES_RETURN = 7, _('Sales Return')
     
     @classmethod
     def num_of_transaction(cls, owner):
@@ -347,6 +401,7 @@ class Transaction(models.Model):
     purchase_allowance = models.ForeignKey('inventory.InventoryAllowance', null=True, blank=True, on_delete= models.CASCADE)
     # sale = models.ForeignKey('inventory.Sale', null=True, blank=True, on_delete=models.CASCADE)
     sold_item = models.ForeignKey('inventory.Sold_Item', null=True, blank=True, on_delete=models.CASCADE)
+    sales_return = models.ForeignKey('inventory.SalesReturn', null=True, blank=True, on_delete= models.CASCADE)
     status = models.IntegerField(choices=Status.choices , null=True, blank=True)
 
     objects = models.Manager() # The default manager.
