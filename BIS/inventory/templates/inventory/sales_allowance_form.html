@@ -1,0 +1,7 @@
+{% extends 'home/form.html' %}
+{% block cardheader %} Sales Allowance {% endblock %}
+{% block formblock %}
+    {{ form.non_field_errors }}
+    {% load crispy_forms_tags %}
+    {{ form|crispy }}
+{% endblock %}

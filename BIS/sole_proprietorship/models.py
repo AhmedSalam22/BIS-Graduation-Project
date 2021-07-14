@@ -337,6 +337,43 @@ class TransactionSignal:
         ) 
 
 
+
+    def sale_allowance(self, sender, instance, created, **kwargs):
+        """
+        Journal Entry to record Sales Allowance
+            Sales Allowance Debit by xxxx
+                Cash or A/R Credit by xxx
+        instance:SalesAllowance
+        """
+        if not created:
+            Transaction.objects.filter(
+                Q(sales_allowance=instance) & Q(status=Transaction.Status.SALES_ALLOWANCE.value) 
+            ).delete()
+
+
+        transaction = Transaction.objects.create(
+            date = instance.date ,
+            sales_allowance = instance,
+            status=Transaction.Status.SALES_ALLOWANCE.value,
+            comment=f"Sales Allowance"
+        )  
+
+        Journal.objects.create(
+            account = instance.sales.term.sales_allowance,
+            balance=  instance.amount ,
+            transaction_type="Debit" ,
+            transaction= transaction
+        ) 
+
+        Journal.objects.create(
+            account = instance.sales.ARorCash(),
+            balance=  instance.amount ,
+            transaction_type="Credit" ,
+            transaction= transaction
+        ) 
+
+
+
 # Create your models here.
 class Accounts(models.Model):
     class Meta:
@@ -385,6 +422,7 @@ class Transaction(models.Model):
         PAY_INVOICE = 5, _("Pay Invoice")
         SALES = 6, _('Sales')
         SALES_RETURN = 7, _('Sales Return')
+        SALES_ALLOWANCE = 8, _('Sales Allowance')
     
     @classmethod
     def num_of_transaction(cls, owner):
@@ -402,6 +440,7 @@ class Transaction(models.Model):
     # sale = models.ForeignKey('inventory.Sale', null=True, blank=True, on_delete=models.CASCADE)
     sold_item = models.ForeignKey('inventory.Sold_Item', null=True, blank=True, on_delete=models.CASCADE)
     sales_return = models.ForeignKey('inventory.SalesReturn', null=True, blank=True, on_delete= models.CASCADE)
+    sales_allowance = models.ForeignKey('inventory.SalesAllowance', null=True, blank=True, on_delete= models.CASCADE)
     status = models.IntegerField(choices=Status.choices , null=True, blank=True)
 
     objects = models.Manager() # The default manager.

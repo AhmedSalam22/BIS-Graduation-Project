@@ -103,6 +103,35 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3" style="background-color:#6633ff;">
+                <p class="text-center"><i class="fa fa-undo" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+                <p class="text-center" style="color:#fff;"><br><strong>Sales Return</strong></p>
+                <a href="{% url 'inventory:create_sales_return' %}" target="_blank"><p class="text-center" style="color:#fff;">Find out more</p></a>
+            </div>
+            <div class="col-md-3" style="background-color:#3399ff;">
+                <p class="text-center"><i class="fa fa-exchange-alt" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+                <p class="text-center" style="color:#fff;"><br><strong>Sales allowance</strong></p>
+                <div class="dropdown">
+                    <div class="text-center" data-toggle="dropdown" aria-expanded="false">
+                      <button type="button" class="btn btn-light">Find out more</button>
+                    </div>
+                    <div class="dropdown-menu" role="menu">
+                        <a class="dropdown-item" role="presentation" href="{% url 'inventory:create_sales_allowance' %}">Create Sales Allowance</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3" style="background-color:#6633ff;">
+                <p class="text-center"><i class="fa fa-money-bill-alt" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+                <p class="text-center" style="color:#fff;"><br><strong>Receive Payment from Cutomer</strong></p>
+                <div class="dropdown">
+                    <div class="text-center" data-toggle="dropdown" aria-expanded="false">
+                      <button type="button" class="btn btn-light">Find out more</button>
+                    </div>
+                    <div class="dropdown-menu" role="menu">
+                    <a class="dropdown-item" role="presentation" href="{% url 'inventory:pay_invoice' 0 %}">Receive Payment</a>
+                    </div>
+                </div>
+            </div>
         </div>
     
 {% endblock %}

@@ -828,3 +828,13 @@ class SalesReturn(models.Model):
 
     def __str__(self):
         return f'return {self.num_returned} unit for {self.sold_item} on {self.date}'
+
+
+
+class SalesAllowance(models.Model):
+    sales = models.OneToOneField(Sale, on_delete=models.CASCADE)
+    date = models.DateField()
+    amount = models.FloatField()
+
+    def __str__(self):
+        return f'Allowance {self.date}: {self.amount}'

@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
     PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm,
-    SalesForm, SoldItemFormset, SalesReturnForm
+    SalesForm, SoldItemFormset, SalesReturnForm, SalesAllowaceForm
     )
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
@@ -319,13 +319,12 @@ class CreateSalesReturnView(LoginRequiredMixin , View):
 
 
 
-    def get(self, request, sales_pk, sales_item_pk, *args, **kwargs):
-        form = SalesReturnForm(sales_pk=sales_pk, sales_item_pk=sales_item_pk, owner=request.user)
-
+    def get(self, request, *args, **kwargs):
+        form = SalesReturnForm(sales_pk=kwargs.get('sales_pk'), sales_item_pk=kwargs.get('sales_item_pk'), owner=request.user)
         return render(request, self.template_name, {'form': form})
 
     @transaction.atomic
-    def post(self, request, sales_pk, sales_item_pk, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         form = SalesReturnForm(data= request.POST)
         if form.is_valid():
             form.save()
@@ -479,6 +478,28 @@ class PivotTableView(LoginRequiredMixin , View):
     template_name = "inventory/pivot_table.html"
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
+
+
+class CreateSalesAllowanceView(LoginRequiredMixin, View):
+    template_name = 'inventory/sales_allowance_form.html'
+    success_url = 'inventory:home'
+
+    def get(self, request, *args, **kwargs):
+        form = SalesAllowaceForm(owner=request.user, sales_pk= kwargs.get('sales_pk', None))
+        return render(request, self.template_name, {'form': form})
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        form = SalesAllowaceForm(data=request.POST, owner=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your Sales Allowance has been created Successfuly')
+            return redirect(reverse_lazy(self.success_url))
+        return render(request , self.template_name , {"form": form} ) 
+
+
+
+
 
 class PurchaseAllowanceView(LoginRequiredMixin, View):
     template_name = 'inventory/purchase_allowance_form.html'

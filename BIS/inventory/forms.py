@@ -1,7 +1,7 @@
 from django import forms
 from inventory.models import (PurchaseInventory , PaymentSalesTerm , InventoryPrice ,
     Inventory, InventoryReturn , PayInvoice, InventoryImag, InventoryAllowance, Sale, Sold_Item,
-    SalesReturn
+    SalesReturn, SalesAllowance
     )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
@@ -281,9 +281,30 @@ class SalesReturnForm(forms.ModelForm, DateMixin):
                     DateField(field='date', initial=True)
                 ]
         )
+        self.fields['sale'].queryset = Sale.objects.filter(owner=self.owner)
+        self.fields['sold_item'].queryset= Sold_Item.objects.filter(sale__owner=self.owner)
+        
         if self.sales_pk != None and self.sales_item_pk != None:
             self.fields['sale'].initial = get_object_or_404(Sale, pk=self.sales_pk, owner=self.owner)
             self.fields['sold_item'].initial = get_object_or_404(Sold_Item, pk=self.sales_item_pk, sale__owner=self.owner)
+            self.fields['sale'].widget.attrs['readonly'] = True
+            self.fields['sold_item'].widget.attrs['readonly'] = True
 
-        self.fields['sale'].widget.attrs['readonly'] = True
-        self.fields['sold_item'].widget.attrs['readonly'] = True
+
+class SalesAllowaceForm(forms.ModelForm, DateMixin):
+    class Meta:
+        model = SalesAllowance
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        self.owner = kwargs.pop('owner', None)
+        self.sales_pk = kwargs.pop('sales_pk', None)
+        super().__init__(*args, **kwargs)
+        self.date(
+                [
+                    DateField(field='date', initial=True)
+                ]
+        )
+        self.fields['sales'].queryset = Sale.objects.filter(owner=self.owner)
+        if self.sales_pk:
+            self.fields['sales'].initial = get_object_or_404(Sale, pk=self.sales_pk, owner=self.owner)
