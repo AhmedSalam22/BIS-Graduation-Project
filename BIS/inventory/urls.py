@@ -33,6 +33,7 @@ urlpatterns = [
     path('create_sales_allowance', views.CreateSalesAllowanceView.as_view(), name='create_sales_allowance'),
     path('create_sales_payment', views.CreateSalesPaymentView.as_view(), name='create_sales_payment'),
     path('create_sales_payment/<int:sales_pk>', views.CreateSalesPaymentView.as_view(), name='create_sales_payment_args'),
+    path('sales_list', views.SalesListView.as_view(), name='sales_list'),
     path('test' , views.Test.as_view() , name="test"),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 

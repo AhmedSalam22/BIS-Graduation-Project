@@ -386,7 +386,7 @@ class TransactionSignal:
                 Q(received_payment=instance) & Q(status=Transaction.Status.RECEIVED_PAYMENT.value) 
             ).delete()
 
-        Transaction.objects.create(
+        transaction = Transaction.objects.create(
             date = instance.date ,
             received_payment = instance,
             status=Transaction.Status.RECEIVED_PAYMENT.value,

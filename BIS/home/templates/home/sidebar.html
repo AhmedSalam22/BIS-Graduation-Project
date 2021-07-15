@@ -28,11 +28,11 @@
 
     <!-- Nav Item - Pages Collapse Menu -->
     <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#Accounting" aria-expanded="true" aria-controls="collapseTwo">
             <i class="far fa-list-alt"></i>
             <span>Accounting</span>
         </a>
-        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+        <div id="Accounting" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Accounting Section</h6>
                 <a class="collapse-item" href="{% url 'sole_proprietorship:home' %}">Home</a>
@@ -48,9 +48,27 @@
 
     <!-- Nav Item - Utilities Collapse Menu -->
     <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCustomer" aria-expanded="true" aria-controls="collapseUtilities">
+            <i class="far fa-id-card"></i>
+            <span>Customers and Sales</span>
+        </a>
+        <div id="collapseCustomer" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Section:</h6>
+                <a class="collapse-item" href="{% url 'Customer_Sales:home' %}">Home</a>
+                <a class="collapse-item" href="{% url 'inventory:sales_list' %}">Sales</a>
+                <a class="collapse-item" href="{% url 'inventory:create_sales_return' %}">Sales Return</a>
+                <a class="collapse-item" href="{% url 'inventory:create_sales_allowance' %}">Sales allowance</a>
+                <a class="collapse-item" href="{% url 'inventory:create_sales_payment' %}">Receive Payment</a>
+
+            </div>
+        </div>
+    </li>
+
+    <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities" aria-expanded="true" aria-controls="collapseUtilities">
             <i class="fas fa-fw fa-wrench"></i>
-            <span>Utilities</span>
+            <span>Vendor and Purchases and Inventory</span>
         </a>
         <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">

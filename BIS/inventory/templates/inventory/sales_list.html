@@ -1,0 +1,72 @@
+{% extends "inventory/customers_sales_index.html" %}
+
+
+{% block content %}
+
+<div class="container-fluid">
+    <h3 class="text-dark mb-4">Sales</h3>
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <p class="text-primary m-0 font-weight-bold">All Sales history</p>
+        </div>
+    <div class="card-body">
+          
+            
+            <a href="{% url 'inventory:purchases_dashboard' %}">
+              <button class="btn btn-primary">Dashboard</button>
+            </a> 
+            <a href="{% url 'inventory:create_sales' %}">
+                <button class="btn btn-primary">create new Sales</button>
+            </a> 
+
+
+    </div>
+        <div class="card-body">
+            <div class="table-responsive table mt-2" role="grid" aria-describedby="dataTable_info">
+                <table class="table table-hover table-borderless">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Sales Date</th>
+                            <th>Customer</th>
+                            <th>Term</th>
+                            <th>Due Date</th>
+                            <th>Options</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                       
+                        {% if sale_list %}
+                            {% for sale in sale_list %}
+                            <tr>
+                                <td><strong>{{ sale.sales_date }}</strong></td>
+                                <td><strong>{{ sale.customer}}</strong></td>
+                                <td>
+                                    <strong>
+                                        <a href="{% url 'inventory:list_term'%}" target="blank">{{ sale.term}}</a>
+                                    </strong>
+                                </td>
+                                <td><strong>{{ sale.due_date }}</strong></td>
+                                <td>
+                                    <a href="{% url 'inventory:detail_purchase' sale.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a>
+                                    <a href="{% url 'inventory:delete_purchase' sale.id %}">
+                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                          {% else %}
+                            <p>There are no accounts in the database.</p>
+                          {% endif %}
+
+                    </tbody>
+                    <tfoot>
+                    </tfoot>
+                </table>
+            </div>
+            {% load sole_proprietorship_extras %}
+            {% include 'home/pagination.html' %}
+        </div>
+    </div>
+{% endblock %}
+

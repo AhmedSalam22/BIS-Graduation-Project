@@ -3,6 +3,7 @@ from .forms import CustomerForm , CustomerAddressForm , CustomerNoteForm , Telep
 from .models import CustomerType
 from home.multi_form_view import MyMultiFormView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.base import TemplateView
 # Create your views here.
 
 
@@ -29,19 +30,15 @@ class CoustomerView(LoginRequiredMixin , MyMultiFormView):
         customer.owner = owner
         customer.save()
         address = forms['customer_address_form'].save(commit=False)
-        address.owner = owner
         address.customer = customer
         address.save()
         note = forms['cutomer_note_form'].save(commit=False)
-        note.owner = owner
         note.customer = customer
         note.save()
         email = forms['customer_email_form'].save(commit=False)
-        email.owner = owner
         email.customer = customer
         email.save()
         phone = forms['customer_telepone_form'].save(commit=False)
-        phone.owner = owner
         phone.customer = customer
         phone.save()
 
@@ -51,3 +48,8 @@ class CoustomerView(LoginRequiredMixin , MyMultiFormView):
 
     def get_success_url(self):
         return reverse('home:home')
+
+
+
+class Home(LoginRequiredMixin, TemplateView):
+    template_name = 'inventory/customers_sales_index.html'

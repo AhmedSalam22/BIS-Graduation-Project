@@ -48,18 +48,19 @@
                                 <td><strong>{{ purchase.supplier}}</strong></td>
                                 <td>
                                     <strong>
-                                        <a href="{% url "inventory:list_term"%}" target="blank">{{ purchase.term}}</a>
+                                        <a href="{% url 'inventory:list_term'%}" target="blank">{{ purchase.term}}</a>
                                     </strong>
                                 </td>
                                 <td><strong>{{ purchase.total_purchases }}</strong></td>
                                 <td><strong>{{ purchase.num_returend }}</strong></td>
                                 <td><strong>{{ purchase.cost_returned }}</strong></td>
-                                <td><a href="{% url "inventory:detail_purchase" purchase.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a></td>
                                 <td>
-                                    <a href="{% url 'inventory:delete_purchase' purchase.id %}">
+                                    <a href="{% url 'inventory:detail_purchase' purchase.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a>
+                                    <a href="{% url 'inventory:delete_purchase' purchase.pk %}">
                                         <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
                                     </a>
                                 </td>
+                               
                             
                             </tr>
                             {% endfor %}

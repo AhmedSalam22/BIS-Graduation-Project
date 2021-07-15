@@ -31,6 +31,7 @@ from django.db.models import Q
 from .forms import JournalFormSetHelper
 from django.shortcuts import get_object_or_404
 from django.views.generic import DeleteView
+from django.db import transaction
 
 
 def prepare_data_frame( journal  ,  accounts):
@@ -594,6 +595,7 @@ class AccountsImport(LoginRequiredMixin , View):
     def get(self , request):
         return render(request , "sole_proprietorship/import_accounts.html" , {"form":UploadFileForm()})
     
+    @transaction.atomic
     def post(self , request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -713,12 +715,7 @@ class LedgerView(LoginRequiredMixin, ConfigRequiredMixin,  View):
     template_name = 'sole_proprietorship/ledger.html'
 
     def get(self, request, *args, **kwargs):
-        
-        form = LedgerFilterForm()
-        form.fields['account'].queryset  = Accounts.objects.filter(owner=request.user)
-        form.fields['start_date'].initial = request.user.fs_reporting_period.start_date
-        form.fields['end_date'].initial = request.user.fs_reporting_period.end_date
-
+        form = LedgerFilterForm(request=request)
         return render(request, self.template_name, {'form':form})
 
 

@@ -194,3 +194,10 @@ class LedgerFilterForm(forms.Form):
     start_date = forms.DateField(required=True,  widget= forms.widgets.DateInput(attrs={'type': 'date'}))
     end_date = forms.DateField(required= True, widget= forms.widgets.DateInput(attrs={'type': 'date'}))
 
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request')
+        super().__init__(*args, **kwargs)
+        self.fields['account'].queryset  = Accounts.objects.filter(owner=self.request.user)
+        self.fields['start_date'].initial = self.request.user.fs_reporting_period.start_date
+        self.fields['end_date'].initial = self.request.user.fs_reporting_period.end_date

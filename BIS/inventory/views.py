@@ -4,7 +4,7 @@ from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerU
 from inventory.models import (PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice,
     PurchaseInventory, PayInvoice, InventoryImag, Sold_Item, Sale
     )
-from django.views.generic import View , TemplateView, DeleteView
+from django.views.generic import View , TemplateView, DeleteView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
@@ -344,7 +344,9 @@ class ListPurchaseInventoryView(LoginRequiredMixin, FilterContextMixin, FilterVi
     helper = PurchaseFilterHelper()
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(owner=self.request.user).all()
+        qs = super().get_queryset().select_related(
+            'supplier', 'term', 
+        ).filter(owner=self.request.user).all()
         print('query', qs.query)
         return qs
 
@@ -561,6 +563,21 @@ class CreateSalesPaymentView(LoginRequiredMixin, View):
             messages.success(request, 'Your Payment has been created Successfuly')
             return redirect(reverse_lazy('inventory:home'))
         return render(request, self.template_name, {'form': form})
+
+
+class SalesListView(LoginRequiredMixin, ListView):
+    model = Sale
+    template_name = "inventory/sales_list.html"
+    paginate_by = 20
+    ordering = ['-sales_date']
+
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related(
+            'term'
+            ).filter(owner= self.request.user)
+        return qs
+
 
 
         

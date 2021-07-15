@@ -880,6 +880,13 @@ class SalesPayment(models.Model):
     amount = models.FloatField()
 
 
+
+    @property
+    def amount_paid(self):
+        query = self.sales.salespayment_set.aggregate(Sum('amount'))
+        return query['amount__sum'] if query['amount__sum'] != None else 0
+
+
     @property
     def first_payment(self) -> bool:
         """
@@ -906,7 +913,7 @@ class SalesPayment(models.Model):
         """
         if self.first_payment and self.discount():
             return self.amount_if_there_discount()
-        return self.sales.net_sales
+        return self.sales.net_sales - self.amount_paid
 
 
     def validate_amount(self):
