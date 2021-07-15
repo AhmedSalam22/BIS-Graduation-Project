@@ -1,7 +1,7 @@
 from django import forms
 from inventory.models import (PurchaseInventory , PaymentSalesTerm , InventoryPrice ,
     Inventory, InventoryReturn , PayInvoice, InventoryImag, InventoryAllowance, Sale, Sold_Item,
-    SalesReturn, SalesAllowance
+    SalesReturn, SalesAllowance, SalesPayment
     )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout , Row , Column  , Div  
@@ -60,7 +60,7 @@ class PaymentSalesTermForm(forms.ModelForm):
         model = PaymentSalesTerm
         fields = ['config' , 'terms' , 'num_of_days_due' , 'discount_in_days' , 'discount_percentage' , 'sales_revenue',
                  "accounts_payable",'pay_freight_out', 'freight_in_account', 'cash_account','freight_out_account', 'COGS',
-                 'accounts_receivable', 'sales_return', 'sales_allowance'
+                 'accounts_receivable', 'sales_return', 'sales_allowance', 'sales_discount'
                  ]
 
     def __init__(self, *args, **kwargs):
@@ -291,12 +291,10 @@ class SalesReturnForm(forms.ModelForm, DateMixin):
             self.fields['sold_item'].widget.attrs['readonly'] = True
 
 
-class SalesAllowaceForm(forms.ModelForm, DateMixin):
-    class Meta:
-        model = SalesAllowance
-        fields = '__all__'
 
-    def __init__(self, *args, **kwargs):
+
+class SalesInitMixin:
+  def __init__(self, *args, **kwargs):
         self.owner = kwargs.pop('owner', None)
         self.sales_pk = kwargs.pop('sales_pk', None)
         super().__init__(*args, **kwargs)
@@ -308,3 +306,18 @@ class SalesAllowaceForm(forms.ModelForm, DateMixin):
         self.fields['sales'].queryset = Sale.objects.filter(owner=self.owner)
         if self.sales_pk:
             self.fields['sales'].initial = get_object_or_404(Sale, pk=self.sales_pk, owner=self.owner)
+
+
+
+class SalesAllowaceForm(SalesInitMixin, forms.ModelForm, DateMixin):
+    class Meta:
+        model = SalesAllowance
+        fields = '__all__'
+
+  
+class SalesPaymentForm(SalesInitMixin, forms.ModelForm, DateMixin):
+    class Meta:
+        model = SalesPayment
+        fields = '__all__'
+
+   

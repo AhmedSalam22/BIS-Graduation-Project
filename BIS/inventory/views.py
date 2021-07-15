@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
     PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm,
-    SalesForm, SoldItemFormset, SalesReturnForm, SalesAllowaceForm
+    SalesForm, SoldItemFormset, SalesReturnForm, SalesAllowaceForm, SalesPaymentForm
     )
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
@@ -262,7 +262,7 @@ class ListInventoryView(LoginRequiredMixin, FilterContextMixin, FilterView):
 
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(owner= self.request.user)
+        qs = super().get_queryset().prefetch_related('imgs').filter(owner= self.request.user)
         # selected related used to cash the result from FK without hit the database
         return qs
 
@@ -546,9 +546,24 @@ class FetchInventoryPriceView(LoginRequiredMixin , View):
 
 
 
+class CreateSalesPaymentView(LoginRequiredMixin, View):
+    template_name = 'inventory/sales_patment_form.html'
+
+    def get(self, request, *args, **kwargs):
+        form = SalesPaymentForm(owner=request.user, sales_pk=kwargs.get('sales_pk'))
+        return render(request, self.template_name, {'form': form})
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        form = SalesPaymentForm(data= request.POST, owner=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your Payment has been created Successfuly')
+            return redirect(reverse_lazy('inventory:home'))
+        return render(request, self.template_name, {'form': form})
 
 
-
+        
 class Test(LoginRequiredMixin , View):
 
 

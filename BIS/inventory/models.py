@@ -75,10 +75,12 @@ class PaymentSalesTerm(models.Model):
     discount_in_days = models.PositiveSmallIntegerField(
         validators=[MaxValueValidator(32)] ,
         null = True,
-        blank = True
+        blank = True,
+        default = 0
     )
     discount_percentage = models.FloatField(
         help_text="Enter discount like this 5%>>will be  5 not 0.05",
+        default = 0
   
     )
     # general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
@@ -127,6 +129,13 @@ class PaymentSalesTerm(models.Model):
         help_text='Select Sales allowance account',
         related_name = 'sales_allowance'
     )
+
+    sales_discount = models.ForeignKey('sole_proprietorship.Accounts',
+        on_delete=models.CASCADE,
+        help_text='Select Sales discount account',
+        related_name = 'sales_discount'
+    )
+
 
     
     
@@ -724,6 +733,9 @@ class Sale(DueDateMixin, models.Model):
     )
 
 
+
+
+
     def ARorCash(self):
         """
         check if you sell service or invenotry bu cash or on account
@@ -731,6 +743,22 @@ class Sale(DueDateMixin, models.Model):
         if self.term.terms  ==  PaymentSalesTerm.Term.CASH.value:
             return self.term.cash_account
         return self.term.accounts_receivable
+
+
+    @property
+    def sales_allowance(self):
+        query = self.salesallowance_set.aggregate(Sum('amount'))
+        return query['amount__sum'] if query['amount__sum'] != None else 0
+
+    @property
+    def sales_return(self):
+        query = self.salesreturn_set.annotate(
+            total=ExpressionWrapper(F('num_returned') * F('sold_item__sale_price'), output_field=FloatField())
+        ).aggregate(
+            Sum('total')
+        )
+        return query['total__sum'] if query['total__sum'] != None else 0
+
 
     @property
     def sub_total(self):
@@ -744,6 +772,12 @@ class Sale(DueDateMixin, models.Model):
             )
         return query['total__sum'] if query['total__sum'] != None else 0
 
+    @property
+    def net_sales(self):
+        """
+            net sales Ignoring discount
+        """
+        return self.sub_total - self.sales_return - self.sales_allowance
 
     def save(self, *args, **kwargs):
         self.due_date = self.check_due_date()
@@ -832,9 +866,65 @@ class SalesReturn(models.Model):
 
 
 class SalesAllowance(models.Model):
-    sales = models.OneToOneField(Sale, on_delete=models.CASCADE)
+    sales = models.ForeignKey(Sale, on_delete=models.CASCADE)
     date = models.DateField()
     amount = models.FloatField()
 
     def __str__(self):
         return f'Allowance {self.date}: {self.amount}'
+
+
+class SalesPayment(models.Model):
+    sales = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    date = models.DateField()
+    amount = models.FloatField()
+
+
+    @property
+    def first_payment(self) -> bool:
+        """
+        return True if this first payment
+        """
+        return True if self.sales.salespayment_set.count() == 0 else False
+
+    def discount(self) -> bool:
+        """
+        return True if the due of payment <= due date and there is a discount otherwise False
+        """
+        if self.sales.due_date:
+            if self.sales.term.discount_percentage > 0  and self.date <= self.sales.due_date:
+                return True
+        return False
+
+
+    def amount_if_there_discount(self):
+        return self.sales.net_sales * ((100- self.sales.self.sales.term.discount_percentage) / 100)
+
+    def amount_you_will_pay(self):
+        """
+            return the amounth that you should pay
+        """
+        if self.first_payment and self.discount():
+            return self.amount_if_there_discount()
+        return self.sales.net_sales
+
+
+    def validate_amount(self):
+        invaild, MESSAGE = None, None
+        if self.amount > self.amount_you_will_pay():
+            MESSAGE = f"the amount {self.amount} you will pay can't be greater than {self.amount_you_will_pay()}"
+            invaild = True
+        return invaild, MESSAGE
+
+    def clean(self):
+        invaild, MESSAGE =  self.validate_amount()
+        if invaild:
+            raise ValidationError({
+                    "amount":ValidationError(_(MESSAGE) , code="invaild") , 
+                    })
+
+    
+
+
+    def __str__(self):
+        return f'payment {self.amount} for {self.sales} on date {self.date}'

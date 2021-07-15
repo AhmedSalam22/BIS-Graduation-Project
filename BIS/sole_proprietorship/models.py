@@ -373,6 +373,60 @@ class TransactionSignal:
         ) 
 
 
+    def received_payment(self, sender, instance, created, **kwargs):
+        """
+        Journal Entry to record Sales Discount
+            Cash Debit by xxxx
+            [Sales Discount   Debit by xxxx]
+                Accounts Receivable credit by xxx
+        instance:SalesPayment
+        """
+        if not created:
+            Transaction.objects.filter(
+                Q(received_payment=instance) & Q(status=Transaction.Status.RECEIVED_PAYMENT.value) 
+            ).delete()
+
+        Transaction.objects.create(
+            date = instance.date ,
+            received_payment = instance,
+            status=Transaction.Status.RECEIVED_PAYMENT.value,
+            comment=f"Sales Payment"
+        )
+
+        if instance.first_payment and instance.discount() and instance.amount == instance.amount_if_there_discount():
+            Journal.objects.create(
+                account = instance.sales.term.cash_account,
+                balance=  instance.amount_if_there_discount() ,
+                transaction_type="Debit" ,
+                transaction= transaction
+            )
+            Journal.objects.create(
+                account = instance.sales.term.sales_discount,
+                balance=  (instance.sales.net_sales - instance.instance.amount_if_there_discount()) ,
+                transaction_type="Debit" ,
+                transaction= transaction
+            )  
+            Journal.objects.create(
+                account = instance.sales.term.accounts_receivable,
+                balance=  instance.sales.net_sales,
+                transaction_type="Credit" ,
+                transaction= transaction
+            )  
+        else:
+            Journal.objects.create(
+                account = instance.sales.term.cash_account,
+                balance=  instance.amount ,
+                transaction_type="Debit" ,
+                transaction= transaction
+            )
+            
+            Journal.objects.create(
+                account = instance.sales.term.accounts_receivable,
+                balance=  instance.amount,
+                transaction_type="Credit" ,
+                transaction= transaction
+            )  
+
 
 # Create your models here.
 class Accounts(models.Model):
@@ -423,6 +477,7 @@ class Transaction(models.Model):
         SALES = 6, _('Sales')
         SALES_RETURN = 7, _('Sales Return')
         SALES_ALLOWANCE = 8, _('Sales Allowance')
+        RECEIVED_PAYMENT = 9, _('Received Payment')
     
     @classmethod
     def num_of_transaction(cls, owner):
@@ -441,9 +496,10 @@ class Transaction(models.Model):
     sold_item = models.ForeignKey('inventory.Sold_Item', null=True, blank=True, on_delete=models.CASCADE)
     sales_return = models.ForeignKey('inventory.SalesReturn', null=True, blank=True, on_delete= models.CASCADE)
     sales_allowance = models.ForeignKey('inventory.SalesAllowance', null=True, blank=True, on_delete= models.CASCADE)
+    received_payment = models.ForeignKey('inventory.SalesPayment', null=True, blank=True, on_delete= models.CASCADE)
     status = models.IntegerField(choices=Status.choices , null=True, blank=True)
 
-    objects = models.Manager() # The default manager.
+    objects = models.Manager() # The defaul t manager.
     my_objects = TransactionManager()
 
     signal = TransactionSignal()    

@@ -48,16 +48,14 @@
                             <td><strong>{{ accounts.account}}</strong></td>
                             <td><strong>{{ accounts.normal_balance}}</strong></td>
                             <td><strong>{{ accounts.account_type}}</strong></td>
-                                  {% if accounts.owner == user %}
-                                  <td>
-                                    <a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">
-                                        <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
-                                    </a> 
-                                     <a href="{% url 'sole_proprietorship:accounts_delete' accounts.id %}">
-                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
-                                     </a>
-                                  </td>
-                                  {% endif %}
+                            <td>
+                                <a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">
+                                    <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                </a> 
+                                <a href="{% url 'sole_proprietorship:accounts_delete' accounts.id %}">
+                                <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                </a>
+                            </td>
                             </tr>
                             {% endfor %}
                           {% else %}

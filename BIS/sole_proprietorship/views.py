@@ -118,7 +118,9 @@ class TransactionListView(LoginRequiredMixin, FilterView):
 
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(journal__account__owner=self.request.user).distinct()
+        qs = super().get_queryset().prefetch_related(
+            'journal_set' , 'journal_set__account'
+        ).filter(journal__account__owner=self.request.user).distinct()
         print('query', qs.query)
         return qs
 

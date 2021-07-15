@@ -33,3 +33,5 @@ class InventoryConfig(AppConfig):
         post_save.connect(Transaction.signal.sale, sender='inventory.Sold_Item')
         post_save.connect(Transaction.signal.sale_return, sender='inventory.SalesReturn')
         post_save.connect(Transaction.signal.sale_allowance, sender='inventory.SalesAllowance')
+        post_save.connect(Transaction.signal.received_payment, sender='inventory.SalesPayment')
+
