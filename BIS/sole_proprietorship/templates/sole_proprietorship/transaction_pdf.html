@@ -1,0 +1,89 @@
+<head>
+    <style>
+        @page {
+            size: a4 portrait;
+            @frame header_frame {           /* Static Frame */
+                -pdf-frame-content: header_content;
+                left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+            }
+            @frame content_frame {          /* Content Frame */
+                left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+            }
+            @frame footer_frame {           /* Another static Frame */
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+        }
+    
+    </style>
+    </head>
+    
+    <body>
+        <!-- Content for Static Frame 'header_frame' -->
+        <div id="header_content">
+            <h3>Instructor: Dr Mona Ganna</h3>
+            <h3>BIS: Ahmed Maher Salam</h3>
+        </div>
+    
+        <!-- Content for Static Frame 'footer_frame' -->
+        <div id="footer_content">(c) - page <pdf:pagenumber>
+            of <pdf:pagecount>
+        </div>
+    
+        <!-- HTML Content -->
+    <table class="table table-hover table-borderless" >
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Account</th>
+                <th>Debit </th>
+                <th>Credit </th>
+                <th>comment</th>
+
+            </tr>
+        </thead>
+           
+        <tbody>
+            
+              {% if transaction_list %}
+                {% for transaction in transaction_list %}
+                   
+                    {% for journal in transaction.journal_set.all %}
+                        <tr>
+                            {% if forloop.first %}
+                                <td><strong>{{ transaction.date}}</strong></td>                      
+                            {% else %}
+                                <td><strong></strong></td>   
+                            {% endif %}
+                            {% if journal.transaction_type == "Debit" %}
+                                <td><strong><pre>{{ journal.account}}</pre></strong></td>
+                                <td><strong>{{ journal.balance}}</strong></td>
+                                <td><strong></strong></td>
+                            {% else %}
+                                <td><strong><pre>   {{ journal.account}}</pre></strong></td>
+                                <td><strong></strong></td>
+                                <td><strong>{{ journal.balance}}</strong></td>
+                            {% endif %}
+                            {% if forloop.first %}
+                            <td><strong>{{ transaction.comment}}</strong></td>
+
+                            {% else %}
+                                <td><strong></strong></td>   
+                                <td><strong></strong></td>   
+
+                            {% endif %}
+                            
+                            
+                        </tr>
+
+                    {% endfor %}
+
+                {% endfor %}
+              {% else %}
+                <p>There are no accounts in the database.</p>
+              {% endif %}
+
+           
+        </tbody>
+    </table>
+    </body>

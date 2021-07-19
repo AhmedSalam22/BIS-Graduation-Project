@@ -66,9 +66,9 @@ class PaymentSalesTermForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        for account in ['sales_return', 'sales_allowance','sales_revenue','accounts_receivable', 'cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
-            self.fields[account].queryset = Accounts.objects.filter(owner=self.owner)
-          
+        queryset = Accounts.objects.filter(owner=self.owner)
+        for account in ['sales_discount', 'sales_return', 'sales_allowance','sales_revenue','accounts_receivable', 'cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
+            self.fields[account].queryset = queryset
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'config',
@@ -79,7 +79,7 @@ class PaymentSalesTermForm(forms.ModelForm):
             Row(
                 Column('freight_in_account', 'freight_out_account', 'sales_revenue'), 
                 Column('COGS', 'cash_account', 'accounts_payable'),
-                Column('accounts_receivable', 'sales_return', 'sales_allowance')
+                Column('accounts_receivable', 'sales_return', 'sales_allowance', 'sales_discount')
             ),
             Row(
                 'pay_freight_out'
@@ -170,7 +170,7 @@ class SoldItemForm(forms.ModelForm):
             HAVING (number_of_unit - ifnull(Sum(r.num_returned) ,0) - ifnull(Sum(s.quantity), 0) )  > 0
          """
 
-        self.fields['item'].queryset = InventoryPrice.objects.filter(id__in =RawSQL(SQL_LITE, [owner_id])).all()
+        self.fields['item'].queryset = InventoryPrice.objects.select_related('inventory').filter(id__in =RawSQL(SQL_LITE, [owner_id])).all()
 
 class InventoryPriceFormsetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
@@ -282,7 +282,7 @@ class SalesReturnForm(forms.ModelForm, DateMixin):
                 ]
         )
         self.fields['sale'].queryset = Sale.objects.filter(owner=self.owner)
-        self.fields['sold_item'].queryset= Sold_Item.objects.filter(sale__owner=self.owner)
+        self.fields['sold_item'].queryset= Sold_Item.objects.filter(sale__owner=self.owner).select_related('item')
         
         if self.sales_pk != None and self.sales_item_pk != None:
             self.fields['sale'].initial = get_object_or_404(Sale, pk=self.sales_pk, owner=self.owner)

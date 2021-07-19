@@ -122,13 +122,8 @@ class TransactionListView(LoginRequiredMixin, FilterView):
         qs = super().get_queryset().prefetch_related(
             'journal_set' , 'journal_set__account'
         ).filter(journal__account__owner=self.request.user).distinct()
-        print('query', qs.query)
         return qs
 
-
-    # def get_filterset(self, filterset_class):
-    #     qs = super().get_filterset(filterset_class).qs.filter(journal__account__owner=self.request.user).distinct()
-    #     return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -138,6 +133,43 @@ class TransactionListView(LoginRequiredMixin, FilterView):
         ctx['helper'] = self.helper
         return ctx
 
+
+    def get(self, request, *args, **kwargs):
+        request.session['export_journal'] = request.GET
+        return super().get(request, *args, **kwargs)
+
+
+
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    ref: https://docs.djangoproject.com/en/3.2/howto/outputting-csv/
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+
+class ExportTrsanctionView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        f = TransactionFilter(request.session.get('export_journal'))
+        queryset = f.qs.prefetch_related(
+            'journal_set' , 'journal_set__account'
+        ).filter(journal__account__owner=request.user).distinct()
+
+
+        pseudo_buffer = Echo()
+        writer = csv.writer(pseudo_buffer)
+        writer.writerow(['Date', 'Account', 'balance', 'transaction type' , 'comment'])
+
+        response = StreamingHttpResponse(
+            streaming_content=(writer.writerow(
+                    [transaction.date , journal.account , journal.balance , journal.transaction_type , transaction.comment ]
+                )  for transaction in queryset for journal in transaction.journal_set.all() 
+            ),
+        content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="journal{}.csv"'.format(timezone.now())
+        return response
 
 
 
@@ -159,7 +191,7 @@ class JournalCreateView(LoginRequiredMixin , View):
         self.ctx['transaction_form'] = TransactionForm()
         return render(request, self.template_name , self.ctx )
 
-    
+    @transaction.atomic
     def post(self , request , *args , **kwargs):
 
         self.ctx['formset'] = JournalFormSet(request.POST , form_kwargs={'user': request.user})
@@ -174,7 +206,7 @@ class JournalCreateView(LoginRequiredMixin , View):
                 journal = journal_form.save(commit=False)
                 journal.transaction = transaction
                 journal.save()
-                messages.success(request, 'Your Transaction Was Created Succesffuly')
+            messages.success(request, 'Your Transaction Was Created Succesffuly')
             return redirect(self.success_url)
         return render(request, self.template_name , self.ctx)
 
@@ -242,12 +274,11 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
                                                     on j.account_id = a.id
                                                     JOIN sole_proprietorship_transaction as t
                                                     ON j.transaction_id = t.id
-                                                    where a.owner_id = %s AND t.date >= %s AND t.date <= %s
-                                    )
-    GROUP by account_type , account
+                                                    where a.owner_id = %s  AND t.date <= %s
+                                    ) as temp_table
+    GROUP by account_type , account, normal_balance
     ORDER by balance DESC
                                                     """ , [self.request.user.id ,
-                                                           self.request.user.fs_reporting_period.start_date ,
                                                            self.request.user.fs_reporting_period.end_date
                                                            
                                                             ])
@@ -327,15 +358,14 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
                                                     on j.account_id = a.id
                                                     JOIN sole_proprietorship_transaction as t
                                                      ON j.transaction_id = t.id
-                                                    where a.owner_id = %s AND t.date >= %s AND t.date <= %s )
+                                                    where a.owner_id = %s  AND t.date <= %s )  as temp_table
             GROUP by account_type
             ORDER by balance DESC
                                                     """ , [request.user.id,
-                                                        request.user.fs_reporting_period.start_date ,
                                                         request.user.fs_reporting_period.end_date   
                                                     ])
             row = list(cursor)
-            query = cursor.execute("""SELECT date , account , sum(helper) as Balance , account_id FROM (
+            query = cursor.execute("""SELECT date , account , sum(helper) as Balance, account_id  FROM (
                                             SELECT * ,
                                             CASE
                                                 WHEN j.transaction_type = a.normal_balance Then  j.balance
@@ -346,13 +376,12 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
                                             on j.account_id = a.id
                                             JOIN sole_proprietorship_transaction as t
                                             ON j.transaction_id = t.id
-                                            where a.owner_id = %s AND t.date >= %s AND t.date <= %s		
-                                                                                                        )
-                            GROUP by date , account """ , [request.user.id,
-                                                        request.user.fs_reporting_period.start_date ,
+                                            where a.owner_id = %s AND t.date <= %s		
+                                                                                                        ) as temp_table
+                            GROUP by date , account , account_id """ , [request.user.id,
                                                         request.user.fs_reporting_period.end_date 
                             ] )
-            data = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "balance_negative" , "account_id"])
+            data = pd.DataFrame(cursor.fetchall() , columns=["date" , "account" , "balance_negative" , "account_id"])
             # print(data)
             # data.columns = query.keys()
 
@@ -472,6 +501,17 @@ class ViewPDF(FinancialStatements):
         return HttpResponse(pdf, content_type='application/pdf')
 
 
+class TransactionsPDFView(LoginRequiredMixin, View):
+    template_name = 'sole_proprietorship/transaction_pdf.html'
+
+    def get(self, request, *args, **kwargs):
+        f = TransactionFilter(request.session.get('export_journal'))
+        queryset = f.qs.prefetch_related(
+            'journal_set' , 'journal_set__account'
+        ).filter(journal__account__owner=request.user).distinct()
+
+        pdf = render_to_pdf(self.template_name, {'transaction_list': queryset})
+        return HttpResponse(pdf, content_type='application/pdf')
 
 
 class ExportFainacialStatementsToExcel(FinancialStatements):
@@ -599,8 +639,8 @@ class AccountsImport(LoginRequiredMixin , View):
     def post(self , request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            file = form.cleaned_data['file']
-            df = pd.read_excel(file)
+            excel_file = form.cleaned_data['file']
+            df = pd.read_excel(excel_file)
             for dic in df.to_dict('records'):
                 account = Accounts(owner=request.user , 
                                     account=dic["account"] ,

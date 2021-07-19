@@ -10,10 +10,12 @@
 
  <form action="" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% load crispy_forms_tags %}  
+
+        {{ form|crispy }}
       
         <button type="submit" class="btn btn-primary">Submit</button>
-        <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:journal_all' %}';return false;">Cancel</button>
+        <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{% url 'sole_proprietorship:all' %}';return false;">Cancel</button>
 
 </form>
 </diV>

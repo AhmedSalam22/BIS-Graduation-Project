@@ -95,7 +95,7 @@ class TransactionManager(models.Manager):
                             JOIN sole_proprietorship_transaction as t
                             ON j.transaction_id = t.id
                             where a.owner_id = %s and t.date <= %s
-                                        )
+                                        ) as temp_table
                     GROUP by normal_balance 
 
                                                     """ , [owner_id, end_date])

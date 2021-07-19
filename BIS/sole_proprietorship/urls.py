@@ -32,7 +32,9 @@ urlpatterns = [
     path('transaction/<int:pk>/delete', 
         views.TransactionDeleteView.as_view(success_url=reverse_lazy('sole_proprietorship:transaction_list')), name='transaction_delete'),
     path('ledger/', views.LedgerView.as_view(), name='ledger'),
-    path('fetch_ledger', views.FetchLedgerView.as_view(), name='fetch_ledger')
+    path('fetch_ledger', views.FetchLedgerView.as_view(), name='fetch_ledger'),
+    path('export_transactions_csv', views.ExportTrsanctionView.as_view(), name='export_transactions_csv'),
+    path('export_transactions_pdf', views.TransactionsPDFView.as_view(), name='export_transactions_pdf')
 
 
 

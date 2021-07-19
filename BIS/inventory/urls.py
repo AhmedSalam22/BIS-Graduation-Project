@@ -22,6 +22,8 @@ urlpatterns = [
     path('delete_purchase/<int:pk>', views.DeletePurchaseInventoryView.as_view(success_url=reverse_lazy('inventory:list_purchase')), name='delete_purchase'),
     path('purchases_dashboard' , views.PurchasesDashboard.as_view() , name="purchases_dashboard") , 
     path('pay_invoice/<int:pk>' , views.PayInvoicePayView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice"),
+    path('pay_invoice' , views.PayInvoicePayView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice_no_args"),
+
     path('pay_invoice_delete/<int:pk>' , views.PayInvoiceDeleteView.as_view(success_url=reverse_lazy('inventory:list_purchase')) , name="pay_invoice_delete"),
     path('create_purchase_allowance', views.PurchaseAllowanceView.as_view(success_url='inventory:detail_purchase'), name='create_purchase_allowance'),
     path('create_purchase_allowance/<int:pk>', views.PurchaseAllowanceView.as_view(success_url='inventory:detail_purchase'), name='create_purchase_allowance'),
@@ -34,6 +36,8 @@ urlpatterns = [
     path('create_sales_payment', views.CreateSalesPaymentView.as_view(), name='create_sales_payment'),
     path('create_sales_payment/<int:sales_pk>', views.CreateSalesPaymentView.as_view(), name='create_sales_payment_args'),
     path('sales_list', views.SalesListView.as_view(), name='sales_list'),
+    path('delete_sale/<int:pk>', views.SalesDeleteView.as_view(success_url=reverse_lazy('inventory:sales_list')), name='delete_sales'),
+    path('sale/<int:pk>', views.SalesDetailView.as_view(), name='sale_detail'),
     path('test' , views.Test.as_view() , name="test"),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 

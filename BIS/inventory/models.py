@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import connection
 import datetime
 from django.utils import timezone 
+from datetime import timedelta
 
 # Create your models here.
 class DueDateMixin:
@@ -17,35 +18,42 @@ class DueDateMixin:
         """
         retrun due date if user don't specify it's directly and used terms instead
         """
+        if hasattr(self, 'purchase_date'):
+            issue_date = self.purchase_date
+        else:
+            issue_date = self.sales_date
+
         if self.due_date:
             return self.due_date
         else:
             # Due in number of days
             if self.term.terms == PaymentSalesTerm.Term.DAYS.value:
-                return self.purchase_date + timezone.timedelta(days=self.term.num_of_days_due)
+                return issue_date + timezone.timedelta(days=self.term.num_of_days_due)
             elif self.term.terms == PaymentSalesTerm.Term.END_OF_MONTH.value:
                 return timezone.datetime(
-                    year = self.purchase_date.year , 
-                    month = self.purchase_date.month , 
+                    year = issue_date.year , 
+                    month = issue_date.month , 
                     day = calendar.monthrange(
-                            year= self.purchase_date.year ,
-                            month = self.purchase_date.month
+                            year= issue_date.year ,
+                            month = issue_date.month
                     )[1]
                 )
             # we mean by next month ex purchase date was feb-02-2021 so due date march-02-2021
             elif self.term.terms == PaymentSalesTerm.Term.NEXT_MONTH.value:
-                if self.purchase_date.month == 12:
+                if issue_date.month == 12:
                     return timezone.datetime(
-                            year = self.purchase_date.year + 1 , 
+                            year = issue_date.year + 1 , 
                             month = 1 , 
-                            day = self.purchase_date.day
+                            day = issue_date.day
                 )
                 else:
                     return timezone.datetime(
-                        year = self.purchase_date.year , 
-                        month = self.purchase_date.month + 1, 
-                        day = self.purchase_date.day
+                        year = issue_date.year , 
+                        month = issue_date.month + 1, 
+                        day = issue_date.day
                     )
+    
+   
 
 
 
@@ -70,7 +78,8 @@ class PaymentSalesTerm(models.Model):
         )
     terms = models.IntegerField(choices=Term.choices , default=Term.CASH , blank=False)
     num_of_days_due = models.PositiveSmallIntegerField(
-        help_text="in case of you want to specify number of days due"
+        help_text="in case of you want to specify number of days due",
+        default= 0
     )
     discount_in_days = models.PositiveSmallIntegerField(
         validators=[MaxValueValidator(32)] ,
@@ -137,7 +146,8 @@ class PaymentSalesTerm(models.Model):
     )
 
 
-    
+  
+
     
     
     def __str__(self):
@@ -735,6 +745,36 @@ class Sale(DueDateMixin, models.Model):
 
 
 
+    @property
+    def total_amount_paid(self):
+        query = self.salespayment_set.aggregate(Sum('amount'))
+        return query['amount__sum'] if query['amount__sum'] != None else 0
+
+    @property
+    def first_payment(self) -> bool:
+        """
+        return True if this first payment
+        """
+        return True if self.salespayment_set.count() == 0 else False
+
+
+    @property
+    def amount_if_there_discount(self):
+        return self.net_sales * ((100- self.term.discount_percentage) / 100)
+
+    @property
+    def paid(self) -> bool:
+        if self.term.terms == PaymentSalesTerm.Term.CASH.value:
+            return True
+        elif self.net_sales == self.total_amount_paid:
+            return True
+        elif self.net_sales * ((100- self.term.discount_percentage) / 100) == self.total_amount_paid and self.salespayment_set.count() ==1 and self.salespayment_set.first().date <=  (self.sales_date + timedelta(self.term.discount_in_days) ) : 
+            return True
+        else:
+            return False
+
+
+
 
     def ARorCash(self):
         """
@@ -749,6 +789,13 @@ class Sale(DueDateMixin, models.Model):
     def sales_allowance(self):
         query = self.salesallowance_set.aggregate(Sum('amount'))
         return query['amount__sum'] if query['amount__sum'] != None else 0
+
+
+    @property
+    def num_units_returned(self):
+        query = self.salesreturn_set.aggregate(Sum('num_returned'))
+        return query['num_returned__sum'] if query['num_returned__sum'] != None else 0
+
 
     @property
     def sales_return(self):
@@ -880,13 +927,6 @@ class SalesPayment(models.Model):
     amount = models.FloatField()
 
 
-
-    @property
-    def amount_paid(self):
-        query = self.sales.salespayment_set.aggregate(Sum('amount'))
-        return query['amount__sum'] if query['amount__sum'] != None else 0
-
-
     @property
     def first_payment(self) -> bool:
         """
@@ -899,21 +939,18 @@ class SalesPayment(models.Model):
         return True if the due of payment <= due date and there is a discount otherwise False
         """
         if self.sales.due_date:
-            if self.sales.term.discount_percentage > 0  and self.date <= self.sales.due_date:
+            if self.sales.term.discount_percentage > 0  and self.date <= (self.sales.sales_date + timedelta(self.sales.term.discount_in_days) ):
                 return True
         return False
 
-
-    def amount_if_there_discount(self):
-        return self.sales.net_sales * ((100- self.sales.self.sales.term.discount_percentage) / 100)
 
     def amount_you_will_pay(self):
         """
             return the amounth that you should pay
         """
         if self.first_payment and self.discount():
-            return self.amount_if_there_discount()
-        return self.sales.net_sales - self.amount_paid
+            return self.sales.amount_if_there_discount
+        return self.sales.net_sales - self.sales.total_amount_paid
 
 
     def validate_amount(self):

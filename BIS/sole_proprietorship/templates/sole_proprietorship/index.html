@@ -38,8 +38,10 @@
                         <div class="dropdown-menu" role="menu">
                         <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:transaction_list' %}">View Journal entries</a>
                         <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:journal_create' %}">Create transactions</a>
-                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:export_journal' %}">Export Journal to CSV</a>
-                        </div>
+                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:export_transactions_csv' %}">Export Journal to CSV</a>
+                        <a class="dropdown-item" role="presentation" href="{% url 'sole_proprietorship:export_transactions_pdf' %}">Export Journal to PDF</a>
+   
+                         </div>
                 </div>
             </div>
             <div class="col-md-3" style="background-color:#3399ff;">

@@ -1,7 +1,6 @@
 {% extends "sole_proprietorship/index.html" %}
 
 {% block content %}
-
 {% if Debit != Credit %}
 <div class="row">
     <div class="col-12">
@@ -72,9 +71,9 @@
             <a href="{% url 'sole_proprietorship:journal_create' %}">
               <button class="btn btn-primary"> Add a Transaction </button>
             </a> 
-            <!-- <a href="{% url 'sole_proprietorship:export_journal'%}">
-                <button class="btn btn-secondary">export transaction into csv</button> 
-            </a> -->
+            <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:export_transactions_csv' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (CSV)</a>
+            <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:export_transactions_pdf' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
+         
 
         </div>
         <div class="card-body">
@@ -86,71 +85,7 @@
                     <div class="text-md-right dataTables_filter" id="dataTable_filter"><label><input type="search" class="form-control form-control-sm" aria-controls="dataTable" placeholder="Search"></label></div>
                 </div> {% endcomment %}
             </div>
-            <div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
-                <table class="table table-hover table-borderless" id="mydataTable">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Date</th>
-                            <th>Account</th>
-                            <th>Debit </th>
-                            <th>Credit </th>
-                            <th>comment</th>
-                            <th>Action</th>
-
-                        </tr>
-                    </thead>
-                       
-                    <tbody>
-                        
-                          {% if transaction_list %}
-                            {% for transaction in transaction_list %}
-                               
-                                {% for journal in transaction.journal_set.all %}
-                                    <tr>
-                                        {% if forloop.first %}
-                                            <td><strong>{{ transaction.date}}</strong></td>                      
-                                        {% else %}
-                                            <td><strong></strong></td>   
-                                        {% endif %}
-                                        {% if journal.transaction_type == "Debit" %}
-                                            <td><strong><pre>{{ journal.account}}</pre></strong></td>
-                                            <td><strong>{{ journal.balance}}</strong></td>
-                                            <td><strong></strong></td>
-                                        {% else %}
-                                            <td><strong><pre>   {{ journal.account}}</pre></strong></td>
-                                            <td><strong></strong></td>
-                                            <td><strong>{{ journal.balance}}</strong></td>
-                                        {% endif %}
-                                        {% if forloop.first %}
-                                        <td><strong>{{ transaction.comment}}</strong></td>
-                                        <td>
-                                            <a href="{% url 'sole_proprietorship:transaction_update' transaction.id %}">
-                                                <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
-                                            </a> 
-                                            <a href="{% url 'sole_proprietorship:transaction_delete' transaction.id %}">
-                                                <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
-                                            </a>
-                                        </td>
-                                        {% else %}
-                                            <td><strong></strong></td>   
-                                            <td><strong></strong></td>   
-
-                                        {% endif %}
-                                        
-                                        
-                                    </tr>
-
-                                {% endfor %}
-
-                            {% endfor %}
-                          {% else %}
-                            <p>There are no accounts in the database.</p>
-                          {% endif %}
-
-                       
-                    </tbody>
-                </table>
-            </div>
+            {% include 'sole_proprietorship/transactions_table.html' %}
             <div class="row">
                 <!-- <div class="col-md-6 align-self-center">
                     <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing 1 to 10 of 27</p>

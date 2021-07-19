@@ -4,7 +4,7 @@ from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerU
 from inventory.models import (PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice,
     PurchaseInventory, PayInvoice, InventoryImag, Sold_Item, Sale
     )
-from django.views.generic import View , TemplateView, DeleteView, ListView
+from django.views.generic import View , TemplateView, DeleteView, ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
@@ -64,6 +64,8 @@ class UpdateTermView(FormKwargsMixin, OwnerUpdateView):
     model = PaymentSalesTerm
     form_class  = PaymentSalesTermForm
     template_name = "inventory/term_form.html"
+
+  
 
 
 class ListTermView(OwnerListView):
@@ -325,7 +327,7 @@ class CreateSalesReturnView(LoginRequiredMixin , View):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        form = SalesReturnForm(data= request.POST)
+        form = SalesReturnForm(data= request.POST, owner=request.user)        
         if form.is_valid():
             form.save()
             messages.success(request, 'Your Sales return has been created Successfuly')
@@ -455,10 +457,11 @@ class PayInvoicePayView(FormKwargsMixin, OwnerCreateView):
 
     def get_initial(self):
         try:
-            invoice = PurchaseInventory.objects.get(owner=self.request.user , pk=self.kwargs['pk'] , status=0)
+            invoice = PurchaseInventory.objects.get(owner=self.request.user , pk=self.kwargs.get('pk') , status=0)
             return {'purchase_inventory': invoice}
         except PurchaseInventory.DoesNotExist:
-            messages.warning(self.request , "Warning:the pk in your url is not vaild.") 
+            pass
+            # messages.warning(self.request , "Warning:the pk in your url is not vaild.") 
 
     @transaction.atomic
     def post(self, *args, **kwargs):
@@ -580,7 +583,17 @@ class SalesListView(LoginRequiredMixin, ListView):
 
 
 
-        
+class SalesDeleteView(OwnerDeleteView):
+    model = Sale
+    
+
+class SalesDetailView(LoginRequiredMixin, DetailView):
+    model = Sale
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(owner= self.request.user).prefetch_related('sold_item_set', 'salespayment_set')
+        return qs
+
 class Test(LoginRequiredMixin , View):
 
 

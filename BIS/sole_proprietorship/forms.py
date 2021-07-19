@@ -110,7 +110,7 @@ class AccountsForm(ModelForm):
         user = self.user
         account = self.cleaned_data.get("account")
 
-        if Accounts.objects.filter(owner__username__iexact=user, account__iexact=account).exists():
+        if Accounts.objects.filter(owner=user, account__iexact=account).exists():
             raise forms.ValidationError(_("this account is already exist"),
                         code="duplicate",
                         params={"value": account}
@@ -127,6 +127,10 @@ class TransactionForm(ModelForm):
             'date': forms.widgets.DateInput(attrs={'type': 'date'}),
 
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].initial = timezone.now()
         
 
 class TransactionFilter(django_filters.FilterSet):
@@ -140,8 +144,17 @@ class TransactionFilter(django_filters.FilterSet):
                 'comment': ['icontains'],
                 }
 
-    def __init__(self,   **kwargs):
-        super().__init__(**kwargs)
+
+    # @property
+    # def qs(self):
+    #     parent = super().qs
+    #     return parent.prefetch_related(
+    #         'journal_set' , 'journal_set__account'
+    #     ).filter(journal__account__owner=self.request.user).distinct()
+
+
+    def __init__(self, *args,   **kwargs):
+        super().__init__(*args, **kwargs)
         self.form.fields["date__gte"].widget =forms.widgets.DateInput(attrs={'type': 'date'})
         self.form.fields["date__gte"].label = 'Start Date'
         self.form.fields["date__lte"].widget =forms.widgets.DateInput(attrs={'type': 'date'})

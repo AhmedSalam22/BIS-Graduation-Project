@@ -48,8 +48,8 @@
                                 </td>
                                 <td><strong>{{ sale.due_date }}</strong></td>
                                 <td>
-                                    <a href="{% url 'inventory:detail_purchase' sale.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a>
-                                    <a href="{% url 'inventory:delete_purchase' sale.id %}">
+                                    <a href="{% url 'inventory:sale_detail' sale.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a>
+                                    <a href="{% url 'inventory:delete_sales' sale.id %}">
                                         <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
                                     </a>
                                 </td>

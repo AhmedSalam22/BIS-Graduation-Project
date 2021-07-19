@@ -41,7 +41,6 @@
                 <a class="collapse-item" href="{% url 'sole_proprietorship:ledger' %}">Ledger</a>
                 <a class="collapse-item" href="{% url 'sole_proprietorship:dashboard' %}">Dashboard</a>
                 <a class="collapse-item" href="{% url 'sole_proprietorship:financialstatements' %}">Financial Statements</a>
-                <a class="collapse-item" href="{% url 'sole_proprietorship:ReportingPeriodConfig' %}">Settings</a>
             </div>
         </div>
     </li>
@@ -57,6 +56,8 @@
                 <h6 class="collapse-header">Section:</h6>
                 <a class="collapse-item" href="{% url 'Customer_Sales:home' %}">Home</a>
                 <a class="collapse-item" href="{% url 'inventory:sales_list' %}">Sales</a>
+                <a class="collapse-item" href="{% url 'inventory:create_sales' %}">Create Sale</a>
+
                 <a class="collapse-item" href="{% url 'inventory:create_sales_return' %}">Sales Return</a>
                 <a class="collapse-item" href="{% url 'inventory:create_sales_allowance' %}">Sales allowance</a>
                 <a class="collapse-item" href="{% url 'inventory:create_sales_payment' %}">Receive Payment</a>
@@ -72,11 +73,16 @@
         </a>
         <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <h6 class="collapse-header">Custom Utilities:</h6>
-                <a class="collapse-item" href="utilities-color.html">Colors</a>
-                <a class="collapse-item" href="utilities-border.html">Borders</a>
-                <a class="collapse-item" href="utilities-animation.html">Animations</a>
-                <a class="collapse-item" href="utilities-other.html">Other</a>
+                <h6 class="collapse-header">Apps:</h6>
+                <a class="collapse-item" href="{% url 'inventory:home' %}">Home</a>
+                <a class="collapse-item" href="{% url 'inventory:list_inventory' %}">Inventory</a>
+                <a class="collapse-item" href="{% url 'inventory:list_purchase' %}">Purchases</a>
+                <a class="collapse-item" href="{% url 'inventory:list_purchase' %}">Create Purchase</a>
+                <a class="collapse-item" href="{% url 'inventory:purchases_dashboard' %}">Dashboard</a>
+                <a class="collapse-item" href="{% url 'inventory:create_purchase_return_no_paramter' %}">Purchase Return</a>
+                <a class="collapse-item" href="{% url 'inventory:create_purchase_allowance' %}">Purchase allowance</a>
+                <a class="collapse-item" href="{% url 'inventory:home' %}">Pay Invoice</a>
+
             </div>
         </div>
     </li>
