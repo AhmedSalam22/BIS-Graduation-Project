@@ -26,6 +26,8 @@ from inventory.crispy_forms import (PurchaseFilterHelper, InventoryFilterHelper,
 from django.db import transaction
 from inventory.filter_forms import InventoryFilter
 from django.core import serializers
+import plotly.graph_objects as go
+import plotly
 
 def get_graph():
     """
@@ -384,7 +386,15 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         inventory_df = pd.DataFrame(data["inventory"] , columns=["item_name", "number_of_unit" , "num_returned"])
         summary_supplier_df = pd.DataFrame(data["supplier"] , columns=["supplier", "total_purchases" , "cost_returned" ])
 
-    
+
+        fig = go.Figure(go.Bar(
+            x=summary_supplier_df['total_purchases'],
+            y=summary_supplier_df['supplier'],
+            orientation='h'))
+
+        fig.update_layout(title_text= 's vs p')
+        supplier_total_purchases =  plotly.offline.plot(fig, auto_open = False, output_type="div")
+
 
         plt.switch_backend("AGG")
         fig, ax1 = plt.subplots(figsize=(11.5, 5))
@@ -442,6 +452,7 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             # "std_cost_per_unit": PurchaseInventory.purchases.std_cost_per_unit(query) , 
             # "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(query) , 
             # "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(query) , 
+            'supplier_total_purchases_fig': supplier_total_purchases,
             "graph": graph,
             "line_fig": graph2 ,
             "graph3" : graph3

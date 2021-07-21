@@ -244,7 +244,7 @@ class PurchaseManager(models.Manager):
                 pr.cost_per_unit ,
                 re.num_returned as return_num_returned,
                 pa.amount_paid as payment_amount_paid,
-                su.first_name || " " || su.middle_name || " " || su.last_name as supplier_name ,
+                su.first_name || ' ' || su.middle_name || ' ' || su.last_name as supplier_name ,
                 inv.item_name  ,
                 te.config ,
                 te.terms ,
@@ -272,7 +272,7 @@ class PurchaseManager(models.Manager):
             cursor.execute("""
             SELECT  purchase_date , net_purchases , cost_returned   FROM myview
             where owner_id = %s AND purchase_date >= %s AND purchase_date <= %s
-            GROUP BY id;
+            GROUP BY id, purchase_date , net_purchases , cost_returned;
             """ , [owner , start_date , end_date])
             purchases_return_over_time = cursor.fetchall()
 
@@ -287,8 +287,8 @@ class PurchaseManager(models.Manager):
             SELECT supplier_name , sum(total_purchases) as total_purchases , sum(cost_returned)  FROM (
                 SELECT supplier_name, total_purchases , cost_returned  FROM myview
                 where owner_id = %s  AND purchase_date >= %s AND purchase_date <= %s
-                GROUP By id, supplier_name)
-            GROUP by supplier_name
+                GROUP By id, supplier_name,  total_purchases , cost_returned ) as subquery
+            GROUP by supplier_name,  total_purchases , cost_returned
             ORDER by total_purchases DESC;
             """ , [owner , start_date , end_date])
             supplier = cursor.fetchall()            
@@ -496,32 +496,45 @@ class PurchaseInventory(DueDateMixin, models.Model):
         """
         Check if this invoice PAID or UNPAID
         """
-        net_purchases = self.check_net_purchase() 
-        total_amount_paid = self.check_total_amount_paid()
-        # if there is dicount
-        try:
-            last_paid_date = self.payinvoice_set.order_by('-date').first().date
-        except AttributeError:
-            last_paid_date = None
-    
-        is_there_is_dicount, amount_if_there_is_dicount=  None, None
-        try:
-            amount_if_there_is_dicount =    self.net_purchases * ( (100 - self.term.discount_percentage) /100) 
-        except TypeError:
-            pass
-
-        if (last_paid_date != None and  self.due_date != None and last_paid_date <= self.due_date and
-             self.term.discount_percentage > 0 and
-               total_amount_paid == amount_if_there_is_dicount):
-            is_there_is_dicount = True
-        
-        if is_there_is_dicount and amount_if_there_is_dicount == total_amount_paid:
+        if self.term.terms == PaymentSalesTerm.Term.CASH.value:
             return "PAID"
-
-        if self.term.terms == PaymentSalesTerm.Term.CASH.value or (net_purchases ==  total_amount_paid and (total_amount_paid!= 0 and net_purchases != 0 )) or self.status == 1:
+        elif self.check_net_purchase() == self.check_total_amount_paid():
+            return "PAID"
+        elif self.check_net_purchase() * ((100- self.term.discount_percentage) / 100) == self.check_total_amount_paid() and self.payinvoice_set.count() ==1 and self.payinvoice_set.first().date <=  (self.purchase_date.date() + timedelta(self.term.discount_in_days) ) : 
             return "PAID"
         else:
-            return  "UNPAID"
+            return "UNPAID"
+
+    # def check_status(self):
+    #     """
+    #     Check if this invoice PAID or UNPAID
+    #     """
+    #     net_purchases = self.check_net_purchase() 
+    #     total_amount_paid = self.check_total_amount_paid()
+    #     # if there is dicount
+    #     try:
+    #         last_paid_date = self.payinvoice_set.order_by('-date').first().date
+    #     except AttributeError:
+    #         last_paid_date = None
+    
+    #     is_there_is_dicount, amount_if_there_is_dicount=  None, None
+    #     try:
+    #         amount_if_there_is_dicount =    self.net_purchases * ( (100 - self.term.discount_percentage) /100) 
+    #     except TypeError:
+    #         pass
+
+    #     if (last_paid_date != None and  self.due_date != None and last_paid_date <= self.due_date and
+    #          self.term.discount_percentage > 0 and
+    #            total_amount_paid == amount_if_there_is_dicount):
+    #         is_there_is_dicount = True
+        
+    #     if is_there_is_dicount and amount_if_there_is_dicount == total_amount_paid:
+    #         return "PAID"
+
+    #     if self.term.terms == PaymentSalesTerm.Term.CASH.value or (net_purchases ==  total_amount_paid and (total_amount_paid!= 0 and net_purchases != 0 )) or self.status == 1:
+    #         return "PAID"
+    #     else:
+    #         return  "UNPAID"
 
     
 
@@ -575,8 +588,8 @@ class PurchaseInventory(DueDateMixin, models.Model):
         """
         query = self.payinvoice_set.aggregate(Sum("amount_paid"))["amount_paid__sum"]
         if query == None:
-            if self.status == PurchaseInventory.Status.PAID.value:
-                return self.total_purchases
+            if self.term.terms == PaymentSalesTerm.Term.CASH.value:
+                return self.check_net_purchase()
             else:
                 return 0
         return query
@@ -595,13 +608,20 @@ class PayInvoice(models.Model):
     date = models.DateField()
     amount_paid = models.FloatField()
 
+
+    def first_patment(self):
+        """
+        return True if this your first payment
+        """
+        return self.purchase_inventory.payinvoice_set.count() == 0
+
     def check_amount_you_will_pay(self):
         amount_you_will_pay, discount = None, None
         amount_paid = self.purchase_inventory.total_amount_paid
         if self.purchase_inventory.status == PurchaseInventory.Status.PAID.value:
             amount_you_will_pay = 0
         else:
-            if self.date <= self.purchase_inventory.due_date and self.purchase_inventory.term.discount_percentage > 0:
+            if self.first_patment() and self.purchase_inventory.term.discount_percentage > 0 and self.date <= (self.purchase_inventory.purchase_date.date() + timedelta(self.purchase_inventory.term.discount_in_days)):
                 amount_you_will_pay = self.purchase_inventory.net_purchases * ( (100 - self.purchase_inventory.term.discount_percentage) /100) - amount_paid
                 discount = True
             else:

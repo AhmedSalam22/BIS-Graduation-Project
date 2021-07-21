@@ -30,7 +30,6 @@ class AccountManager(models.Manager):
         """
         Return the dataset for a specific account to use it in General Ledger
         """
-        print('ledger is invoked')
         with connection.cursor() as cursor:
             cursor.execute(""" 
                 SELECT t.date, t.comment, j.transaction_type,
@@ -48,16 +47,80 @@ class AccountManager(models.Manager):
                     ORDER BY t.date
 
                                                 """ , [owner_id, account, start_date, end_date])
-            print('done')
             data = cursor.fetchall()
-            print(f'start_date: {start_date}, end_date={end_date} account_id={account} owner_id= {owner_id}')
-            print(data)
+        return data
+
+    def account_over_time(self, owner_id, account, start_date, end_date):
+        """
+        Return the dataset for a specific account over the time
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(""" 
+                SELECT t.date,
+                    (CASE
+                        WHEN j.transaction_type = a.normal_balance Then  j.balance
+                        ELSE ( -1 * j.balance)
+                    END )as amount
+                    FROM sole_proprietorship_accounts as a
+                    JOIN sole_proprietorship_journal as j
+                    ON j.account_id = a.id
+                    JOIN sole_proprietorship_transaction as t
+                    ON t.id = j.transaction_id
+                    
+                    WHERE a.owner_id = %s  and a.id = %s and t.date >= %s and t.date <= %s
+                    ORDER BY t.date
+
+                                                """ , [owner_id, account, start_date, end_date])
+            data = cursor.fetchall()
+        return data
+
+    def accounts_type_balances(self, owner_id, end_date):
+        """
+            return [(balance, account_types) ....]
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(""" 
+                            SELECT sum(helper) as balance,  account_type FROM (
+                                                    SELECT * ,
+                                                    CASE
+                                                        WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                                        ELSE ( -1 * j.balance)
+                                                    END as helper 
+                                                    FROM sole_proprietorship_journal as j
+                                                    JOIN sole_proprietorship_accounts as a
+                                                    on j.account_id = a.id
+                                                    JOIN sole_proprietorship_transaction as t
+                                                    ON j.transaction_id = t.id
+                                                    where a.owner_id = %s  AND t.date <= %s )  as temp_table
+            GROUP by account_type
+            ORDER by balance DESC
+                                                    """ , [owner_id, end_date])
+            data = list(cursor)
         return data
 
 
-
-
-
+    def account_type_account_balance(self, owner_id, account_type, end_date):      
+        """
+            return [(account_type, account, balance) ....]
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(""" 
+                SELECT account_type, account, 
+                        SUM(CASE
+                            WHEN j.transaction_type = a.normal_balance Then  j.balance
+                            ELSE ( -1 * j.balance)
+                        END) as balance 
+                        FROM sole_proprietorship_journal as j
+                        JOIN sole_proprietorship_accounts as a
+                        on j.account_id = a.id
+                        JOIN sole_proprietorship_transaction as t
+                        ON j.transaction_id = t.id
+                        where a.owner_id = %s  AND t.date <= %s and a.account_type = %s 
+                    GROUP BY account_type, account
+                    ORDER BY balance 
+                                                    """ , [owner_id, end_date, account_type])
+            data = cursor.fetchall()
+        return data
 
 
 class TransactionManager(models.Manager):

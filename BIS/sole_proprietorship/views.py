@@ -32,7 +32,8 @@ from .forms import JournalFormSetHelper
 from django.shortcuts import get_object_or_404
 from django.views.generic import DeleteView
 from django.db import transaction
-
+from django.utils.safestring import mark_safe
+import plotly.figure_factory as ff
 
 def prepare_data_frame( journal  ,  accounts):
     accounts = pd.DataFrame(accounts)
@@ -335,100 +336,57 @@ class ExportJournal(LoginRequiredMixin , View):
         return response
 
 class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
+    def pie_plot(self, labels, values, title):
+        fig = go.Figure(data=[go.Pie(labels=labels, values= values)] )
+        fig.update_layout(title_text= title)
+        return fig.to_html(full_html=False, include_plotlyjs=False)
+
+
     def get(self, request):
         owner =  request.user
-        query = Q(journal__account__owner=owner,date__gte=request.user.fs_reporting_period.start_date)
+        query = Q(journal__account__owner=owner)
         query.add(Q(date__lte=request.user.fs_reporting_period.end_date), Q.AND)
         total_transaction = Transaction.objects.filter(query).distinct().count()
         total_accounts = Accounts.objects.filter(owner=owner).count()
 
-        query2 = Q(account__owner=owner,transaction__date__gte=request.user.fs_reporting_period.start_date)
+        query2 = Q(account__owner=owner)
         query2.add(Q(transaction__date__lte=request.user.fs_reporting_period.end_date), Q.AND)
         avg_transaction = Journal.objects.filter(query2).distinct().aggregate(Avg("balance")) 
-        with connection.cursor() as cursor:
-            cursor.execute(""" 
-                            SELECT sum(helper) as balance,  account_type FROM (
-                                                    SELECT * ,
-                                                    CASE
-                                                        WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                        ELSE ( -1 * j.balance)
-                                                    END as helper 
-                                                    FROM sole_proprietorship_journal as j
-                                                    JOIN sole_proprietorship_accounts as a
-                                                    on j.account_id = a.id
-                                                    JOIN sole_proprietorship_transaction as t
-                                                     ON j.transaction_id = t.id
-                                                    where a.owner_id = %s  AND t.date <= %s )  as temp_table
-            GROUP by account_type
-            ORDER by balance DESC
-                                                    """ , [request.user.id,
-                                                        request.user.fs_reporting_period.end_date   
-                                                    ])
-            row = list(cursor)
-            query = cursor.execute("""SELECT date , account , sum(helper) as Balance, account_id  FROM (
-                                            SELECT * ,
-                                            CASE
-                                                WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                ELSE ( -1 * j.balance)
-                                            END as helper 
-                                            FROM sole_proprietorship_journal as j
-                                            JOIN sole_proprietorship_accounts as a
-                                            on j.account_id = a.id
-                                            JOIN sole_proprietorship_transaction as t
-                                            ON j.transaction_id = t.id
-                                            where a.owner_id = %s AND t.date <= %s		
-                                                                                                        ) as temp_table
-                            GROUP by date , account , account_id """ , [request.user.id,
-                                                        request.user.fs_reporting_period.end_date 
-                            ] )
-            data = pd.DataFrame(cursor.fetchall() , columns=["date" , "account" , "balance_negative" , "account_id"])
-            # print(data)
-            # data.columns = query.keys()
 
-        accounts_type = [ account[1] for account in row]
-        accounts_balance = [account[0] for account in row]
+    
+        data = Accounts.my_objects.accounts_type_balances(request.user.id, request.user.fs_reporting_period.end_date)
+        accounts_dic = {key:value for value, key in data}
 
-        accounts = ['Assest' , 'Investment' , 'liabilities' , 'Revenue' , 'Expenses' ,'Drawings']
-        accounts_dic = {}
-        for account in accounts:
-            try:
-                accounts_dic[account] = accounts_balance[accounts_type.index(account)]
-            except ValueError:
-                accounts_dic[account] = 0
-        # old method using pandas instead of SQL query
-        # accounts = Accounts.objects.filter(owner=owner).all().values()
-        # journal = Journal.objects.filter(owner=owner).all().values()
-        # data = prepare_data_frame(journal , accounts)
-        # trial_balance = prepare_trial_balance(data)
-        # net_income =  prepare_net_income(data)
-        amount = accounts_dic["Revenue"] - accounts_dic["Expenses"]
-        # investment ,  drawings = prepare_equity_statement(data)
-        equity = accounts_dic["Investment"] + amount - accounts_dic["Drawings"]
-        # assest , total_assest , liabilities ,total_liabilities = prepare_finacial_statement(data)
-        
+     
+        income = accounts_dic.get("Revenue", 0) - accounts_dic.get("Expenses", 0)
+        equity = accounts_dic.get("Investment", 0) + income - accounts_dic.get("Drawings")        
         # revenue vs expense
-        labels = ['Revenues','expenses']
-        values = [accounts_dic["Revenue"], accounts_dic["Expenses"]]
-        fig = go.Figure(data=[go.Pie(labels=labels, values= values)] )
-        fig.update_layout(title_text='Revenues vs expenses')
-        revenues_expenses_fig = plotly.offline.plot(fig, auto_open = False, output_type="div")
-        # investment vs drawings
-        labels2 = ['Investment','Drawings']
-        values2 = [accounts_dic["Investment"], accounts_dic["Drawings"] ]
-        fig2 = go.Figure(data=[go.Pie(labels=labels2, values=values2)])
-        fig2.update_layout(title_text='Investment vs Drawings')
-        investment_drwaings_fig = plotly.offline.plot(fig2, auto_open = False, output_type="div")
+        revenues_expenses_fig = self.pie_plot(
+            ['Revenues','expenses'],
+            [accounts_dic.get("Revenue", 0), accounts_dic.get("Expenses",0)],
+            'Revenues vs expenses'
+        )
+
+
+        # investment vs drawings'
+        investment_drwaings_fig = self.pie_plot(
+            ['Investment','Drawings'],
+            [accounts_dic.get("Investment", 0), accounts_dic.get("Drawings", 0)],
+            'Investment vs Drawings'
+        )
+
         # total accounts
-        # q = data.groupby("account_type")["balance_negative"].sum()
-        # q.sort_values(ascending=False , inplace=True)
-        fig3 = go.Figure([go.Bar(x=accounts_type , y=accounts_balance)] )
+        fig3 = go.Figure([go.Bar(x=list(accounts_dic.keys()) , y=list(accounts_dic.values()))] )
         fig3.update_layout(title_text='accounts type')
-        accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
-        #line chart 
+        # accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
+        accounts_fig =  fig3.to_html(full_html=False, include_plotlyjs=False)
+   
+
         account_form = AccountForm(user=owner)
-        q2 = data.query("account_id == '{}' ".format(request.GET.get("account") , None))
-        line_fig = px.line(q2, x="date", y="balance_negative")
-        line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
+        # q2 = data.query("account_id == '{}' ".format(request.GET.get("account") , None))
+        # line_fig = px.line(q2, x="date", y="balance_negative")
+        # line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
+        # print(' line chart', timezone.now() - start )
 
         ctx = {
             "total_transaction" : total_transaction , 
@@ -439,7 +397,7 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
             "equity" : equity  , 
             "accounts_fig" : accounts_fig , 
             "account_form" : account_form ,
-            "line_fig": line_fig , 
+            # "line_fig": line_fig , 
             "start_date": request.user.fs_reporting_period.start_date,
             "end_date": request.user.fs_reporting_period.end_date,
         }
@@ -772,4 +730,97 @@ class FetchLedgerView(LoginRequiredMixin, View):
             start_date=request.GET.get('start_date'),
             end_date= request.GET.get('end_date'))
         }
+        return JsonResponse(ctx)
+
+
+class AccountOverTimeView(LoginRequiredMixin, View):
+    def get(self, request):
+        data = Accounts.my_objects.account_over_time(
+                owner_id = request.user.id,
+                account=request.GET.get('account'),
+                start_date= request.user.fs_reporting_period.start_date,
+                end_date= request.user.fs_reporting_period.end_date
+        )
+
+        df = pd.DataFrame(data, columns=['Date', 'Amount'])
+        fig = go.Figure()
+        fig.add_trace(
+                go.Scatter(x=list(df.Date), y=list(df.Amount))
+        )
+        account_name = Accounts.objects.get(owner=request.user, pk=request.GET.get('account')).account
+        fig.update_layout(
+            title_text=f"{account_name} balance over the time"
+        )
+        # Add range slider
+        fig.update_layout(
+            xaxis=dict(
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=1,
+                            label="1m",
+                            step="month",
+                            stepmode="backward"),
+                        dict(count=6,
+                            label="6m",
+                            step="month",
+                            stepmode="backward"),
+                        dict(count=1,
+                            label="YTD",
+                            step="year",
+                            stepmode="todate"),
+                        dict(count=1,
+                            label="1y",
+                            step="year",
+                            stepmode="backward"),
+                        dict(step="all")
+                    ])
+                ),
+                rangeslider=dict(
+                    visible=True
+                ),
+                type="date"
+            )
+        )
+        account_over_time_fig = fig.to_html(full_html=False, include_plotlyjs=False)
+
+        ctx = {
+            'account_over_time_fig': mark_safe(account_over_time_fig)
+        }
+
+        return JsonResponse(ctx)
+
+
+class DetailAccountTypeView(LoginRequiredMixin, View):
+    def get(self, request):
+        print('account_type', request.GET.get('account_type'))
+        # if request.GET.get('account_type') in ['']
+        # we can do validation for input to prevent SQL injection but i realize Django Take care of this for us
+        data = Accounts.my_objects.account_type_account_balance(
+                owner_id = request.user.id,
+                account_type=request.GET.get('account_type'),
+                end_date= request.user.fs_reporting_period.end_date
+        )
+
+        df = pd.DataFrame(data, columns=['account_type', 'account', 'balance'])
+        total = df['balance'].sum()
+        df['%'] = round(df['balance'] / total  * 100, 2)
+        df.loc[len(df)] =  ['', 'Total', total, 100] 
+        df_fig = ff.create_table(df.iloc[: , 1:])
+        
+        
+        fig = go.Figure(go.Bar(
+            x=df['balance'],
+            y=df['account'],
+            orientation='h'))
+
+        fig.update_layout(
+            title_text=f"{request.GET.get('account_type')} accounts and their balance"
+        )
+        accounts_fig = fig.to_html(full_html=False, include_plotlyjs=False)
+
+        ctx = {
+            'accounts_fig': mark_safe(accounts_fig),
+            'df_fig': mark_safe(df_fig.to_html(full_html=False, include_plotlyjs=False))
+        }
+
         return JsonResponse(ctx)

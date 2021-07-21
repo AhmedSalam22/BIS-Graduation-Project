@@ -34,7 +34,9 @@ urlpatterns = [
     path('ledger/', views.LedgerView.as_view(), name='ledger'),
     path('fetch_ledger', views.FetchLedgerView.as_view(), name='fetch_ledger'),
     path('export_transactions_csv', views.ExportTrsanctionView.as_view(), name='export_transactions_csv'),
-    path('export_transactions_pdf', views.TransactionsPDFView.as_view(), name='export_transactions_pdf')
+    path('export_transactions_pdf', views.TransactionsPDFView.as_view(), name='export_transactions_pdf'),
+    path('account_over_time', views.AccountOverTimeView.as_view(), name='account_over_time'),
+    path('DetailAccountTypeView', views.DetailAccountTypeView.as_view(), name='detail_account_type')
 
 
 

@@ -90,19 +90,23 @@ class PaymentSalesTermForm(forms.ModelForm):
         self.helper.form_tag = False
 
 
-class PurchaseInventoryForm(forms.ModelForm):
+class PurchaseInventoryForm(forms.ModelForm, DateMixin):
     class Meta:
         model = PurchaseInventory
         fields = ['supplier' , 'purchase_date' ,'term', 'due_date' , 'frieght_in']
-        widgets = {
-            'purchase_date': forms.widgets.DateInput(attrs={'type': 'date'}),
-            'due_date': forms.widgets.DateInput(attrs={'type': 'date'}),
-        }
+
 
     def __init__(self,owner, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["supplier"].queryset = Supplier.objects.filter(owner=owner)
         self.fields["term"].queryset = PaymentSalesTerm.objects.filter(owner=owner)
+        self.date(
+                [
+                    DateField(field='purchase_date', initial=True),
+                    DateField(field='due_date', initial=False)
+
+                ]
+        )
 
         self.helper = FormHelper()
         self.helper.layout = Layout( 

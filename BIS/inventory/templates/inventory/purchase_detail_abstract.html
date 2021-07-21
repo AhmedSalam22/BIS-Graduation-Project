@@ -142,7 +142,7 @@
                             <td><strong>{{ price.number_of_unit}}</strong></td>
                             <td><strong>{{ price.cost_per_unit}}</strong></td>
                             <td><strong>{{ price.total_cost}}</strong></td>
-                            <td><strong>{{ price.inventory.description|truncatechars:125 }}</strong></td>
+                            <td><strong>{{ price.inventory.description|truncatechars:50 }}</strong></td>
 
                         </tr>
                     {% endfor %}

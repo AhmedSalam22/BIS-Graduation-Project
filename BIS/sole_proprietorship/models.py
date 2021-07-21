@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from sole_proprietorship.managers import TransactionManager, AccountManager
 from inventory.helper import Helper
 from django.db.models import Q 
+from datetime import timedelta
 
 class TransactionSignal:
     def PurchaseInventory(self, sender, instance , created,  **kwargs):
@@ -139,6 +140,7 @@ class TransactionSignal:
         A/p Debit by  xxxx
             Cash Credit by xxxxx
             Inventory[dicount] credit by xxxx
+        instance:PayInvoice
         """
         
         if not create:
@@ -153,8 +155,8 @@ class TransactionSignal:
             comment=f"PAY invoice"
         )
 
-        day_of_payment, due_date, dicount_percentage = instance.date , instance.purchase_inventory.due_date,instance.purchase_inventory.term.discount_percentage
-        if due_date != None and day_of_payment <= due_date and  dicount_percentage > 0:
+        dicount_percentage = instance.purchase_inventory.term.discount_percentage
+        if instance.purchase_inventory.payinvoice_set.count() == 1 and instance.purchase_inventory.term.discount_percentage > 0 and instance.date <= (instance.purchase_inventory.purchase_date.date() + timedelta(instance.purchase_inventory.term.discount_in_days)):
             total_amount = instance.amount_paid/ ( (100 - dicount_percentage) / 100)
             Journal.objects.create(
                                 account = instance.purchase_inventory.term.accounts_payable,

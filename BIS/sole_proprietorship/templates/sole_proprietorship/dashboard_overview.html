@@ -69,13 +69,3 @@
 
     </div>
 </div>
-<div class="row">
-    <form method="GET" action="">
-        {% csrf_token %}   
-        {{ account_form}}
-    <input type="submit" , value="query line chart">
-    </form>
-    <div class="col-md-12">
-        {{ line_fig|safe }}
-    </div>
-</div>
