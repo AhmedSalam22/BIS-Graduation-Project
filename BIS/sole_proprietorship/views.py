@@ -802,16 +802,19 @@ class DetailAccountTypeView(LoginRequiredMixin, View):
         )
 
         df = pd.DataFrame(data, columns=['account_type', 'account', 'balance'])
+        fig = go.Figure(go.Bar(
+            x=df['balance'],
+            y=df['account'],
+            orientation='h')
+        )
+
         total = df['balance'].sum()
         df['%'] = round(df['balance'] / total  * 100, 2)
         df.loc[len(df)] =  ['', 'Total', total, 100] 
         df_fig = ff.create_table(df.iloc[: , 1:])
         
         
-        fig = go.Figure(go.Bar(
-            x=df['balance'],
-            y=df['account'],
-            orientation='h'))
+    
 
         fig.update_layout(
             title_text=f"{request.GET.get('account_type')} accounts and their balance"

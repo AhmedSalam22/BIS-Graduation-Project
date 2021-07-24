@@ -1,4 +1,6 @@
 {% extends "sole_proprietorship/index.html" %}
+{% load static%}
+
 {% block content %}
 <div class="card">
     <div class="card-body">
@@ -12,7 +14,11 @@
 <br>
 <br>
 <div class="container-fluid">
-    <table class="table table-hover table-borderless">
+    <div class="spinner row">
+
+    </div>
+        
+    <table class="table table-hover table-borderless datatable">
         <thead class="table-dark">
             <tr>
                 <th>Date</th>
@@ -27,7 +33,6 @@
         </tbody>
       </table>      
 </div>
-
 <script>
 
     function createTableBody(begginingBalance, data){
@@ -77,9 +82,11 @@
         dataType: "JSON",
         data: $('form').serialize(),
         success: function(data) {
-            console.log(data.begginingBalance);
-            console.log(data.data);
+            // console.log(data.begginingBalance);
+            // console.log(data.data);
+            $('.spinner.row').html(`<img src="{% static 'home/img/spinner.gif' %}">`);  
             createTableBody(data.begginingBalance, data.data);
+            $('.spinner.row').html(``); 
         },
         error : function(xhr,errmsg,err) {
             console.log(`${xhr.status} ${xhr.responseText} \nerrmsg= ${errmsg}\n err: ${err}`); // provide a bit more info about the error to the console

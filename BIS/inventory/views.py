@@ -28,6 +28,8 @@ from inventory.filter_forms import InventoryFilter
 from django.core import serializers
 import plotly.graph_objects as go
 import plotly
+import plotly.express as px
+import plotly.figure_factory as ff
 
 def get_graph():
     """
@@ -306,9 +308,9 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
         return render(request , self.template_name , {"form": form} )
 
     @transaction.atomic
-    def post(self, request, pk , *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         owner = request.user
-        query = get_object_or_404(InventoryPrice , pk=pk , inventory__owner=owner)
+        query = get_object_or_404(InventoryPrice , pk=kwargs.get('pk')  , inventory__owner=owner)
         form = InventoryReturnForm(data=request.POST)
         if form.is_valid():
             obj = form.save(commit=True)
@@ -372,7 +374,7 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         owner = request.user
 
         initial_data = {
-            "start_date": timezone.now() - timezone.timedelta(weeks=1) , 
+            "start_date": timezone.now() - timezone.timedelta(weeks=4) , 
             "end_date": timezone.now() }
   
         reporting_period_form = ReportingPeriodConfigForm(initial = initial_data)
@@ -390,54 +392,93 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         fig = go.Figure(go.Bar(
             x=summary_supplier_df['total_purchases'],
             y=summary_supplier_df['supplier'],
+            name='Total Purchases',
             orientation='h'))
 
-        fig.update_layout(title_text= 's vs p')
-        supplier_total_purchases =  plotly.offline.plot(fig, auto_open = False, output_type="div")
+        fig.update_layout(title_text= 'Supplier and total purchases')
+        supplier_total_purchases =  fig.to_html(full_html=False, include_plotlyjs=False)
 
 
-        plt.switch_backend("AGG")
-        fig, ax1 = plt.subplots(figsize=(11.5, 5))
-        try:
-            sns.barplot(x="total_purchases", y="supplier", data=summary_supplier_df , color="blue" , label="total purchases")
-            sns.barplot(x="cost_returned", y="supplier", data=summary_supplier_df , color="red" , label="cost_returned")
-        except ValueError:
-            pass
+        
+        fig = go.Figure(go.Bar(
+            x=summary_supplier_df['cost_returned'],
+            y=summary_supplier_df['supplier'],
+            name='Total Purchases',
+            marker=dict(
+                    color='rgba(246, 78, 139, 0.6)',
+                    line=dict(color='rgba(246, 78, 139, 1.0)', width=3)
+                ),
+            orientation='h'))
 
-        plt.yticks(rotation=45)
-        plt.legend()
-        plt.xlabel("total amount")
-        plt.title("Supplier Vs total purchases  Vs cost of returned")
-        graph = get_graph()
+        fig.update_layout(title_text= 'Cost returned')
+        cost_returned =  fig.to_html(full_html=False, include_plotlyjs=False)
+
+        # plt.switch_backend("AGG")
+        # fig, ax1 = plt.subplots(figsize=(11.5, 5))
+        # try:
+        #     sns.barplot(x="total_purchases", y="supplier", data=summary_supplier_df , color="blue" , label="total purchases")
+        #     sns.barplot(x="cost_returned", y="supplier", data=summary_supplier_df , color="red" , label="cost_returned")
+        # except ValueError:
+        #     pass
+
+        # plt.yticks(rotation=45)
+        # plt.legend()
+        # plt.xlabel("total amount")
+        # plt.title("Supplier Vs total purchases  Vs cost of returned")
+        # graph = get_graph()
    
-    
-        
-        plt.switch_backend("AGG")
-        fig, ax1 = plt.subplots(figsize=(11.5, 5))
-        try:
-            sns.lineplot(data=purchases_return_over_time_df, x="purchase_date" , y="net_purchases" , color="blue" , label="total cost of purchases")
-            sns.lineplot(data=purchases_return_over_time_df, x="purchase_date" , y="cost_returned" , color="red" , label="total cost of returnd")
-        except ValueError:
-            pass
-        plt.ylabel("Total")
-        plt.xlabel("Date")
-        plt.title("Purchases and Returnning over the time")
-        graph2 = get_graph()
+        fig = go.Figure()
+        fig.add_trace(
+                go.Scatter(x=list(purchases_return_over_time_df.purchase_date), y=list(purchases_return_over_time_df.net_purchases))
+        )
+
+        fig.update_layout(
+            title_text="Net purchases Over the time"
+        )
+       
+        fig = px.line(purchases_return_over_time_df, x='purchase_date', y='net_purchases', title='net purchases over the time')
+        fig.update_xaxes(rangeslider_visible=True)
+        net_purchases_over_time = fig.to_html(full_html=False, include_plotlyjs=False)
+
+        df_notDueAndOverDue = pd.DataFrame(
+            PurchaseInventory.purchases.notDueAndOverDue(owner.id , start_date , end_date), columns=['Satus', 'Total amount unpaid', 'number']
+            )
+        df_notDueAndOverDue.loc[df_notDueAndOverDue.shape[0]] = ['TOTAL', df_notDueAndOverDue['Total amount unpaid'].sum(), df_notDueAndOverDue.number.sum()]
+        df_fig1 = ff.create_table(df_notDueAndOverDue)
+        df_fig1 = df_fig1.to_html(full_html=False, include_plotlyjs=False)
+
+
+        df =  pd.DataFrame(
+            PurchaseInventory.purchases.vendors_to_pay(owner.id , start_date , end_date),
+            columns= ['Vendor Name', 'Amount Due', 'Open Invoices', 'Min Due Date', 'Max Due Date']
+            )
+        vendors_to_pay_tbl = df.to_html(index=False, justify='left', classes = "table table-hover table-borderless", table_id="mydataTable")
+        # plt.switch_backend("AGG")
+        # fig, ax1 = plt.subplots(figsize=(11.5, 5))
+        # try:
+        #     sns.lineplot(data=purchases_return_over_time_df, x="purchase_date" , y="net_purchases" , color="blue" , label="total cost of purchases")
+        #     sns.lineplot(data=purchases_return_over_time_df, x="purchase_date" , y="cost_returned" , color="red" , label="total cost of returnd")
+        # except ValueError:
+        #     pass
+        # plt.ylabel("Total")
+        # plt.xlabel("Date")
+        # plt.title("Purchases and Returnning over the time")
+        # graph2 = get_graph()
         
 
-        plt.switch_backend("AGG")
-        fig, ax1 = plt.subplots(figsize=(11.5, 5))
-        try:
-            sns.barplot(x="number_of_unit", y="item_name", data=inventory_df , color="blue" , label="Num of unit" )
-            sns.barplot(x="num_returned", y="item_name", data=inventory_df , color="red" , label="Num of returned")
-        except ValueError:
-            pass 
-        plt.title("inventory item")
-        plt.xlabel("Number of unit")
-        plt.ylabel("inventoy")
-        plt.yticks(rotation=45)
-        plt.legend()
-        graph3 = get_graph()
+        # plt.switch_backend("AGG")
+        # fig, ax1 = plt.subplots(figsize=(11.5, 5))
+        # try:
+        #     sns.barplot(x="number_of_unit", y="item_name", data=inventory_df , color="blue" , label="Num of unit" )
+        #     sns.barplot(x="num_returned", y="item_name", data=inventory_df , color="red" , label="Num of returned")
+        # except ValueError:
+        #     pass 
+        # plt.title("inventory item")
+        # plt.xlabel("Number of unit")
+        # plt.ylabel("inventoy")
+        # plt.yticks(rotation=45)
+        # plt.legend()
+        # graph3 = get_graph()
 
     
 
@@ -453,9 +494,13 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             # "max_cost_per_unit": PurchaseInventory.purchases.max_cost_per_unit(query) , 
             # "min_cost_per_unit": PurchaseInventory.purchases.min_cost_per_unit(query) , 
             'supplier_total_purchases_fig': supplier_total_purchases,
-            "graph": graph,
-            "line_fig": graph2 ,
-            "graph3" : graph3
+            # "graph": graph,
+            # "line_fig": graph2 ,
+            # "graph3" : graph3,
+            "net_purchases_over_time" : net_purchases_over_time,
+            'cost_returned': cost_returned,
+            'df_fig1': df_fig1,
+            'vendors_to_pay_tbl': vendors_to_pay_tbl
  
 
         }

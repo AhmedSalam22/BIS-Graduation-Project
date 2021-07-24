@@ -12,6 +12,29 @@ import datetime
 from django.utils import timezone 
 from datetime import timedelta
 
+
+
+
+def test():
+    PurchaseInventory.objects.annotate(
+        total_amount_unpaid=(F("net_purchases")- F("total_amount_paid")),
+        due=ExpressionWrapper( 
+            Case(
+                When(
+                due_date__gt = now() , then=Value("Over due")
+                ),
+                When(
+                due_date__lte = now() , then=Value("Not Due Yet")
+                ),
+            ),
+            output_field = models.CharField(max_length=20)
+        )
+
+    ).filter(
+        status=PurchaseInventory.Status.UNPAID.value
+    )
+
+
 # Create your models here.
 class DueDateMixin:
     def check_due_date(self):
@@ -212,9 +235,14 @@ class PurchaseManager(models.Manager):
              )
         data["unpaid_count"] = PurchaseInventory.objects.filter(query & Q(status=0)).count()
         # to avoide Type error ex) 1 - None >> TypeError
-        print('total_amount_paid', data.get('total_amount_paid', None))
         data = {key:( value if value != None else 0) for (key, value) in data.items() }
-        data["total_amount_unpaid"] = data["net_purchases"] - data["total_amount_paid"]
+
+        query = PurchaseInventory.objects.filter(
+            query & Q(status=PurchaseInventory.Status.UNPAID.value)
+            ).aggregate(Sum('net_purchases'), Sum('total_amount_paid'))
+        query = {key:( value if value != None else 0) for (key, value) in query.items() }
+
+        data["total_amount_unpaid"] = query["net_purchases__sum"] - query["total_amount_paid__sum"]
         return data
 
 
@@ -270,9 +298,9 @@ class PurchaseManager(models.Manager):
                 """)
 
             cursor.execute("""
-            SELECT  purchase_date , net_purchases , cost_returned   FROM myview
+            SELECT  purchase_date , Sum(net_purchases) , Sum(cost_returned)   FROM myview
             where owner_id = %s AND purchase_date >= %s AND purchase_date <= %s
-            GROUP BY id, purchase_date , net_purchases , cost_returned;
+            GROUP BY purchase_date;
             """ , [owner , start_date , end_date])
             purchases_return_over_time = cursor.fetchall()
 
@@ -288,7 +316,7 @@ class PurchaseManager(models.Manager):
                 SELECT supplier_name, total_purchases , cost_returned  FROM myview
                 where owner_id = %s  AND purchase_date >= %s AND purchase_date <= %s
                 GROUP By id, supplier_name,  total_purchases , cost_returned ) as subquery
-            GROUP by supplier_name,  total_purchases , cost_returned
+            GROUP by supplier_name
             ORDER by total_purchases DESC;
             """ , [owner , start_date , end_date])
             supplier = cursor.fetchall()            
@@ -304,7 +332,52 @@ class PurchaseManager(models.Manager):
         return result
 
 
-        
+    def notDueAndOverDue(self, owner_id, purchase_date_start, purchase_date_end):
+        """
+            return not due yet:  total amount unpaid
+                 Over Dye: total amount unpaid
+        """
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    CASE
+                        WHEN due_date >=  CURRENT_DATE THEN 'Not Due Yet'
+                        WHEN due_date < CURRENT_DATE THEN 'Over Due'
+                    END as Due,
+                    Sum(net_purchases- total_amount_paid),
+                    Count(id)
+                FROM inventory_purchaseinventory
+                WHERE status = 0 AND owner_id = %s AND purchase_date >= %s AND purchase_date <= %s
+                GROUP BY Due;
+            """, [owner_id, purchase_date_start, purchase_date_end])
+            # data = {key: value for value, key in cursor.fetchall()}  
+            data = cursor.fetchall()
+        return data  
+
+    def vendors_to_pay (self, owner_id, purchase_date_start, purchase_date_end):
+        """
+            return amount due for each supplier and aggregate if there is more than one invoice
+        """
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    supplier.first_name || ' ' || supplier.middle_name || ' ' || supplier.last_name as full_name,
+                    Sum(purchases.net_purchases - purchases.total_amount_paid) as total_amount_due,
+                    Count(purchases.id) as open_invoices,
+                    Min(purchases.due_date) as min_due_date,
+                    Max(purchases.due_date) as max_due_date
+                FROM suppliers_supplier as supplier
+                JOIN inventory_purchaseinventory as purchases
+                ON purchases.supplier_id = supplier.id
+                WHERE purchases.status = 0 AND purchases.owner_id = %s AND purchases.purchase_date >= %s AND purchases.purchase_date <= %s
+                GROUP BY supplier.id
+                ORDER BY total_amount_due  DESC;
+            """, [owner_id, purchase_date_start, purchase_date_end])
+            # data = {key: value for value, key in cursor.fetchall()}  
+            data = cursor.fetchall()
+        return data     
+
+    
     
 
     def avg_cost_per_unit(self , query):
@@ -472,7 +545,7 @@ class PurchaseInventory(DueDateMixin, models.Model):
 
     status = models.IntegerField(choices=Status.choices)
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    purchase_date = models.DateTimeField()
+    purchase_date = models.DateField()
     due_date = models.DateField(
         help_text="optional if you want to specify it by yourself",
         null = True ,

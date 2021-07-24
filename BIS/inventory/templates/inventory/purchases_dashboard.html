@@ -110,35 +110,30 @@
 
 <div class="row">
     <div class="col">
+        {{ net_purchases_over_time|safe }}
+        {{ df_fig1|safe }}
+    </div>
+</div>
+<div class="row">
+    <div class="col">
         {{ supplier_total_purchases_fig|safe }}
     </div>
+
 </div>
-
-<div class="row">
-    <div class="col">
-        <img src="data:image/png;base64, {{ graph|safe }}">
-    </div>
-
+<div class="col">
+    {{ cost_returned|safe }}
 </div>
 <div class="row">
     <div class="col">
-    
-        <img src="data:image/png;base64, {{ line_fig|safe }}">
-
+        {{ vendors_to_pay_tbl|safe }}
     </div>
-</div>
-<div class="row">
-    <div class="col">
-    
-        <img src="data:image/png;base64, {{ graph3|safe }}">
 
-    </div>
 </div>
 
 {% endblock %}
 {% block footer %}
+{% include "home/dataTableFooter.html" %}
 <script>
-
     $(document).ready(function() {
         $('#ModalLaunch').click(function () {
             $('#settingsModal').modal({
@@ -151,5 +146,6 @@
         });
     });
 </script>
+
 
 {% endblock %}
