@@ -171,7 +171,7 @@ class SoldItemForm(forms.ModelForm):
             ON s.item_id = p.id
             WHERE inventory_purchaseinventory.owner_id = %s
             GROUP BY p.id
-            HAVING (number_of_unit - ifnull(Sum(r.num_returned) ,0) - ifnull(Sum(s.quantity), 0) )  > 0
+            HAVING (number_of_unit - COALESCE(Sum(r.num_returned) ,0) - COALESCE(Sum(s.quantity), 0) )  > 0
          """
 
         self.fields['item'].queryset = InventoryPrice.objects.select_related('inventory').filter(id__in =RawSQL(SQL_LITE, [owner_id])).all()
@@ -230,6 +230,7 @@ class PayInvoiceForm(forms.ModelForm):
         self.fields["purchase_inventory"].queryset = PurchaseInventory.objects.filter(owner=self.owner , status=0)
         self.fields['date'].widget = DateInput()
         self.fields['date'].initial = timezone.now()
+
 
 
 

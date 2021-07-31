@@ -2,7 +2,7 @@ from django.shortcuts import render , redirect , get_object_or_404
 from django.urls import reverse_lazy
 from home.owner import OwnerCreateView ,OwnerDeleteView , OwnerListView , OwnerUpdateView , OwnerDetailView
 from inventory.models import (PaymentSalesTerm , Inventory , InventoryReturn , InventoryPrice,
-    PurchaseInventory, PayInvoice, InventoryImag, Sold_Item, Sale
+    PurchaseInventory, PayInvoice, InventoryImag, Sold_Item, Sale, SalesReturn, SalesAllowance
     )
 from django.views.generic import View , TemplateView, DeleteView, ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,7 +14,7 @@ from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , Inv
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
 from django.contrib import messages
-from django.db.models import Sum , Q
+from django.db.models import Sum, Q, F, FloatField, ExpressionWrapper
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -30,6 +30,8 @@ import plotly.graph_objects as go
 import plotly
 import plotly.express as px
 import plotly.figure_factory as ff
+from django.db.models.functions import Coalesce
+from django.db.models import Func, DateTimeField
 
 def get_graph():
     """
@@ -114,7 +116,9 @@ class CreateSalesView(LoginRequiredMixin, View):
                 sold_item.sale = sales
                 sold_item.save()
             messages.success(request, 'Your Sales has been created Successfuly')
-            return redirect(reverse_lazy('inventory:home'))
+            return redirect(
+                reverse_lazy('inventory:sale'), args=[sales.id]
+                )
         ctx = {
             'sales_form': sales_form, 
             'salesFormsetHelper': self.salesFormsetHelper,
@@ -368,19 +372,107 @@ class DetailPurchaseInventoryView(OwnerDetailView):
 class DeletePurchaseInventoryView(OwnerDeleteView):
     model = PurchaseInventory
 
+
+
+class Dash:
+    start_date = (timezone.now() - timezone.timedelta(weeks=4)).date()
+    end_date = timezone.now().date()
+
+    def __init__(self, owner_id):
+        self.owner_id = owner_id
+
+    @property
+    def num_sales(self):
+        return Sale.objects.filter(owner__id= self.owner_id, sales_date__gte= Dash.start_date, sales_date__lte= Dash.end_date).count()
+
+    @property
+    def sold_item_filter(self):
+        return (
+                Q(sale__owner__id = self.owner_id) & Q(sale__sales_date__gte= Dash.start_date) & Q(sale__sales_date__lte= Dash.end_date)
+            )
+
+    @property
+    def total_sales(self):
+        query = Sold_Item.objects.filter(
+            self.sold_item_filter
+        ).annotate(
+            total = (F('sale_price') * F('quantity'))
+        ).aggregate(
+            total_sales_amount = Sum('total')
+        )
+        return query['total_sales_amount'] if query['total_sales_amount'] != None else 0
+
+
+    @property
+    def sales_return_amt(self):
+        query = SalesReturn.objects.filter(
+            self.sold_item_filter
+        ).annotate(
+            total=ExpressionWrapper( 
+                (F('sold_item__sale_price') * F('num_returned')),
+                output_field = FloatField()
+            )
+        ).aggregate(
+            total_sales_return_amt = Sum('total')
+        )
+        return query['total_sales_return_amt'] if query['total_sales_return_amt'] != None else 0
+
+    @property
+    def sales_return_unit(self):
+        query = SalesReturn.objects.filter(
+            self.sold_item_filter
+        ).aggregate(
+            num_returned=Sum('num_returned')
+        )
+        return query['num_returned'] if query['num_returned'] != None else 0
+
+    @property
+    def sales_allowance(self):
+        filter_expression = ( 
+            Q(sales__owner__id = self.owner_id) & Q(sales__sales_date__gte= Dash.start_date) & Q(sales__sales_date__lte= Dash.end_date)
+        )
+        query = SalesAllowance.objects.filter(
+            filter_expression
+        ).aggregate(
+            sales_allowance=Sum('amount')
+        )
+        return query['sales_allowance'] if query['sales_allowance'] != None else 0
+
+    @property
+    def net_sales(self):
+        return self.total_sales - self.sales_return_amt - self.sales_allowance
+
+    @property
+    def money_recieved(self):
+        # query one ignore if it's already pay in cash
+        query = Sale.sales.all_sales(owner_id=self.owner_id).aggregate(money_revieved=Coalesce(Sum('total_amt_paid'),0))
+        # to avoid the above issue
+        query2 = Sale.sales.all_sales(
+            owner_id=self.owner_id
+            ).filter(
+                term__terms = PaymentSalesTerm.Term.CASH.value
+            ).aggregate(
+                money_revieved=Coalesce(Sum('netsales'), 0)
+            )
+
+        return query['money_revieved'] + query2['money_revieved']
+           
+    
+    @staticmethod
+    def reporting_period_form():
+        initial_data =  {"start_date": Dash.start_date,  "end_date": Dash.end_date}
+        return ReportingPeriodConfigForm(initial= initial_data)
+
 class PurchasesDashboard(LoginRequiredMixin , View):
     template_name = "inventory/purchases_dashboard.html"
     def get(self , request , *args, **kwargs):
         owner = request.user
 
-        initial_data = {
-            "start_date": timezone.now() - timezone.timedelta(weeks=4) , 
-            "end_date": timezone.now() }
-  
-        reporting_period_form = ReportingPeriodConfigForm(initial = initial_data)
+        reporting_period_form = Dash.reporting_period_form()
 
-        start_date = request.GET.get("start_date", initial_data["start_date"])
-        end_date = request.GET.get("end_date", initial_data["end_date"])
+        start_date = request.GET.get("start_date", Dash.start_date)
+        end_date = request.GET.get("end_date", Dash.end_date)
+
         query = Q(owner=owner) & Q(purchase_date__gte=start_date)  & Q(purchase_date__lte=end_date)
 
         data = PurchaseInventory.purchases.analysis(owner.id , start_date , end_date)
@@ -452,7 +544,7 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             PurchaseInventory.purchases.vendors_to_pay(owner.id , start_date , end_date),
             columns= ['Vendor Name', 'Amount Due', 'Open Invoices', 'Min Due Date', 'Max Due Date']
             )
-        vendors_to_pay_tbl = df.to_html(index=False, justify='left', classes = "table table-hover table-borderless", table_id="mydataTable")
+        vendors_to_pay_tbl = df.to_html(index=False, justify='left', classes = "table table-hover table-borderless datatable")
         # plt.switch_backend("AGG")
         # fig, ax1 = plt.subplots(figsize=(11.5, 5))
         # try:
@@ -649,6 +741,28 @@ class SalesDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         qs = super().get_queryset().filter(owner= self.request.user).prefetch_related('sold_item_set', 'salespayment_set')
         return qs
+
+
+
+class SalesDashboradView(LoginRequiredMixin, TemplateView):
+    template_name = 'inventory/sales_dashboard.html'
+
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form'] = Dash.reporting_period_form()
+        ctx['start_date'], ctx['end_date'] = Dash.start_date, Dash.end_date
+
+        dash = Dash(owner_id=self.request.user.id)
+        ctx['num_sales'] = dash.num_sales
+        ctx['total_sales'] = dash.total_sales
+        ctx['sales_return_amt'] = dash.sales_return_amt
+        ctx['sales_return_unit'] = dash.sales_return_unit
+        ctx['sales_allowance'] = dash.sales_allowance
+        ctx['net_sales'] = dash.net_sales
+        ctx['money_recieved'] = dash.money_recieved 
+        return ctx
+
 
 class Test(LoginRequiredMixin , View):
 

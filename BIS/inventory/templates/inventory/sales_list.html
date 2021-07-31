@@ -38,17 +38,16 @@
                        
                         {% if sale_list %}
                             {% for sale in sale_list %}
-                            <tr>
+                            <tr id="sale_{{sale.id}}" onclick="openSaleDetail(this)">
                                 <td><strong>{{ sale.sales_date }}</strong></td>
                                 <td><strong>{{ sale.customer}}</strong></td>
                                 <td>
                                     <strong>
-                                        <a href="{% url 'inventory:list_term'%}" target="blank">{{ sale.term}}</a>
+                                      {{ sale.term}}
                                     </strong>
                                 </td>
                                 <td><strong>{{ sale.due_date }}</strong></td>
                                 <td>
-                                    <a href="{% url 'inventory:sale_detail' sale.pk %}" target="_blank"><button class="btn btn-dark" type="button"><i class="fa fa-eye"></i></button></a>
                                     <a href="{% url 'inventory:delete_sales' sale.id %}">
                                         <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
                                     </a>
@@ -68,5 +67,11 @@
             {% include 'home/pagination.html' %}
         </div>
     </div>
+<script>
+    function openSaleDetail(element) {
+        const saleId = element.id.split('_')[1];
+        window.open(`/inventory/sale/${saleId}`, '_blank').focus();
+    }
+</script>
 {% endblock %}
 

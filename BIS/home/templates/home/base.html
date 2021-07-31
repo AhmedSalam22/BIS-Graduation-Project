@@ -12,13 +12,13 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.plot.ly/plotly-2.2.0.min.js"></script>
+    <link rel="stylesheet" href="{% static 'home/css/mycss.css' %}">
 
     {% block css %} {% endblock %}
     {% block javascript_top %} {% endblock %}
 </head>
 
-<body id="page-top">
+<body id="page-top" class="sidebar-toggled">
     <div id="wrapper">
        {% include 'home/sidebar.html' %}
         <div class="d-flex flex-column" id="content-wrapper">
@@ -73,54 +73,54 @@
 
 
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
-    <script src="{% static 'home/js/script.min.js'%}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+<script src="{% static 'home/js/script.min.js'%}"></script>
 
-    <script>
-            $(document).ready(function() {
-                $(".toast").toast('show');
-                $(".close").click(function() {
-                   $(".toast").toast('hide');
-                 });
-                $("#search-btn").click(function()
-                {
-                    let search = document.getElementById("search").value;
-                    if (search == ""){search="None";}
-                    let counter = 0;
-                    $.getJSON(`/projects/ProjectsListViewAjax/${search}`, function(data){
-                    console.log('JSON', data);
-                    $('#ajax').empty();
-                    $('#ajax').append(`<div class="row row-cols-2"></div>`);
-                    console.log(data);
-                    data.forEach(function(obj)
-                    {
-                        let html = `
-                            <div class="col-auto col-sm-12 col-md-12 col-lg-4 col-xl-4" style="padding-top: 15px;padding-bottom: 15px;padding-right: 15px;padding-left: 15px;">
-                                <div class="bg-light border rounded shadow card" data-bs-hover-animate="pulse"><img class="card-img-top" src="/${obj["fields"]["img"]}">
-                                    <div class="card-body">
-                                        <a href="projects/${obj["pk"]}" target="_blank">
-                                        <h3 class="card-title" style="font-family: Antic, sans-serif;color: rgb(81,87,94);">
-                                        ${obj["fields"]["title"]}
-                                        </h3>
-                                        </a>
-                                        <h5 class="card-sub-title" style="font-family: Antic, sans-serif;color: #4634e2;">${obj["fields"]["tag"]}</h5>
-                                        <p class="card-text" style="font-family: Antic, sans-serif;color: rgb(24, 114, 218);"></p><p id="lorem">${obj["fields"]["summary"]}</p>
-                                        <button class="btn btn-primary" type="button" style="font-weight: normal;font-family: Antic, sans-serif;">Go to the project&nbsp;</button>
-                                        </div>
-                                </div>
-                        </div>`;
-                        console.log(obj);
-                        $('.row-cols-2').append(html);
-                        
-                    
-                    }); 
-              
-                }); 
-                });
+<script>
+    $(document).ready(function() {   
+        $(".toast").toast('show');
+        $(".close").click(function() {
+            $(".toast").toast('hide');
             });
+        $("#search-btn").click(function()
+        {
+            let search = document.getElementById("search").value;
+            if (search == ""){search="None";}
+            let counter = 0;
+            $.getJSON(`/projects/ProjectsListViewAjax/${search}`, function(data){
+            console.log('JSON', data);
+            $('#ajax').empty();
+            $('#ajax').append(`<div class="row row-cols-2"></div>`);
+            console.log(data);
+            data.forEach(function(obj)
+            {
+                let html = `
+                    <div class="col-auto col-sm-12 col-md-12 col-lg-4 col-xl-4" style="padding-top: 15px;padding-bottom: 15px;padding-right: 15px;padding-left: 15px;">
+                        <div class="bg-light border rounded shadow card" data-bs-hover-animate="pulse"><img class="card-img-top" src="/${obj["fields"]["img"]}">
+                            <div class="card-body">
+                                <a href="projects/${obj["pk"]}" target="_blank">
+                                <h3 class="card-title" style="font-family: Antic, sans-serif;color: rgb(81,87,94);">
+                                ${obj["fields"]["title"]}
+                                </h3>
+                                </a>
+                                <h5 class="card-sub-title" style="font-family: Antic, sans-serif;color: #4634e2;">${obj["fields"]["tag"]}</h5>
+                                <p class="card-text" style="font-family: Antic, sans-serif;color: rgb(24, 114, 218);"></p><p id="lorem">${obj["fields"]["summary"]}</p>
+                                <button class="btn btn-primary" type="button" style="font-weight: normal;font-family: Antic, sans-serif;">Go to the project&nbsp;</button>
+                                </div>
+                        </div>
+                </div>`;
+                console.log(obj);
+                $('.row-cols-2').append(html);
+                
+            
+            }); 
+        
+        }); 
+        });
+    });
 
-    </script>
+</script>
     {% block footer %} {% endblock %}
 
 

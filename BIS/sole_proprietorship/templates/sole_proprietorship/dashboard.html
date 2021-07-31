@@ -1,6 +1,8 @@
 {% extends "sole_proprietorship/index.html" %}
 {% load static%}
-
+{% block javascript_top %}
+    <script src="{% static 'home/js/plotly-2.2.0.min.js' %}"></script>
+{% endblock %}
 {% block content %}
 {% include "sole_proprietorship/reporting_header_base.html" %}
 <ul class="nav nav-tabs card-header-tabs" role="tablist">

@@ -38,6 +38,7 @@ urlpatterns = [
     path('sales_list', views.SalesListView.as_view(), name='sales_list'),
     path('delete_sale/<int:pk>', views.SalesDeleteView.as_view(success_url=reverse_lazy('inventory:sales_list')), name='delete_sales'),
     path('sale/<int:pk>', views.SalesDetailView.as_view(), name='sale_detail'),
+    path('sales_dashborad', views.SalesDashboradView.as_view(), name='sales_dashboard'),
     path('test' , views.Test.as_view() , name="test"),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 

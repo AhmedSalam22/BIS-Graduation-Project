@@ -164,7 +164,7 @@
                                     <td><strong>{{ sold_item.quantity}}</strong></td>
                                     <td><strong>{{ sold_item.sale_price}}</strong></td>
                                     <td><strong>{% widthratio sold_item.quantity 1 sold_item.sale_price %}</strong></td>
-                                    <td><strong>{{ sold_item.item.inventory.description|truncatechars:125 }}</strong></td>
+                                    <td><strong>{{ sold_item.item.inventory.description|truncatechars:50 }}</strong></td>
                                     <td>
                                         <div class="dropdown">
                                             <div class="text-center" data-toggle="dropdown" aria-expanded="false">

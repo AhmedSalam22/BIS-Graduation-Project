@@ -1,0 +1,4 @@
+.sidebar.toggled {
+    overflow: hidden !important;
+    width: 0rem !important;
+}

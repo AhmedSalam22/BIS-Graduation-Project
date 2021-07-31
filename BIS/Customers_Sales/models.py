@@ -276,7 +276,7 @@ class Customer(models.Model):
     @property
     def full_name(self):
         """Returns the customer's full name."""
-        return '%s %s %s' % (self.first_name, self.middle_name , self.last_name)
+        return f'{self.first_name} {self.middle_name if self.middle_name != None else ""} {self.last_name}'
 
     def __str__(self):
         return self.full_name

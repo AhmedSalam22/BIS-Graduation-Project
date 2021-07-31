@@ -4,14 +4,16 @@ from suppliers.models import Supplier
 from django.utils.translation import gettext as _
 from  django.core.validators import MaxValueValidator
 from django.utils import timezone
-from django.db.models import Sum , ExpressionWrapper , F , FloatField , Max , Min , Avg , StdDev , Count , Q
+from django.db.models import (Sum, ExpressionWrapper, F, FloatField, Max, Min, Avg, StdDev, Count, Q, Func,
+                                DateTimeField, Case, When, Value
+                             )
 import calendar
 from django.core.exceptions import ValidationError
 from django.db import connection
 import datetime
 from django.utils import timezone 
 from datetime import timedelta
-
+from django.db.models.functions import Coalesce
 
 
 
@@ -222,6 +224,65 @@ class InventoryImag(models.Model):
         return f"img:{self.inventory.item_name}"
 
 
+
+class DateAdd(Func):
+    """
+    refrence: https://stackoverflow.com/questions/33981468/using-dateadd-in-django-filter
+    Custom Func expression to add date and int fields as day addition
+    Usage: models.objects.annotate(end_date=DateAdd('start_date','duration')).filter(end_date__gt=datetime.now)
+    """
+    arg_joiner = " + CAST("
+    template = "%(expressions)s || ' days' as INTERVAL)"
+    output_field = DateTimeField()
+
+
+class SaleManager(models.Manager):
+    def all_sales(self, owner_id):
+        query = Sale.objects.filter(
+            owner__id = owner_id
+        ).annotate(
+            total_sales= ExpressionWrapper(
+                 Sum(F('sold_item__sale_price') * F('sold_item__quantity')) 
+                , output_field= FloatField()
+            ),
+            sales_return_amt  = ExpressionWrapper(
+                Coalesce(
+                    Sum(
+                        (
+                            F('sold_item__sale_price') * F('salesreturn__num_returned')
+                        )
+                        ),
+                    0
+                    ),
+                output_field= FloatField()
+                ),  
+            allowance=ExpressionWrapper(
+                Coalesce(Sum('salesallowance__amount'), 0),
+                output_field= FloatField()
+
+            ),
+            netsales= F('total_sales') - F('sales_return_amt')- F('allowance'),
+            total_amt_paid= Coalesce(Sum('salespayment__amount'), 0)
+        
+        ).annotate(
+            amt_after_discount = ExpressionWrapper(
+                F('netsales') * ((100- F("term__discount_percentage")) / 100),
+                output_field= FloatField()
+            ),
+            num_payment = Count('salespayment')
+        ).annotate(
+            status = Case(
+                When(term__terms = PaymentSalesTerm.Term.CASH.value, then=Value('PAID')),
+                When(netsales = F('total_amt_paid'), then= Value('PAID')),
+                When(
+                    Q(total_amt_paid = F('amt_after_discount')) & Q(num_payment = 1) & Q(salespayment__date__lte = DateAdd(F('sales_date') ,(F('term__discount_in_days')))), 
+                    then= Value('PAID')
+                ),
+                default=Value("UNPAID"),
+                output_field= models.CharField(max_length=6)
+            )
+        )
+        return query
 
 class PurchaseManager(models.Manager):
     def purchases_analysis(self , query):
@@ -834,6 +895,8 @@ class Sale(DueDateMixin, models.Model):
         null = True ,
         blank = True,
     )
+    objects = models.Manager() # the default_managers
+    sales = SaleManager()
 
 
 
