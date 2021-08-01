@@ -456,6 +456,15 @@ class Dash:
             )
 
         return query['money_revieved'] + query2['money_revieved']
+
+
+    @property
+    def num_unpaid_invoice(self):
+        return Sale.sales.all_sales(owner_id=self.owner_id).filter(status="UNPAID").count()
+    
+    @property
+    def amount_unpaid_sales(self):
+        return self.net_sales - self.money_recieved
            
     
     @staticmethod
@@ -687,16 +696,26 @@ class PurchaseAllowanceView(LoginRequiredMixin, View):
 
 
 
-class FetchInventoryPriceView(LoginRequiredMixin , View):
+class FetchInventoryPriceView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         inventory_prices = InventoryPrice.objects.select_related('inventory').filter(purchase_inventory__owner= request.user,
                             purchase_inventory=request.GET.get('purchase_inventory')
                             ).distinct().values('pk', 'inventory__item_name', 'cost_per_unit')
 
         return JsonResponse(
-                 list(inventory_prices), safe = False
+                 list(inventory_prices), safe= False
             )
 
+class FetchSoldItemView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        sold_item = Sold_Item.objects.filter(
+            sale__owner__id=request.user.id,
+            sale__id = request.GET.get('sale')
+            ).all()
+        
+        return JsonResponse(
+            [[item.pk, item.__str__()] for item in sold_item], safe=False
+        )
 
 
 class CreateSalesPaymentView(LoginRequiredMixin, View):
@@ -761,6 +780,9 @@ class SalesDashboradView(LoginRequiredMixin, TemplateView):
         ctx['sales_allowance'] = dash.sales_allowance
         ctx['net_sales'] = dash.net_sales
         ctx['money_recieved'] = dash.money_recieved 
+        ctx['num_unpaid_invoice'] = dash.num_unpaid_invoice
+        ctx['amount_unpaid_sales'] = dash.amount_unpaid_sales
+
         return ctx
 
 
