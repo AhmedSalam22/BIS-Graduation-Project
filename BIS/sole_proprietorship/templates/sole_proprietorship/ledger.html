@@ -21,6 +21,9 @@
     <table class="table table-hover table-borderless datatable">
         <thead class="table-dark">
             <tr>
+                <th colspan="5" style="text-align: center;" id="account"> </th>
+            </tr>
+            <tr>
                 <th>Date</th>
                 <th>Comment</th>
                 <th>Debit</th>
@@ -84,7 +87,8 @@
         success: function(data) {
             // console.log(data.begginingBalance);
             // console.log(data.data);
-            $('.spinner.row').html(`<img src="{% static 'home/img/spinner.gif' %}">`);  
+            $('.spinner.row').html(`<img src="{% static 'home/img/spinner.gif' %}">`); 
+            $('#account').html($("#id_account option:selected" ).text()); 
             createTableBody(data.begginingBalance, data.data);
             $('.spinner.row').html(``); 
         },

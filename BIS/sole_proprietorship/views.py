@@ -657,6 +657,8 @@ class ReportingPeriodConfigView(LoginRequiredMixin , View):
         if hasattr(owner, 'fs_reporting_period'):
             data["start_date"] = owner.fs_reporting_period.start_date
             data["end_date"] = owner.fs_reporting_period.end_date
+            data['company_name'] = owner.fs_reporting_period.company_name
+
         form = ReportingPeriodConfigForm(initial=data)
 
         ctx = {

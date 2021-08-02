@@ -1,5 +1,6 @@
 <head>
 <style>
+    
     @page {
         size: a4 portrait;
         @frame header_frame {           /* Static Frame */
@@ -13,6 +14,16 @@
             -pdf-frame-content: footer_content;
             left: 50pt; width: 512pt; top: 772pt; height: 20pt;
         }
+    }
+    table thead tr th {
+        background-color: #1085fa;
+        text-align: center;
+        color: white;
+    }
+
+    table tbody tr {
+        font-weight: bold;
+        color: black;
     }
 
 </style>
@@ -31,7 +42,6 @@
     </div>
 
     <!-- HTML Content -->
-
 <hr>
 <h3>Trial Balance</h3>
 <table>

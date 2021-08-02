@@ -1,0 +1,45 @@
+
+<div class="card shadow">
+    <div class="card-body">
+    <table class="dataframe table table-hover table-borderless">
+        <thead>
+            <tr>
+                <th colspan="3">{{ request.user.fs_reporting_period.company_name|default:"AYBA"}}</th>
+            </tr>
+            <tr>
+                <th colspan="3">Owner's Equity Statement</th>
+            </tr>
+            <tr>
+                <th colspan="3">from {{ request.user.fs_reporting_period.start_date }} to {{ request.user.fs_reporting_period.end_date}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>Owner's capital investment </th>
+                <td></td>
+                <td>{{Investment}}</td>
+            </tr>
+            <tr>
+                <th>
+                    {% if net_income > 0 %}
+                        Add net income 
+                    {% else %}
+                        substract net loss
+                    {% endif %}
+                </th>
+                <td>{{net_income}}</td>
+            <td></td>
+            </tr>
+            <tr>
+                <th>Less: Drawings  </th>
+                <td>({{Drawings}}) </td>
+                <td></td>
+            </tr>
+            <tr class="alert alert-primary">
+                <th> Owner's Equity is equal to   </th>
+                <td> </td>
+                <td> {{ equity }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

@@ -89,7 +89,7 @@ class UploadFileForm(forms.Form):
 class ReportingPeriodConfigForm(forms.ModelForm):
     class Meta:
         model = ReportingPeriodConfig
-        fields = ['start_date' , 'end_date']
+        fields = ['company_name', 'start_date' , 'end_date']
         widgets = {
                 'start_date': forms.widgets.DateInput(attrs={'type': 'date'}),
                 'end_date': forms.widgets.DateInput(attrs={'type': 'date'}),
