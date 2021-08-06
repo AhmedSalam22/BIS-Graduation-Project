@@ -8,10 +8,9 @@
 <div class="d-flex align-items-center p-3 my-3 text-black  rounded shadow-sm" style="background-color:#ffffff">
     <div class="me-3"><i class="fa fa-calendar text-gray-300"></i></div>
     <div class="lh-1">
-      <h1 class="h6 mb-0 text-black lh-1">Company Name</h1>
       <small>this report generates from {{ start_date }} to {{ end_date }} </small>
               <!-- Button trigger modal -->
-    <button type="button" id="ModalLaunch" class="btn btn-light" style="margin-left: 46em;"data-bs-toggle="modal" data-bs-target="#settingsModal">
+    <button type="button" id="ModalLaunch" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#settingsModal">
         <strong>
         <i class="fas fa-cogs"></i>
             Settings
@@ -111,28 +110,30 @@
         </div>
     </div>
 </div>
-
 <div class="row">
-    <div class="col">
-        {{ net_purchases_over_time|safe }}
-        {{ df_fig1|safe }}
-    </div>
-</div>
-<div class="row">
-    <div class="col">
+    <div class="col-md-6" >
         {{ supplier_total_purchases_fig|safe }}
     </div>
 
-</div>
-<div class="col">
-    {{ cost_returned|safe }}
-</div>
-<div class="row">
-    <div class="col">
-        {{ vendors_to_pay_tbl|safe }}
+    <div class="col-md-6" >
+        {{ cost_returned|safe }}
     </div>
-
 </div>
+<hr>
+
+<div class="row" style="background-color: white;">
+        <div class="col-md-6" >
+            {{ vendors_to_pay_tbl|safe }}
+        </div>
+    
+        <div class="col-md-6" >
+            {{ df_fig1|safe }}
+        </div>
+ 
+</div>
+
+<hr>
+
 
 {% endblock %}
 {% block footer %}

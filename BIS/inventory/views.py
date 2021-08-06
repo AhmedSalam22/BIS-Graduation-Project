@@ -14,7 +14,7 @@ from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , Inv
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
 from django.contrib import messages
-from django.db.models import Sum, Q, F, FloatField, ExpressionWrapper
+from django.db.models import Sum, Q, F, FloatField, ExpressionWrapper, Case, When, Value
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -30,8 +30,8 @@ import plotly.graph_objects as go
 import plotly
 import plotly.express as px
 import plotly.figure_factory as ff
-from django.db.models.functions import Coalesce
-from django.db.models import Func, DateTimeField
+from django.db.models.functions import Coalesce, ExtractDay
+from django.db.models import Func, DateTimeField, CharField
 
 def get_graph():
     """
@@ -117,7 +117,7 @@ class CreateSalesView(LoginRequiredMixin, View):
                 sold_item.save()
             messages.success(request, 'Your Sales has been created Successfuly')
             return redirect(
-                reverse_lazy('inventory:sale'), args=[sales.id]
+                reverse_lazy('inventory:sale_detail', args=[sales.id])
                 )
         ctx = {
             'sales_form': sales_form, 
@@ -467,6 +467,53 @@ class Dash:
         return self.net_sales - self.money_recieved
            
     
+    @property
+    def aged_receivables(self):
+        """
+          0-30
+          31-60
+          61-90
+          over 90 days
+        """
+        result = dict()
+        aged_receivables = ['0-30', '31-60', '61-90', 'over 90 days']
+        query = Sale.sales.all_sales(self.owner_id).filter(status='UNPAID').annotate(
+            days_overdue= ExtractDay(F('due_date') - timezone.now() ),
+            aged_receivables=Case(
+                When(days_overdue__lte = 30, then=Value('0-30')),
+                When(days_overdue__lte = 60, then=Value('31-60')),
+                When(days_overdue__lte = 90, then=Value('61-90')),
+                When(days_overdue__gt = 90, then=Value('over 90 days')),
+                output_field= CharField(max_length=50)
+            ),
+            total_amt_unpaid = F('netsales') - F('total_amt_paid')
+        )
+        for age_receivable in aged_receivables:
+            result[age_receivable] = query.filter(aged_receivables=age_receivable).aggregate(total_amt_unpaid__sum=Coalesce(Sum('total_amt_unpaid'), 0))['total_amt_unpaid__sum']
+        return result
+        
+    @property
+    def aged_receivables_pie_tbl_chart(self):
+        data = self.aged_receivables
+        data_matrix = [
+                        ['Aged Receivables', 'total amout unpaid', '%']
+                    ]
+        TOTAL_AMT_UNPAID = sum(list(data.values()))
+        for key, value in data.items():
+            data_matrix.append([key, value, round(value/TOTAL_AMT_UNPAID *100, 2)])
+
+        data_matrix.append(['TOTAL', TOTAL_AMT_UNPAID, '100%'])
+
+        fig_tbl = ff.create_table(data_matrix)
+        fig_pie = go.Figure(data=[go.Pie(labels=list(data.keys()), values= list(data.values()))] )
+        fig_pie.update_layout(title_text= 'Aged Receivables')
+        return fig_pie.to_html(full_html=False, include_plotlyjs=False),  fig_tbl.to_html(full_html=False, include_plotlyjs=False)
+
+    
+   
+
+
+
     @staticmethod
     def reporting_period_form():
         initial_data =  {"start_date": Dash.start_date,  "end_date": Dash.end_date}
@@ -536,10 +583,6 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         fig.update_layout(
             title_text="Net purchases Over the time"
         )
-       
-        fig = px.line(purchases_return_over_time_df, x='purchase_date', y='net_purchases', title='net purchases over the time')
-        fig.update_xaxes(rangeslider_visible=True)
-        net_purchases_over_time = fig.to_html(full_html=False, include_plotlyjs=False)
 
         df_notDueAndOverDue = pd.DataFrame(
             PurchaseInventory.purchases.notDueAndOverDue(owner.id , start_date , end_date), columns=['Satus', 'Total amount unpaid', 'number']
@@ -598,7 +641,6 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             # "graph": graph,
             # "line_fig": graph2 ,
             # "graph3" : graph3,
-            "net_purchases_over_time" : net_purchases_over_time,
             'cost_returned': cost_returned,
             'df_fig1': df_fig1,
             'vendors_to_pay_tbl': vendors_to_pay_tbl
@@ -782,6 +824,8 @@ class SalesDashboradView(LoginRequiredMixin, TemplateView):
         ctx['money_recieved'] = dash.money_recieved 
         ctx['num_unpaid_invoice'] = dash.num_unpaid_invoice
         ctx['amount_unpaid_sales'] = dash.amount_unpaid_sales
+        ctx['aged_receivables_pie_chart'], ctx['aged_receivables_tbl'] = dash.aged_receivables_pie_tbl_chart
+
 
         return ctx
 
