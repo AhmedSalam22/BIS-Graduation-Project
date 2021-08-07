@@ -1,6 +1,13 @@
 {% extends "home/base.html" %}
 {% load static %}
-
+{% block css %}
+    <style>
+        table {
+            font-weight: bold;
+            color: black;
+        }
+    </style>
+{% endblock %}
 {% block javascript_top %}
     <script src="{% static 'home/js/plotly-2.2.0.min.js' %}"></script>
 {% endblock %}
@@ -118,21 +125,19 @@
         {{ aged_receivables_pie_chart|safe }}
     </div>
 
-    <div class="col-md-6" id="onCreditOrCash">
+    <div class="col-md-6" id="agedReceivablesTable">
         {{ aged_receivables_tbl|safe }}
     </div>
 </div>
-<div class="row">
-    <div class="col" id="agedReceivablesTable">
-
-    </div>
-</div>
-<div class="row">
+<hr>
+<div class="row" style="background-color: white;">
     <div class="col" id="customersWhoOweMoney">
+        <h3 style="color: black;font-weight: bold; font-style: italic;">customers who owe money</h3>
 
+        {{ customers_who_owe_money|safe }}
     </div>
 </div>
-
+<hr>
 {% endblock %}
 {% block footer %}
 {% include "home/dataTableFooter.html" %}

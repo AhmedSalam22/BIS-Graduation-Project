@@ -30,9 +30,9 @@ import plotly.graph_objects as go
 import plotly
 import plotly.express as px
 import plotly.figure_factory as ff
-from django.db.models.functions import Coalesce, ExtractDay
+from django.db.models.functions import Coalesce, ExtractDay, Concat
 from django.db.models import Func, DateTimeField, CharField
-
+from django.utils.functional import cached_property
 def get_graph():
     """
     reference :https://www.youtube.com/watch?v=jrT6NiM46jk
@@ -381,7 +381,7 @@ class Dash:
     def __init__(self, owner_id):
         self.owner_id = owner_id
 
-    @property
+    @cached_property
     def num_sales(self):
         return Sale.objects.filter(owner__id= self.owner_id, sales_date__gte= Dash.start_date, sales_date__lte= Dash.end_date).count()
 
@@ -391,7 +391,7 @@ class Dash:
                 Q(sale__owner__id = self.owner_id) & Q(sale__sales_date__gte= Dash.start_date) & Q(sale__sales_date__lte= Dash.end_date)
             )
 
-    @property
+    @cached_property
     def total_sales(self):
         query = Sold_Item.objects.filter(
             self.sold_item_filter
@@ -403,7 +403,7 @@ class Dash:
         return query['total_sales_amount'] if query['total_sales_amount'] != None else 0
 
 
-    @property
+    @cached_property
     def sales_return_amt(self):
         query = SalesReturn.objects.filter(
             self.sold_item_filter
@@ -417,7 +417,7 @@ class Dash:
         )
         return query['total_sales_return_amt'] if query['total_sales_return_amt'] != None else 0
 
-    @property
+    @cached_property
     def sales_return_unit(self):
         query = SalesReturn.objects.filter(
             self.sold_item_filter
@@ -426,7 +426,7 @@ class Dash:
         )
         return query['num_returned'] if query['num_returned'] != None else 0
 
-    @property
+    @cached_property
     def sales_allowance(self):
         filter_expression = ( 
             Q(sales__owner__id = self.owner_id) & Q(sales__sales_date__gte= Dash.start_date) & Q(sales__sales_date__lte= Dash.end_date)
@@ -438,14 +438,14 @@ class Dash:
         )
         return query['sales_allowance'] if query['sales_allowance'] != None else 0
 
-    @property
+    @cached_property
     def net_sales(self):
         return self.total_sales - self.sales_return_amt - self.sales_allowance
 
-    @property
+    @cached_property
     def money_recieved(self):
         # query one ignore if it's already pay in cash
-        query = Sale.sales.all_sales(owner_id=self.owner_id).aggregate(money_revieved=Coalesce(Sum('total_amt_paid'),0))
+        query = Sale.sales.all_sales(owner_id=self.owner_id).filter(sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).aggregate(money_revieved=Coalesce(Sum('total_amt_paid'),0))
         # to avoid the above issue
         query2 = Sale.sales.all_sales(
             owner_id=self.owner_id
@@ -458,16 +458,16 @@ class Dash:
         return query['money_revieved'] + query2['money_revieved']
 
 
-    @property
+    @cached_property
     def num_unpaid_invoice(self):
-        return Sale.sales.all_sales(owner_id=self.owner_id).filter(status="UNPAID").count()
+        return Sale.sales.all_sales(owner_id=self.owner_id).filter(status="UNPAID",  sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).count()
     
-    @property
+    @cached_property
     def amount_unpaid_sales(self):
         return self.net_sales - self.money_recieved
            
     
-    @property
+    @cached_property
     def aged_receivables(self):
         """
           0-30
@@ -477,8 +477,8 @@ class Dash:
         """
         result = dict()
         aged_receivables = ['0-30', '31-60', '61-90', 'over 90 days']
-        query = Sale.sales.all_sales(self.owner_id).filter(status='UNPAID').annotate(
-            days_overdue= ExtractDay(F('due_date') - timezone.now() ),
+        query = Sale.sales.all_sales(self.owner_id).filter(status='UNPAID', sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).annotate(
+            days_overdue= ExtractDay(timezone.now()  - F('due_date')),
             aged_receivables=Case(
                 When(days_overdue__lte = 30, then=Value('0-30')),
                 When(days_overdue__lte = 60, then=Value('31-60')),
@@ -511,6 +511,22 @@ class Dash:
 
     
    
+    @cached_property
+    def customers_who_owe_money(self):
+        query = Sale.sales.all_sales(self.owner_id).filter(
+            status='UNPAID',
+            sales_date__gte= Dash.start_date ,
+            sales_date__lte= Dash.end_date
+            ).annotate(
+            total_amt_unpaid = F('netsales') - F('total_amt_paid'),
+            customer_name=Concat(F('customer__first_name'), Value(' '), F('customer__middle_name'), Value(' '), F('customer__last_name'))
+            ).values('customer_id','customer_name', 'total_amt_unpaid')
+
+        df = pd.DataFrame(query)
+        return df.groupby(['customer_id', 'customer_name']).agg(['sum', 'count']).reset_index().to_html(index=False, classes="table table-hover table-borderless datatable")
+
+
+
 
 
 
@@ -812,6 +828,9 @@ class SalesDashboradView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['form'] = Dash.reporting_period_form()
+        if self.request.GET.get('start_date', None) != None:
+            Dash.start_date,  Dash.end_date = self.request.GET.get('start_date'), self.request.GET.get('end_date')
+
         ctx['start_date'], ctx['end_date'] = Dash.start_date, Dash.end_date
 
         dash = Dash(owner_id=self.request.user.id)
@@ -825,6 +844,7 @@ class SalesDashboradView(LoginRequiredMixin, TemplateView):
         ctx['num_unpaid_invoice'] = dash.num_unpaid_invoice
         ctx['amount_unpaid_sales'] = dash.amount_unpaid_sales
         ctx['aged_receivables_pie_chart'], ctx['aged_receivables_tbl'] = dash.aged_receivables_pie_tbl_chart
+        ctx['customers_who_owe_money'] = dash.customers_who_owe_money
 
 
         return ctx

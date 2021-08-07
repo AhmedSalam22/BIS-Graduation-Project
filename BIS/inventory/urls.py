@@ -1,9 +1,11 @@
 from django.urls import path , include , reverse_lazy
 from inventory import views
+from django.views.decorators.cache import cache_page
+
 
 app_name = "inventory"
 urlpatterns = [
-    path("" , views.HomeView.as_view() , name="home"),
+    path("" ,  cache_page(60 * 60)(views.HomeView.as_view()) , name="home"),
     path('create_term' , views.CreateTermView.as_view(success_url=reverse_lazy('inventory:list_term')) , name="create_term" ),
     path('update_term/<int:pk>' , views.UpdateTermView.as_view(success_url=reverse_lazy('inventory:list_term')) , name="update_term" ),
     path('list_term' , views.ListTermView.as_view() , name="list_term" ), 

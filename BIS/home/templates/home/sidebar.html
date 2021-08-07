@@ -1,3 +1,6 @@
+{% load cache %}
+{% cache None sidebar request.user.fs_reporting_period.company_name %}
+
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
@@ -118,3 +121,4 @@
     </div> -->
 
 </ul>
+{% endcache %}

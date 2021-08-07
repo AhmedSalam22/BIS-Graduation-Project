@@ -1,10 +1,11 @@
 from django.urls import path, reverse_lazy
 from django.views.generic import TemplateView
 from . import views
+from django.views.decorators.cache import cache_page
 
 app_name='sole_proprietorship'
 urlpatterns = [
-    path("" , TemplateView.as_view(template_name= "sole_proprietorship/index.html") , name = "home"),
+    path("" , cache_page(60 * 60)(TemplateView.as_view(template_name= "sole_proprietorship/index.html")) , name = "home"),
     path('accounts', views.AccountsListView.as_view(), name='all'),
     path('accounts/create', 
         views.AccountsCreateView.as_view(success_url=reverse_lazy('sole_proprietorship:all')), name='accounts_create'),
