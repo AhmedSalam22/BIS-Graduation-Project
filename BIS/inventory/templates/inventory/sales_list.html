@@ -3,6 +3,16 @@
 
 {% block content %}
 
+<div class="card">
+    <div class="card-body">
+        <form method="get">
+            {% load crispy_forms_tags %}  
+            {{ form }}
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+</div>
+
 <div class="container-fluid">
     <h3 class="text-dark mb-4">Sales</h3>
     <div class="card shadow">
@@ -64,7 +74,28 @@
                 </table>
             </div>
             {% load sole_proprietorship_extras %}
-            {% include 'home/pagination.html' %}
+            <div class="row justify-content-center">
+                <div class="pagination">
+            
+                    <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?{% query_transform request page=1 %}">&laquo; first</a>
+                            <a href="?{% query_transform request page=page_obj.previous_page_number %}">previous</a>
+                        {% endif %}
+                
+                        <span class="current">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                        </span>
+                
+                        {% if page_obj.has_next %}
+                            <a href="?{% query_transform request page=page_obj.next_page_number %}">next</a>
+                            <a href="?{% query_transform request page=page_obj.paginator.num_pages %}">last &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+
         </div>
     </div>
 <script>

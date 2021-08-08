@@ -9,7 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
     PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm,
-    SalesForm, SoldItemFormset, SalesReturnForm, SalesAllowaceForm, SalesPaymentForm
+    SalesForm, SoldItemFormset, SalesReturnForm, SalesAllowaceForm, SalesPaymentForm, SalesFilterForm
+
     )
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
@@ -803,12 +804,39 @@ class SalesListView(LoginRequiredMixin, ListView):
 
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related(
-            'term'
-            ).filter(owner= self.request.user)
+        # qs = super().get_queryset().select_related(
+        #     'term'
+        #     ).filter(owner= self.request.user)
+        qs = Sale.sales.all_sales(owner_id= self.request.user.id).select_related('term').order_by('-sales_date')
         return qs
 
 
+    def get_context_data(self, *args,  **kwargs):
+        ctx = super().get_context_data(*args, **kwargs)
+        ctx['form'] = SalesFilterForm(self.request.GET)
+        return ctx
+
+    def filter_queryset(self, request):
+        # keys = ['sales_date__gte', 'sales_date__lte', 'due_date__gte', 'due_date__lte', 'status']
+        sales_filter_form = SalesFilterForm(request.GET)
+        # we can't use sales_filter_form.cleaned_data unless call these method
+        sales_filter_form.is_valid()
+        filters = {}
+        for key, value in sales_filter_form.cleaned_data.items():
+            if value != "" and value != None and value != " ":
+                filters[key] = value
+        return filters
+
+
+    def get(self, request, *args, **kwargs):
+        filters = self.filter_queryset(request)
+        if len(filters) == 0:
+            self.object_list = self.get_queryset()
+        else:
+            self.object_list = self.get_queryset().filter(**filters)
+        context = self.get_context_data()
+        
+        return self.render_to_response(context)
 
 class SalesDeleteView(OwnerDeleteView):
     model = Sale

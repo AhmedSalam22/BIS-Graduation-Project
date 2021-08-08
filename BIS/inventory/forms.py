@@ -326,3 +326,23 @@ class SalesPaymentForm(SalesInitMixin, forms.ModelForm, DateMixin):
         fields = '__all__'
 
    
+
+
+STATUS_CHOICES =(
+    ('', ''),
+    ("PAID", "PAID"),
+    ("UNPAID", "UNPAID"),
+
+)
+
+
+class SalesFilterForm(forms.Form):
+    sales_date__gte = forms.DateField(label='sales date >=', required=False , widget=forms.widgets.DateInput(attrs={'type': 'date'}))
+    sales_date__lte = forms.DateField(label='sales date <=', required=False, widget=forms.widgets.DateInput(attrs={'type': 'date'}))
+    due_date__gte = forms.DateField(label='due date >=', required=False, widget=forms.widgets.DateInput(attrs={'type': 'date'}))
+    due_date__lte = forms.DateField(label='due date <=', required=False, widget=forms.widgets.DateInput(attrs={'type': 'date'}))
+    status = forms.ChoiceField(choices = STATUS_CHOICES, required=False)
+
+
+
+    
