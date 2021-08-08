@@ -14,7 +14,7 @@ from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , Inv
 from sole_proprietorship.models import Journal, Accounts
 from django.utils import timezone
 from django.contrib import messages
-from django.db.models import Sum, Q, F, FloatField, ExpressionWrapper, Case, When, Value
+from django.db.models import Sum, Q, F, FloatField, ExpressionWrapper, Case, When, Value,IntegerField
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -30,9 +30,15 @@ import plotly.graph_objects as go
 import plotly
 import plotly.express as px
 import plotly.figure_factory as ff
-from django.db.models.functions import Coalesce, ExtractDay, Concat
-from django.db.models import Func, DateTimeField, CharField
+from django.db.models.functions import Coalesce, ExtractDay, Concat, Now, Cast, TruncDate
+from django.db.models import Func, DateTimeField, CharField, DateField 
 from django.utils.functional import cached_property
+
+
+class DaysInterval(Func):
+    function = 'make_interval'
+    template = '%(function)s(days:=%(expressions)s)'
+
 def get_graph():
     """
     reference :https://www.youtube.com/watch?v=jrT6NiM46jk
@@ -304,7 +310,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
 
     def get(self,request,*args, **kwargs):
         form = InventoryReturnForm()
-        form.fields['inventory_price'].queryset = InventoryPrice.objects.filter(inventory__owner=request.user).all()
+        form.fields['inventory_price'].queryset = InventoryPrice.objects.filter(inventory__owner=request.user).select_related('inventory')
         if kwargs.get('pk', None) != None: 
             inventory_price = get_object_or_404(InventoryPrice , pk=kwargs.get('pk') , inventory__owner=request.user)
             form.fields['inventory_price'].initial = inventory_price
@@ -478,15 +484,14 @@ class Dash:
         result = dict()
         aged_receivables = ['0-30', '31-60', '61-90', 'over 90 days']
         query = Sale.sales.all_sales(self.owner_id).filter(status='UNPAID', sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).annotate(
-            days_overdue= ExtractDay(timezone.now()  - F('due_date')),
+            days_overdue= TruncDate(Now()) - F('due_date') ,
             aged_receivables=Case(
-                When(days_overdue__lte = 30, then=Value('0-30')),
-                When(days_overdue__lte = 60, then=Value('31-60')),
-                When(days_overdue__lte = 90, then=Value('61-90')),
-                When(days_overdue__gt = 90, then=Value('over 90 days')),
+                When(days_overdue__day__lte = 30, then=Value('0-30')),
+                When(days_overdue__day__lte = 60, then=Value('31-60')),
+                When(days_overdue__day__lte = 90, then=Value('61-90')),
+                When(days_overdue__day__gt = 90, then=Value('over 90 days')),
                 output_field= CharField(max_length=50)
-            ),
-            total_amt_unpaid = F('netsales') - F('total_amt_paid')
+            )
         )
         for age_receivable in aged_receivables:
             result[age_receivable] = query.filter(aged_receivables=age_receivable).aggregate(total_amt_unpaid__sum=Coalesce(Sum('total_amt_unpaid'), 0))['total_amt_unpaid__sum']
@@ -517,9 +522,6 @@ class Dash:
             status='UNPAID',
             sales_date__gte= Dash.start_date ,
             sales_date__lte= Dash.end_date
-            ).annotate(
-            total_amt_unpaid = F('netsales') - F('total_amt_paid'),
-            customer_name=Concat(F('customer__first_name'), Value(' '), F('customer__middle_name'), Value(' '), F('customer__last_name'))
             ).values('customer_id','customer_name', 'total_amt_unpaid')
 
         df = pd.DataFrame(query)

@@ -34,6 +34,8 @@ from django.views.generic import DeleteView
 from django.db import transaction
 from django.utils.safestring import mark_safe
 import plotly.figure_factory as ff
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
+
 
 def prepare_data_frame( journal  ,  accounts):
     accounts = pd.DataFrame(accounts)
@@ -85,10 +87,13 @@ class ConfigRequiredMixin:
 
 
 
-class AccountsListView(OwnerListView):
+class AccountsListView(ListView):
     # paginate_by = 10
     model = Accounts
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(owner=self.request.user).values('account', 'normal_balance', 'account_type', 'id')
 
 
 class AccountsCreateView(OwnerCreateView):

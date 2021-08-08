@@ -13,7 +13,8 @@ from django.db import connection
 import datetime
 from django.utils import timezone 
 from datetime import timedelta
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, Concat
+from django.utils.functional import cached_property
 
 
 
@@ -281,6 +282,10 @@ class SaleManager(models.Manager):
                 default=Value("UNPAID"),
                 output_field= models.CharField(max_length=6)
             )
+        ).annotate(
+            total_amt_unpaid = F('netsales') - F('total_amt_paid'),
+            customer_name=Concat(F('customer__first_name'), Value(' '), F('customer__middle_name'), Value(' '), F('customer__last_name'))
+          
         )
         return query
 
@@ -807,7 +812,7 @@ class InventoryPrice(models.Model):
     purchase_inventory = models.ForeignKey(PurchaseInventory, on_delete=models.CASCADE)
 
 
-    @property
+    @cached_property
     def total_cost(self):
         return self.cost_per_unit * self.number_of_unit
 
@@ -901,12 +906,12 @@ class Sale(DueDateMixin, models.Model):
 
 
 
-    @property
+    @cached_property
     def total_amount_paid(self):
         query = self.salespayment_set.aggregate(Sum('amount'))
         return query['amount__sum'] if query['amount__sum'] != None else 0
 
-    @property
+    @cached_property
     def first_payment(self) -> bool:
         """
         return True if this first payment
@@ -914,11 +919,11 @@ class Sale(DueDateMixin, models.Model):
         return True if self.salespayment_set.count() == 0 else False
 
 
-    @property
+    @cached_property
     def amount_if_there_discount(self):
         return self.net_sales * ((100- self.term.discount_percentage) / 100)
 
-    @property
+    @cached_property
     def paid(self) -> bool:
         if self.term.terms == PaymentSalesTerm.Term.CASH.value:
             return True
@@ -941,19 +946,19 @@ class Sale(DueDateMixin, models.Model):
         return self.term.accounts_receivable
 
 
-    @property
+    @cached_property
     def sales_allowance(self):
         query = self.salesallowance_set.aggregate(Sum('amount'))
         return query['amount__sum'] if query['amount__sum'] != None else 0
 
 
-    @property
+    @cached_property
     def num_units_returned(self):
         query = self.salesreturn_set.aggregate(Sum('num_returned'))
         return query['num_returned__sum'] if query['num_returned__sum'] != None else 0
 
 
-    @property
+    @cached_property
     def sales_return(self):
         query = self.salesreturn_set.annotate(
             total=ExpressionWrapper(F('num_returned') * F('sold_item__sale_price'), output_field=FloatField())
@@ -963,7 +968,7 @@ class Sale(DueDateMixin, models.Model):
         return query['total__sum'] if query['total__sum'] != None else 0
 
 
-    @property
+    @cached_property
     def sub_total(self):
         """
         return sub total for the sales without considering sales return and allowance
@@ -975,7 +980,7 @@ class Sale(DueDateMixin, models.Model):
             )
         return query['total__sum'] if query['total__sum'] != None else 0
 
-    @property
+    @cached_property
     def net_sales(self):
         """
             net sales Ignoring discount
@@ -1083,7 +1088,7 @@ class SalesPayment(models.Model):
     amount = models.FloatField()
 
 
-    @property
+    @cached_property
     def first_payment(self) -> bool:
         """
         return True if this first payment
