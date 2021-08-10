@@ -1,20 +1,20 @@
 from django.shortcuts import render , reverse
-from .forms import CustomerForm , CustomerAddressForm , CustomerNoteForm , TelephoneForm , CustomerEmailForm
+from .forms import CustomerForm , CustomerAddressForm , CustomerNoteForm  , CustomerEmailForm
 from .models import CustomerType
-from home.multi_form_view import MyMultiFormView
+# from home.multi_form_view import MyMultiFormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.base import TemplateView
+from django.views import View
+
 # Create your views here.
-
-
-class CoustomerView(LoginRequiredMixin , MyMultiFormView):
+class CoustomerView(LoginRequiredMixin, View):
     template_name = 'Customers_Sales/customer_form.html'
 
     form_classes = {
         'customer_form' : CustomerForm,
         'customer_address_form' : CustomerAddressForm,
         'cutomer_note_form': CustomerNoteForm,
-        'customer_telepone_form':TelephoneForm ,
+        # 'customer_telepone_form':TelephoneForm ,
         'customer_email_form': CustomerEmailForm
     }
 
@@ -38,9 +38,9 @@ class CoustomerView(LoginRequiredMixin , MyMultiFormView):
         email = forms['customer_email_form'].save(commit=False)
         email.customer = customer
         email.save()
-        phone = forms['customer_telepone_form'].save(commit=False)
-        phone.customer = customer
-        phone.save()
+        # phone = forms['customer_telepone_form'].save(commit=False)
+        # phone.customer = customer
+        # phone.save()
 
 
 

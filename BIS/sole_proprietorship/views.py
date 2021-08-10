@@ -25,7 +25,7 @@ from io import BytesIO
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 import xlsxwriter
-from pivottablejs import pivot_ui
+# from pivottablejs import pivot_ui
 from django.contrib import messages
 from django.db.models import Q
 from .forms import JournalFormSetHelper
@@ -616,37 +616,37 @@ class AccountsImport(LoginRequiredMixin , View):
 
 
 
-class PivotTable(LoginRequiredMixin , View):
+# class PivotTable(LoginRequiredMixin , View):
     
-    def get(self , request):
-        with connection.cursor() as cursor:
+#     def get(self , request):
+#         with connection.cursor() as cursor:
 
-            query = cursor.execute("""SELECT date , account , sum(helper) as Balance , normal_balance , transaction_type , account_type FROM (
-                                            SELECT * ,
-                                            CASE
-                                                WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                ELSE ( -1 * j.balance)
-                                            END as helper 
-                                            FROM sole_proprietorship_journal as j
-                                            JOIN sole_proprietorship_accounts as a
-                                            on j.account_id = a.id
-                                            Join sole_proprietorship_transaction as t
-                                            ON t.id = j.transaction_id
-                                            where a.owner_id = %s			
-                                                                                                        )
-                            GROUP by date , account """ , [request.user.id] )
-            df = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "Balance" , "normal_balance" , "transaction_type" , "account_type"])
-        # owner=request.user
-        # accounts = Accounts.objects.filter(owner=owner).all().values()
-        # journal = Journal.objects.filter(owner=owner).all().values()
-        # df = prepare_data_frame(journal , accounts)
-        pivot = pivot_ui(df)
-        with open(pivot.src) as t:
-            r = t.read()
-        ctx = {
-            "result": r
-        }
-        return render(request , "sole_proprietorship/test.html" , ctx)
+#             query = cursor.execute("""SELECT date , account , sum(helper) as Balance , normal_balance , transaction_type , account_type FROM (
+#                                             SELECT * ,
+#                                             CASE
+#                                                 WHEN j.transaction_type = a.normal_balance Then  j.balance
+#                                                 ELSE ( -1 * j.balance)
+#                                             END as helper 
+#                                             FROM sole_proprietorship_journal as j
+#                                             JOIN sole_proprietorship_accounts as a
+#                                             on j.account_id = a.id
+#                                             Join sole_proprietorship_transaction as t
+#                                             ON t.id = j.transaction_id
+#                                             where a.owner_id = %s			
+#                                                                                                         )
+#                             GROUP by date , account """ , [request.user.id] )
+#             df = pd.DataFrame(query.fetchall() , columns=["date" , "account" , "Balance" , "normal_balance" , "transaction_type" , "account_type"])
+#         # owner=request.user
+#         # accounts = Accounts.objects.filter(owner=owner).all().values()
+#         # journal = Journal.objects.filter(owner=owner).all().values()
+#         # df = prepare_data_frame(journal , accounts)
+#         pivot = pivot_ui(df)
+#         with open(pivot.src) as t:
+#             r = t.read()
+#         ctx = {
+#             "result": r
+#         }
+#         return render(request , "sole_proprietorship/test.html" , ctx)
 
 
 

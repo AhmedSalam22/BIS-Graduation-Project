@@ -23,10 +23,10 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = '6ang@@6j)r5^x3ldie5#a2mxo*5^8cy$)2wton(ws7opwz)(cg'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    '127.0.0.1'
+    '*'
 ]
 
 
@@ -46,11 +46,11 @@ INSTALLED_APPS = [
     # pip installed app
     'crispy_forms',
     'debug_toolbar',
-    'phonenumber_field',
+    # 'phonenumber_field',
     'django_filters',
     'extra_views',
     'ckeditor',
-    'django_extensions',
+    # 'django_extensions',
 
 
     #Django app
@@ -66,6 +66,8 @@ CSRF_COOKIE_HTTPONLY = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+     # Enables whitenoise for serving static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -105,13 +107,37 @@ WSGI_APPLICATION = 'BIS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'Ahmed2219990',
-        'HOST': '127.0.0.1',
+        'NAME': 'AYBA',
+        'USER': 'Ahmed',
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': 'ayba-db.postgres.database.azure.com',
         'PORT': '5432',
+        'OPTIONS': {"sslmode":"require"},
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',
+#         'USER': 'postgres',
+#         'PASSWORD': 'Ahmed2219990',
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',
+#     }
+# }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',
+#         'USER': 'postgres',
+#         'PASSWORD': 'Ahmed2219990',
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
@@ -158,6 +184,8 @@ MEDIA_URL = '/media/'
 # Path where media is stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 

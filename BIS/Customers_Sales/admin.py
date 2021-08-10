@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer , CustomerEmail , Telephone , CustomerType , CustomerAddress , CustomerNote
+from .models import Customer , CustomerEmail  , CustomerType , CustomerAddress , CustomerNote
 
 
 class CustomerAddressInline(admin.TabularInline):
@@ -50,7 +50,6 @@ class CustomerAdmin(admin.ModelAdmin):
 admin.site.register(Customer , CustomerAdmin)
 admin.site.register([
  CustomerEmail , 
- Telephone , 
  CustomerType , 
  CustomerAddress , 
  CustomerNote])

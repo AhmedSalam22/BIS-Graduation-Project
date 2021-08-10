@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from phonenumber_field.modelfields import PhoneNumberField 
+# from phonenumber_field.modelfields import PhoneNumberField 
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from ckeditor.fields import RichTextField
@@ -295,11 +295,11 @@ class CustomerEmail(CustomerCommonFields):
     def __str__(self):
         return self.email
 
-class Telephone (CustomerCommonFields):
-    phone_number = PhoneNumberField(blank=True , region="EG")
+# class Telephone (CustomerCommonFields):
+#     phone_number = PhoneNumberField(blank=True , region="EG")
 
-    def __str__(self):
-        return f"{self.phone_number}"
+#     def __str__(self):
+#         return f"{self.phone_number}"
 
 
 
