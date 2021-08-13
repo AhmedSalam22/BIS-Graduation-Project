@@ -1,5 +1,24 @@
 {% extends "home/base.html" %}
 
+{% block css %}
+<style>
+.myCard {
+    transition: transform .2s;
+    cursor: pointer;
+    margin-right: 20px;
+    margin-bottom: 20px; 
+    max-width: 250px;
+    z-index: 1;
+}
+
+.myCard:hover{
+    transform: scale(1.1);
+    z-index: 2;
+}
+</style>
+
+
+{% endblock %}
 
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
@@ -12,7 +31,24 @@
 
 {% block content %}
 <div class="row row-cols-auto">
-    <div class="col-md-3" style="background-color:#3399ff;">
+
+    <div class="col-md-3 myCard" style="background-color:#6633ff;">
+        <p class="text-center"><i class="fa fa-users" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+        <p class="text-center" style="color:#fff;"><br><strong>Customers</strong></p>
+        <div class="dropdown">
+            <div class="text-center" data-toggle="dropdown" aria-expanded="false">
+              <button type="button" class="btn btn-light">Find out more</button>
+            </div>
+            <div class="dropdown-menu" role="menu">
+                <a class="dropdown-item" role="presentation" href="{% url 'Customer_Sales:add_customer'  %}">Create Customer</a>
+                <a class="dropdown-item" role="presentation" href="{% url 'Customer_Sales:customer_list'  %}">Customer List</a>
+ 
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-3 myCard" style="background-color:#3399ff;">
         <p class="text-center"><i class="fa fa-file-invoice-dollar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
         <p class="text-center" style="color:#fff;"><br><strong>Sales</strong></p>
         <div class="dropdown">
@@ -26,12 +62,12 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3" style="background-color:#6633ff;">
+    <div class="col-md-3 myCard" style="background-color:#6633ff;">
         <p class="text-center"><i class="fa fa-undo" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
         <p class="text-center" style="color:#fff;"><br><strong>Sales Return</strong></p>
         <a href="{% url 'inventory:create_sales_return' %}" target="_blank"><p class="text-center" style="color:#fff;">Find out more</p></a>
     </div>
-    <div class="col-md-3" style="background-color:#3399ff;">
+    <div class="col-md-3 myCard" style="background-color:#3399ff;">
         <p class="text-center"><i class="fa fa-exchange-alt" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
         <p class="text-center" style="color:#fff;"><br><strong>Sales allowance</strong></p>
         <div class="dropdown">
@@ -43,7 +79,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3" style="background-color:#6633ff;">
+    <div class="col-md-3 myCard" style="background-color:#6633ff;">
         <p class="text-center"><i class="fa fa-money-bill-alt" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
         <p class="text-center" style="color:#fff;"><br><strong>Receive Payment from Cutomer</strong></p>
         <div class="dropdown">
@@ -55,7 +91,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3" style="background-color:#3399ff;">
+    <div class="col-md-3 myCard" style="background-color:#3399ff;">
         <p class="text-center"><i class="fa fa-handshake" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
         <p class="text-center" style="color:#fff;"><br><strong>Paymenyt and Sales Term</strong></p>
         <div class="dropdown">
@@ -68,7 +104,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3" style="background-color:#6633ff;">
+    <div class="col-md-3 myCard" style="background-color:#6633ff;">
         <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
         <p class="text-center" style="color:#fff;"><br><strong>Dashboard</strong></p>
         <a href="{% url 'inventory:sales_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>

@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = '6ang@@6j)r5^x3ldie5#a2mxo*5^8cy$)2wton(ws7opwz)(cg'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     '*'
@@ -104,40 +104,32 @@ WSGI_APPLICATION = 'BIS.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+#remote Database
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'AYBA',
+#         'USER': 'Ahmed',
+#         'PASSWORD': os.getenv("DB_PASSWORD"),
+#         'HOST': 'ayba-db.postgres.database.azure.com',
+#         'PORT': '5432',
+#         'OPTIONS': {"sslmode":"require"},
+#     }
+# }
+
+#Local Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'AYBA',
-        'USER': 'Ahmed',
+        'NAME': 'postgres',
+        'USER': 'postgres',
         'PASSWORD': os.getenv("DB_PASSWORD"),
-        'HOST': 'ayba-db.postgres.database.azure.com',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
-        'OPTIONS': {"sslmode":"require"},
     }
 }
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',
-#         'USER': 'postgres',
-#         'PASSWORD': 'Ahmed2219990',
-#         'HOST': '127.0.0.1',
-#         'PORT': '5432',
-#     }
-# }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',
-#         'USER': 'postgres',
-#         'PASSWORD': 'Ahmed2219990',
-#         'HOST': '127.0.0.1',
-#         'PORT': '5432',
-#     }
-# }
 
 
 # Password validation

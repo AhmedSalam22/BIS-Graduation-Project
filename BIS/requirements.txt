@@ -15,3 +15,4 @@ whitenoise
 psycopg2-binary
 ipython
 django-crispy-forms
+openpyxl
