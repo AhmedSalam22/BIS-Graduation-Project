@@ -364,7 +364,7 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
 
      
         income = accounts_dic.get("Revenue", 0) - accounts_dic.get("Expenses", 0)
-        equity = accounts_dic.get("Investment", 0) + income - accounts_dic.get("Drawings")        
+        equity = accounts_dic.get("Investment", 0) + income - accounts_dic.get("Drawings", 0)        
         # revenue vs expense
         revenues_expenses_fig = self.pie_plot(
             ['Revenues','expenses'],

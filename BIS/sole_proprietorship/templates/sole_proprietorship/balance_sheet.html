@@ -51,7 +51,11 @@
             </tr>
             <tr class="alert alert-primary">
                 <td colspan="2"> Total Liabilities & Owner's Equity  </td>
+                {% if liabilities %}
                 <td> {{ equity|add:liabilities }}</td>
+                {% else %}
+                <td> {{ equity|add:0 }}</td>
+                {% endif %}
             </tr>
         </tbody>
     </table>

@@ -504,7 +504,7 @@ class Dash:
         data_matrix = [
                         ['Aged Receivables', 'total amout unpaid', '%']
                     ]
-        TOTAL_AMT_UNPAID = sum(list(data.values()))
+        TOTAL_AMT_UNPAID = sum(list(data.values())) or 1
         for key, value in data.items():
             data_matrix.append([key, value, round(value/TOTAL_AMT_UNPAID *100, 2)])
 
@@ -526,8 +526,10 @@ class Dash:
             ).values('customer_id','customer_name', 'total_amt_unpaid')
 
         df = pd.DataFrame(query)
-        return df.groupby(['customer_id', 'customer_name']).agg(['sum', 'count']).reset_index().to_html(index=False, classes="table table-hover table-borderless datatable")
-
+        try:
+            return df.groupby(['customer_id', 'customer_name']).agg(['sum', 'count']).reset_index().to_html(index=False, classes="table table-hover table-borderless datatable")
+        except KeyError:
+            return df.to_html(index=False, classes="table table-hover table-borderless datatable")
 
 
 
