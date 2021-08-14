@@ -104,30 +104,32 @@ WSGI_APPLICATION = 'BIS.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-#remote Database
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'AYBA',
-#         'USER': 'Ahmed',
-#         'PASSWORD': os.getenv("DB_PASSWORD"),
-#         'HOST': 'ayba-db.postgres.database.azure.com',
-#         'PORT': '5432',
-#         'OPTIONS': {"sslmode":"require"},
-#     }
-# }
 
-#Local Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': os.getenv("DB_PASSWORD"),
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+if os.getenv('SERVER'):
+    #remote Database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'AYBA',
+            'USER': 'Ahmed',
+            'PASSWORD': os.getenv("DB_PASSWORD"),
+            'HOST': 'ayba-db.postgres.database.azure.com',
+            'PORT': '5432',
+            'OPTIONS': {"sslmode":"require"},
+        }
     }
-}
+else:
+    #Local Database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': os.getenv("DB_PASSWORD"),
+            'HOST': '127.0.0.1',
+            'PORT': '5432',
+        }
+    }
 
 
 
