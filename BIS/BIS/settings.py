@@ -105,7 +105,7 @@ WSGI_APPLICATION = 'BIS.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 
-if os.getenv('DB_SERVER'):
+if os.getenv('DB_SERVER') == 'True':
     #remote Database
     DATABASES = {
         'default': {
