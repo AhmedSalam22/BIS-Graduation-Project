@@ -1,5 +1,5 @@
 {% extends 'home/form.html' %}
-{% block cardheader %} Payment or Sales Term {% endblock %}
+{% block cardheader %} Payment or Sales Term  {% endblock %}
 {% block formblock %}
     {{ form.non_field_errors }}
     {% load crispy_forms_tags %}
@@ -10,7 +10,7 @@
 <script>
 
     async function fetchAccounts(selectAccounts) {
-        const url = new URL('http://{{ request.META.HTTP_HOST }}{% url "sole_proprietorship:fetch_accounts" %}');
+        const url = new URL('{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url "sole_proprietorship:fetch_accounts" %}');
         const fetchPromies = await fetch(url,{
             method: 'GET',
         });

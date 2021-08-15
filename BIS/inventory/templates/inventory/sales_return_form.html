@@ -14,7 +14,7 @@
 
     async function fetchSoldItems() {
         soldItem.innerHTML = '';
-        const url = new URL('http://{{ request.META.HTTP_HOST }}{% url "inventory:fetch_sold_items" %}');
+        const url = new URL('{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url "inventory:fetch_sold_items" %}');
         const data = {"sale": saleElement.value };
         url.search = new URLSearchParams(data);
         const fetchPromies = await fetch(url,{
