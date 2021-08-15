@@ -34,7 +34,7 @@ import plotly.figure_factory as ff
 from django.db.models.functions import Coalesce, ExtractDay, Concat, Now, Cast, TruncDate
 from django.db.models import Func, DateTimeField, CharField, DateField 
 from django.utils.functional import cached_property
-
+from django.db.models.expressions import RawSQL
 
 class DaysInterval(Func):
     function = 'make_interval'
@@ -888,6 +888,47 @@ class POSView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
+
+
+class FetchInventoryAvailableForSale(LoginRequiredMixin, View):
+    SQL = """
+            SELECT  p.id
+            FROM inventory_inventoryprice as p
+            LEFT JOIN inventory_purchaseinventory 
+            ON inventory_purchaseinventory.id = p.purchase_inventory_id
+            LEFT JOIN inventory_inventoryreturn as r
+            ON p.id = r.inventory_price_id
+            LEFT JOIN inventory_sold_item as s
+            ON s.item_id = p.id
+            WHERE inventory_purchaseinventory.owner_id = %s
+            GROUP BY p.id
+            HAVING (number_of_unit - COALESCE(Sum(r.num_returned) ,0) - COALESCE(Sum(s.quantity), 0) )  > 0
+         """
+
+
+    def get(self, request, *args, **kwargs):
+        queryset = InventoryPrice.objects.select_related(
+            'inventory'
+            ).filter(
+                id__in =RawSQL(self.SQL, [request.user.id])
+            ).values(
+                'id',
+                'inventory__item_name',
+                'cost_per_unit', 
+                'inventory__description'
+            )        
+        return JsonResponse(
+                    [   { 
+                            'id': item['id'],
+                            'name': item['inventory__item_name'],
+                            'description': item['inventory__description'],
+                            'cost_per_unit':item['cost_per_unit']
+                        }
+
+                         for item in queryset
+                    ], safe=False
+                )
+
 
 class Test(LoginRequiredMixin , View):
 

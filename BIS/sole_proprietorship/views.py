@@ -834,3 +834,23 @@ class DetailAccountTypeView(LoginRequiredMixin, View):
         }
 
         return JsonResponse(ctx)
+
+class FetchAccounts(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        queryset = Accounts.objects.filter(
+              owner= self.request.user
+            ).values(
+                'id',
+                'account',
+            )        
+        return JsonResponse(
+                    [   { 
+                            'id': account['id'],
+                            'name': account['account'],
+                        }
+
+                         for account in queryset
+                    ], safe=False
+                )
+

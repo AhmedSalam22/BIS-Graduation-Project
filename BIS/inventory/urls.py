@@ -44,6 +44,7 @@ urlpatterns = [
     path('fetch_sold_items', views.FetchSoldItemView.as_view(), name='fetch_sold_items'),
     path('test' , views.Test.as_view() , name="test"),
     path('pos', views.POSView.as_view(), name='pos'),
+    path('inventory_available_for_sale', views.FetchInventoryAvailableForSale.as_view(), name='inventory_available_for_sale'),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 
 

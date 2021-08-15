@@ -66,23 +66,24 @@ class PaymentSalesTermForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.owner = kwargs.pop('owner')
         super().__init__(*args, **kwargs)
-        queryset = Accounts.objects.filter(owner=self.owner)
         for account in ['sales_discount', 'sales_return', 'sales_allowance','sales_revenue','accounts_receivable', 'cash_account', 'accounts_payable', 'freight_in_account', 'freight_out_account', 'COGS']:
-            self.fields[account].queryset = queryset
+            self.fields[account].queryset =  Accounts.objects.none()
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'config',
-            Row( 
-                Column(InlineRadios('terms') , css_class="col-4"),
-                Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage')
-            ),
-            Row(
-                Column('freight_in_account', 'freight_out_account', 'sales_revenue'), 
-                Column('COGS', 'cash_account', 'accounts_payable'),
-                Column('accounts_receivable', 'sales_return', 'sales_allowance', 'sales_discount')
-            ),
-            Row(
-                'pay_freight_out'
+            'terms',
+            Div(
+                Row( 
+                    Column('num_of_days_due' , 'discount_in_days' , 'discount_percentage')
+                ),
+                Row(
+                    Column('freight_in_account', 'freight_out_account', 'sales_revenue'), 
+                    Column('COGS', 'cash_account', 'accounts_payable'),
+                    Column('accounts_receivable', 'sales_return', 'sales_allowance', 'sales_discount')
+                ),
+                Row(
+                    'pay_freight_out'
+                ), css_class='select-accounts'
             )
             
         )
