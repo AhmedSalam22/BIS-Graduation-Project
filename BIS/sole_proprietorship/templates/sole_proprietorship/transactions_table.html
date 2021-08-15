@@ -1,5 +1,5 @@
-<div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
-    <table class="table table-hover table-borderless" id="mydataTable">
+<div class="table-responsive table mt-2" role="grid" aria-describedby="dataTable_info">
+    <table class="table table-hover table-borderless">
         <thead class="table-dark">
             <tr>
                 <th>Date</th>
@@ -18,7 +18,8 @@
                 {% for transaction in transaction_list %}
                    
                     {% for journal in transaction.journal_set.all %}
-                        <tr>
+
+                        <tr {% if forloop.last %} class="end-of-transaction" {% else %} class="start-of-transaction" {% endif %}>
                             {% if forloop.first %}
                                 <td><strong>{{ transaction.date}}</strong></td>                      
                             {% else %}

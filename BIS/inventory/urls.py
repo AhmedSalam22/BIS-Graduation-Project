@@ -5,7 +5,7 @@ from django.views.decorators.cache import cache_page
 
 app_name = "inventory"
 urlpatterns = [
-    path("" ,  cache_page(60 * 60)(views.HomeView.as_view()) , name="home"),
+    path("" ,  views.HomeView.as_view() , name="home"),
     path('create_term' , views.CreateTermView.as_view(success_url=reverse_lazy('inventory:list_term')) , name="create_term" ),
     path('update_term/<int:pk>' , views.UpdateTermView.as_view(success_url=reverse_lazy('inventory:list_term')) , name="update_term" ),
     path('list_term' , views.ListTermView.as_view() , name="list_term" ), 
@@ -43,6 +43,7 @@ urlpatterns = [
     path('sales_dashborad', views.SalesDashboradView.as_view(), name='sales_dashboard'),
     path('fetch_sold_items', views.FetchSoldItemView.as_view(), name='fetch_sold_items'),
     path('test' , views.Test.as_view() , name="test"),
+    path('pos', views.POSView.as_view(), name='pos'),
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
 
 

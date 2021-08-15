@@ -1,5 +1,21 @@
 {% extends "sole_proprietorship/index.html" %}
+{% block css %}
+<style>
+/* remove table border table-bordreless */
+.end-of-transaction  {
+    border-bottom-width: 2px !important;
+    border-style: dashed;
+}
 
+.start-of-transaction {
+    border-bottom-width: 0px !important;
+    border-style: none;
+}
+
+
+
+</style>
+{% endblock %}
 {% block content %}
 {% if Debit != Credit %}
 <div class="row">
@@ -31,7 +47,7 @@
 <br>
     <div class="row">
 
-        <div class="col-6">
+        <div class="col-sm-5 col-md-6">
             <div class="card shadow border-left-primary py-2">
                 <div class="card-body">
                     <div class="row align-items-center no-gutters">
@@ -44,7 +60,7 @@
                 </div>
             </div>
         </div>
-            <div class="col-6">
+            <div class="col-sm-5 offset-sm-2 col-md-6 offset-md-0">
                 <div class="card shadow border-left-primary py-2">
                     <div class="card-body">
                         <div class="row align-items-center no-gutters">
@@ -67,13 +83,15 @@
         </div>
         <div class="card-body">
           
-            
-            <a href="{% url 'sole_proprietorship:journal_create' %}">
-              <button class="btn btn-primary"> Add a Transaction </button>
-            </a> 
-            <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:export_transactions_csv' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (CSV)</a>
-            <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:export_transactions_pdf' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
-         
+            <div class="d-grid gap-2 d-md-block">
+                <a class="btn btn-primary" href="{% url 'sole_proprietorship:journal_create' %}">
+                    Add a Transaction 
+                  </a> 
+                  <a class="btn btn-primary" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:export_transactions_csv' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (CSV)</a>
+                  <a class="btn btn-primary" role="button" href="{% url 'sole_proprietorship:export_transactions_pdf' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
+               
+            </div>
+           
 
         </div>
         <div class="card-body">

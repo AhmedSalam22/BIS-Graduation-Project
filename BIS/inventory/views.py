@@ -882,6 +882,13 @@ class SalesDashboradView(LoginRequiredMixin, TemplateView):
         return ctx
 
 
+
+class POSView(LoginRequiredMixin, View):
+    template_name ='inventory/post.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
 class Test(LoginRequiredMixin , View):
 
 

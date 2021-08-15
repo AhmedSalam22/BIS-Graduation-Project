@@ -1,0 +1,96 @@
+{% extends 'home/base.html' %}
+{% block css %}
+<style>
+.box {
+    background-color: white;
+    border-radius: 10px;
+    color: black;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-8">
+        <div class="row row-cols-auto">
+            <div class="col-md-3 card">
+                <img src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png" alt="" class="w-100 card-img-top">
+                <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text"></p>
+                    <div><a class="btn btn-primary" style="width: 100%">See details</a></div>
+                </div>
+            </div>
+            <div class="col-md-3 card">
+                <img src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png" alt="" class="w-100 card-img-top">
+                <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <p class="card-text"></p>
+                    <div><a class="btn btn-primary" style="width: 100%" >See details</a></div>
+                </div>
+            </div>       
+        </div>
+        
+                 
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <span id="cart" style="height: 445px;" class=" os-host-resize-disabled os-host-scrollbar-vertical-hidden os-host-transition"><div class="os-resize-observer-host"><div class="os-resize-observer observed" style="left: 0px; right: auto;"></div></div><div class="os-size-auto-observer" style="height: calc(100% + 1px); float: left;"><div class="os-resize-observer observed"></div></div><div class="os-content-glue" style="margin: 0px;"></div><div class="os-padding"><div class="os-viewport" style="bottom: -17px; overflow-x: scroll;"><div class="os-content" style="padding: 0px; height: 100%; width: 100%;">
+        <table class="table table-hover">
+            <thead class="text-muted">
+                <tr>
+                <th scope="col">Item</th>
+                <th scope="col" width="120">Qty</th>
+                <th scope="col" width="120">Price</th>
+                <th scope="col" class="text-right" width="200">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <figure class="figure">
+                            <div class="img-wrap"><img src="https://productmanagementfestival.com/wp-content/uploads/2017/01/sell-your-product-online.jpg" class="img-thumbnail img-xs"></div>
+                            <figcaption class="figure-caption">
+                                <h6 class="title text-truncate">Product name </h6>
+                            </figcaption>
+                        </figure> 
+                    </td>
+                    <td class="text-center"> 
+                        <div class="m-btn-group m-btn-group--pill btn-group mr-2" role="group" aria-label="...">
+                            <input type="number" style="width: 100px;">
+                        </div>
+                    </td>
+                    <td> 
+                        <div class="price-wrap"> 
+                            <var class="price">$145</var> 
+                        </div> 
+                    </td>
+                    <td class="text-right"> 
+                        <a href="" class="btn btn-outline-danger"> <i class="fa fa-trash"></i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+</div> <!-- card.// -->
+        <div class="box" style="background-color: white;">
+ 
+            <dl style="display: flex;">
+                <dt style="padding-right:50%">Sub Total:</dt>
+                <dd class="text-right  h4 b">$215</dd>
+            </dl>
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="#" class="btn  btn-danger btn-error btn-lg btn-block"><i class="fa fa-times-circle "></i> Cancel </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="#" class="btn  btn-primary btn-lg btn-block"><i class="fa fa-shopping-bag"></i> Charge </a>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}

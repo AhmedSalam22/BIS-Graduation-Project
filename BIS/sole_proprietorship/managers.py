@@ -44,7 +44,7 @@ class AccountManager(models.Manager):
                     ON t.id = j.transaction_id
                     
                     WHERE a.owner_id = %s  and a.id = %s and t.date >= %s and t.date <= %s
-                    ORDER BY t.date
+                    ORDER BY t.date, t.id
 
                                                 """ , [owner_id, account, start_date, end_date])
             data = cursor.fetchall()

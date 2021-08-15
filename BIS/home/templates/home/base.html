@@ -6,14 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>BIS{% block title %} {% endblock %}</title>
     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+
     <link rel="stylesheet" href="{% static 'home/bootstrap/css/bootstrap.min.css' %}">
+    <!-- CSS only -->
+
     <link rel="stylesheet" href="{% static 'home/css/styles.min.css' %}">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="{% static 'home/css/mycss.css' %}">
-
     {% block css %} {% endblock %}
     {% block javascript_top %} {% endblock %}
 </head>
@@ -37,30 +40,31 @@
                         </div>
                     </div>
                 </nav>
+            
 
-                <div class="container">
+                <div class="container-fluid">
+                    {% block container %}
 
-                    {% if messages %}
-                    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="false">
-                        <div class="toast-header">
-                            {% comment %} <img src="..." class="rounded me-2" alt="..."> {% endcomment %}
-                            <strong class="me-auto">AYABA-Notification System</strong>
-                            <button class="close" type="button"  data-bs-dismiss="toast" aria-label="Close"><i class="fa fa-times" aria-hidden="true"></i></button>
+                        {% if messages %}
+                            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="false">
+                                <div class="toast-header">
+                                    {% comment %} <img src="..." class="rounded me-2" alt="..."> {% endcomment %}
+                                    <strong class="me-auto">AYABA-Notification System</strong>
+                                    <button class="close" type="button"  data-bs-dismiss="toast" aria-label="Close"><i class="fa fa-times" aria-hidden="true"></i></button>
+                                </div>
+                                <div class="toast-body">
+                                    {% for message in messages %}                                 
+                                        {{ message }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% block breadcrumb %}{% endblock %}
+
+                        <div id="ajax">
+                            {% block content %}{% endblock%}
                         </div>
-                        <div class="toast-body">
-                             {% for message in messages %}                                 
-                                {{ message }}
-                            {% endfor %}
-                        </div>
-                    </div>
-                      
-                    {% endif %}
-                    {% block breadcrumb %}{% endblock %}
-                  
-                    <!-- <h3 class="text-dark mb-1">Blank Page</h3> -->
-                    <div id="ajax">
-                    {% block content %}{% endblock%}
-                    </div>
+                    {% endblock %}
                 </div>
             </div>
             <footer class="bg-white sticky-footer">
@@ -69,7 +73,9 @@
                 </div>
             </footer>
 
-        </div><a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a></div>
+        </div>
+        <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+    </div>
 
 
 

@@ -438,6 +438,9 @@ class Accounts(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['account', 'owner'], name='unique_account')
         ]
+        indexes = [
+            models.Index(fields=['account'], name='account_idx'),
+        ]
     # account , Type , Normal Balance 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     account = models.CharField(max_length = 250)
@@ -470,6 +473,11 @@ class Accounts(models.Model):
         return self.account
 
 class Transaction(models.Model):
+    class Meta:
+        indexes = [
+            models.Index(fields=['date'], name='date_idx'),
+        ]
+
     class Status(models.IntegerChoices):
         PURCHASE_INVENTORY = 1, _("Purchase Inventory")
         PURCHASE_RETURN = 2, _("Purchase return")

@@ -30,6 +30,8 @@ urlpatterns = [
     # path('cv/', include('cms.urls')) ,
     path('new_partner_admission/', include('new_partner_admission.urls')) ,
     path('result/', include('result.urls')) , 
+    path('suppliers/', include('suppliers.urls')) , 
+
 
 ]
 

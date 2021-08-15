@@ -1,46 +1,36 @@
 {% extends 'home/base.html' %}
 {% block content %}
-<div class="container">
-    <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-dark mb-0">Inventory items</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:create_inventory'%}"><i class="fa fa-plus fa-sm text-white-50"></i>&nbsp;Create New Inventory</a>
-    </div>   
-    {% include 'home/filter_form.html' %}
-
-    {% if inventory_list %}    
-        <div class="row">
+<div class="d-sm-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-dark mb-0">Inventory items</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:create_inventory'%}"><i class="fa fa-plus fa-sm text-white-50"></i>&nbsp;Create New Inventory</a>
+</div>   
+{% include 'home/filter_form.html' %}
+{% if inventory_list %}    
+    <div class="row">
         {% for inventory in inventory_list %}
             {% if forloop.counter0|divisibleby:"4" %}
                 </div><br><div class="row">
             {% endif %}
             <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-            <!-- Card-->
-            <div class="card shadow-sm border-0 rounded">
-                <div class="card-body p-0">
+                <!-- Card-->
+                <div class="card">
                     {% if inventory.imgs.all.0.img.url %}
                         <img src="{{inventory.imgs.all.0.img.url}}" alt="" class="w-100 card-img-top">
                     {% else %}
                         <img src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png" alt="" class="w-100 card-img-top">
                     {% endif %}
-                    <div class="p-4">
-                        <h5 class="mb-0"> <a href="{% url "inventory:detail_inventory" inventory.id %}">{{ inventory.item_name }}</a></h5>
-                        <p class="small text-muted">{{ inventory.description|truncatechars:75 }}</p>
+                    <div class="card-body">
+                        <h5 class="card-title">Card title</h5>
+                        <p class="card-text">{{ inventory.description|truncatechars:75 }}</p>
+                        <div><a class="btn btn-primary"  style="width: 100%" href="{% url "inventory:detail_inventory" inventory.id %}" target="blank">See details</a></div>
                     </div>
-                  <div><a class="btn btn-light" href="{% url "inventory:detail_inventory" inventory.id %}" target="blank">See details</a></div>
+                    
                 </div>
             </div>
-        </div>
-            
-         
-        
-      
-        {% endfor %}
-    {% else %}
-        <p>There is no inventory item in the database yet.</p>
-    {% endif %}
-  
-      
-        </div>
-</div>
+            {% endfor %}
+        {% else %}
+            <p>There is no inventory item in the database yet.</p>
+    </div>
+        {% endif %}
 {% load sole_proprietorship_extras %}
 {% include 'home/pagination.html' %}
 {% endblock %}

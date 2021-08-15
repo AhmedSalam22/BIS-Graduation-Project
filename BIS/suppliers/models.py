@@ -1,6 +1,16 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-# Create your models here.
+from django.db.models.functions import Concat
+from django.db.models import Value, F
+
+
+class SupplierManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            supplier_full_name = Concat(F('first_name'), Value(' '), F('middle_name'), Value(' '), F('last_name'))
+        )
+
+
 class Supplier(models.Model):
     """
     Create Supplier Table in db.
@@ -10,6 +20,9 @@ class Supplier(models.Model):
     last_name   = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50 , blank=True , null=False , default=" ")
 
+
+    objects = SupplierManager()
+    
     @property
     def full_name(self):
         """Returns the customer's full name."""

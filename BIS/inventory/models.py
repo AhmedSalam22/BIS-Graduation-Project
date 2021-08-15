@@ -186,6 +186,11 @@ class Inventory(models.Model):
     i can use just one inventrory account for all item in inventory but i created one - to many relation 
     in order to make it's dynamic in other meaning we can have many inventory account so there is FK
     """
+    class Meta:
+        indexes = [
+            models.Index(fields=['item_name'], name='item_name_idx'),
+        ]
+
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     item_name = models.CharField(max_length=250)
     description = models.TextField(
@@ -605,6 +610,13 @@ class PurchaseInventory(DueDateMixin, models.Model):
     Note freight in cost which inccure when you purchase your inventory will charge only on the first
     form inventory in formset
     """
+    class Meta:
+        indexes = [
+            models.Index(fields=['status'], name='pur_status_idx'),
+            models.Index(fields=['purchase_date'], name='purchase_date_idx'),
+
+        ]
+
     class Status(models.IntegerChoices):
         UNPAID = 0 , _("UNPAID")
         PAID = 1 , _("PAID")

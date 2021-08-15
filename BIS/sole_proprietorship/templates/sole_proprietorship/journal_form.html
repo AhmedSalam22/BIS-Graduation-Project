@@ -1,20 +1,22 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
-<style>
-
-</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
 {% endblock %}
 {% block javascript_top %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
 
 <script>
   $(document).ready(function() {
-         $('.select2').select2();
+         $('.select2').select2({
+            theme: 'bootstrap4'
+         });
   });
    $(document).change(function() {
-         $('.select2').select2();
+         $('.select2').select2({
+            theme: 'bootstrap4'
+         });
   });
 </script>
 {% endblock%}
