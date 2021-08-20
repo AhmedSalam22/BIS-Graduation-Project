@@ -439,7 +439,9 @@ class Accounts(models.Model):
             models.UniqueConstraint(fields=['account', 'owner'], name='unique_account')
         ]
         indexes = [
-            models.Index(fields=['account'], name='account_idx'),
+            models.Index(fields=['account', 'owner'], name='account_idx'),
+            models.Index(fields=['owner'], name='acc_owner_idx'),
+
         ]
     # account , Type , Normal Balance 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

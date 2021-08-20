@@ -6,31 +6,32 @@
 {% include 'home/filter_form.html' %}
 {% if inventory_list %}    
     <div class="row">
+        <div class="row row-cols-auto">
         {% for inventory in inventory_list %}
-            {% if forloop.counter0|divisibleby:"4" %}
-                </div><br><div class="row">
-            {% endif %}
-            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                <!-- Card-->
-                <div class="card">
-                    {% if inventory.imgs.all.0.img.url %}
-                        <img src="{{inventory.imgs.all.0.img.url}}" alt="" class="w-100 card-img-top">
-                    {% else %}
-                        <img src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png" alt="" class="w-100 card-img-top">
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title">Card title</h5>
-                        <p class="card-text">{{ inventory.description|truncatechars:75 }}</p>
-                        <div><a class="btn btn-primary"  style="width: 100%" href="{% url "inventory:detail_inventory" inventory.id %}" target="blank">See details</a></div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <!-- Card-->
+                    <div class="card">
+                        {% if inventory.imgs.all.0.img.url %}
+                            <img src="{{inventory.imgs.all.0.img.url}}" alt="" class="w-100 card-img-top">
+                        {% else %}
+                            <img src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png" alt="" class="w-100 card-img-top">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">Card title</h5>
+                            <p class="card-text">{{ inventory.description|truncatechars:75 }}</p>
+                            <div><a class="btn btn-primary"  style="width: 100%" href="{% url "inventory:detail_inventory" inventory.id %}" target="blank">See details</a></div>
+                        </div>
+                        
                     </div>
-                    
                 </div>
-            </div>
             {% endfor %}
+        </div>
+    </div>
         {% else %}
             <p>There is no inventory item in the database yet.</p>
-    </div>
         {% endif %}
+
+
 {% load sole_proprietorship_extras %}
 {% include 'home/pagination.html' %}
 {% endblock %}

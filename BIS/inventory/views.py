@@ -883,11 +883,10 @@ class SalesDashboradView(LoginRequiredMixin, TemplateView):
 
 
 
-class POSView(LoginRequiredMixin, View):
+class POSView(CreateSalesView):
     template_name ='inventory/post.html'
 
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
+
 
 
 class FetchInventoryAvailableForSale(LoginRequiredMixin, View):
@@ -909,20 +908,26 @@ class FetchInventoryAvailableForSale(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         queryset = InventoryPrice.objects.select_related(
             'inventory'
+            ).prefetch_related(
+                'inventory__imgs__first'
             ).filter(
                 id__in =RawSQL(self.SQL, [request.user.id])
-            ).values(
+            ).distinct(
+                'id', 'cost_per_unit'
+                ).values(
                 'id',
                 'inventory__item_name',
                 'cost_per_unit', 
-                'inventory__description'
+                'inventory__description',
+                'inventory__imgs__img'
             )        
         return JsonResponse(
                     [   { 
                             'id': item['id'],
                             'name': item['inventory__item_name'],
                             'description': item['inventory__description'],
-                            'cost_per_unit':item['cost_per_unit']
+                            'cost_per_unit':item['cost_per_unit'],
+                            'img': item['inventory__imgs__img']
                         }
 
                          for item in queryset

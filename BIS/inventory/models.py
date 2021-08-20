@@ -1010,8 +1010,8 @@ class Sale(DueDateMixin, models.Model):
 class Sold_Item(models.Model):
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
     item = models.ForeignKey(InventoryPrice, on_delete=models.CASCADE)
-    sale_price = models.FloatField()
-    quantity = models.FloatField()
+    sale_price = models.FloatField(null=False, blank=False)
+    quantity = models.FloatField(null=False, blank=False)
 
 
     def units_sold(self):
@@ -1043,6 +1043,7 @@ class Sold_Item(models.Model):
 
 
     def clean(self):
+        super().clean()
         invaild, MESSAGE =  self.quantity_g_units_available_for_sales()
         if invaild:
             raise ValidationError({
