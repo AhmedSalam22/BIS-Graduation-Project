@@ -10,6 +10,12 @@
     padding: 15px;
     margin-bottom: 10px;
 }
+
+.delete-row, .add-row {
+    display: none;
+}
+
+
     
 </style>
 {% endblock %}
@@ -184,16 +190,47 @@
     });
     $('.delete-row').click();
     function appendToSoldItems(inventory){
-            $('.add-row').click();
-            $(".link-formset.dynamic-form td select.form-control").last().val(`${inventory.id}`).change();
-            for (let i=0 ; i < DATA.length ; i++ ) {
-                if (DATA[i].id == inventory.id) {
-                    DATA[i].Added = true;
-                    break;
+            function addedOrNot(){
+                for (let i=0 ; i < DATA.length ; i++ ) {
+                    if (DATA[i].id === parseInt(inventory.id)) {
+                        if (DATA[i].Added) {
+                            DATA[i].Added = false;
+                        } else {
+                            DATA[i].Added = true;
+                        }
+                        break;
+                    }
                 }
             }
-            inventory.className = 'btn btn-danger';
-            inventory.innerText = 'SELECTED';
+
+            function removeInventory() {
+                let formset = $("table tbody tr.link-formset.dynamic-form");
+                let condition;
+                for (let index = 0; index < formset.length; index++) {
+                    condition =  $("table tbody tr.link-formset.dynamic-form")[index].children[0].children[0].children[0].value === inventory.id;
+                    if (condition) {
+                        $("table tbody tr.link-formset.dynamic-form")[index].children[2].children[1].click();
+                        inventory.className = 'btn btn-primary';
+                    inventory.innerText = 'Add';
+                    } 
+                    
+                }
+            }
+
+            if ( inventory.innerText !== 'Remove') { 
+                $('.add-row').click();
+                $(".link-formset.dynamic-form td select.form-control").last().val(`${inventory.id}`).change();
+                inventory.className = 'btn btn-danger';
+                inventory.innerText = 'Remove';
+                addedOrNot();     
+           
+            } else {
+                removeInventory();
+                addedOrNot();
+
+        
+
+            }
            
         }
 
@@ -231,7 +268,7 @@
                             <h5 class="card-title">${inventory.name}</h5>
                             <h6>cost per unit: ${inventory.cost_per_unit } </h6>
                             <p class="card-text">${inventory.description.slice(0,100)}</p>
-                            <div><a id=${inventory.id} class="btn btn-danger" style="width: 100%; color: white;" onclick="appendToSoldItems(this)">SELECTED</a></div>
+                            <div><a id=${inventory.id} class="btn btn-danger" style="width: 100%; color: white;" onclick="appendToSoldItems(this)">Remove</a></div>
                         </div>
                     </div>`);
             }
@@ -248,7 +285,7 @@
             dataType: "JSON",
             success: function(data) {
                 DATA = data;
-                console.log(DATA);
+                // console.log(DATA);
                 DATA.forEach(inventory => {
                     appendInventory(inventory);
                 });
