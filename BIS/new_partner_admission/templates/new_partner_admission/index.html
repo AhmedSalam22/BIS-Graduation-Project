@@ -3,35 +3,41 @@
 {% block title %} New partner admission {% endblock %}
 {% block css %} 
     <link href="{% static 'new_partner_admission/styles.css' %}" rel="stylesheet">
+    <script src="{% static 'new_partner_admission/app.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
-    <h1>Function: Required journal entry for new partner admission</h1>
-
-    <h2>How many partner do you have after the addmission?</h2>
-    <form id="PartnersNumber">
-        Enter the Number:
-        <input type="number" id="inputNumber" name="height" min="2" value="2" max="50">
-        <label for="cars">Choose method:</label>
-        <select id="method" name="method">
-          <option value="Bouns">Bouns</option>
-          <option value="Good will">Good will</option>
-
-        </select>
-        <input type="submit" value="Calculate">
-        
-    </form>
-
-    <p style = "color: red">Note patener 1 is the new Partner</p>
-    <div id="Result">
-        <h2>Result </h2>
+    <h2>How this Work?</h2>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/GHYUnWXOpvk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <div class="header-app" style="background-color: black;color: white;">
+        <h1>Function: Required journal entry for new partner admission</h1>
+        <h2>How many partner do you have after the addmission?</h2>
     </div>
-    <h2>Design Inputs</h2>
- 
+    <div style="background-color: white; color: black;">
+        <form id="PartnersNumber">
+            Enter the Number:
+            <input type="number" id="inputNumber" name="height" min="2" value="2" max="50">
+            <label for="cars">Choose method:</label>
+            <select id="method" name="method">
+              <option value="Bouns">Bouns</option>
+              <option value="Good will">Good will</option>
     
-    <table id="pixelCanvas"></table>
+            </select>
+            <input type="submit" value="Calculate">
+            
+        </form>
+    
+        <p style = "color: red">Note patener 1 is the new Partner</p>
+        <div id="Result">
+            <h2>Result </h2>
+        </div>
+        <h2>Design Inputs</h2>
+     
+        
+        <table id="pixelCanvas"></table>
+    </div>
+    
 
-    
+<hr>
 {% endblock %}
 
-{% block js %} <script src="{% static 'new_partner_admission/app.js' %}"></script> {% endblock %}

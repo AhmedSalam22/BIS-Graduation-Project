@@ -1,27 +1,79 @@
 {% extends "home/base.html" %}
 
 {% block content %}
- <p>
-     {% now "jS F Y H:i" %}
- </p>
- 
-<hr>
- <div class="row row-cols-auto">
-    <div class="col-md-4" style="background-color:#6633ff;">
-        <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
-        <p class="text-center" style="color:#fff;"><br><strong>Sales Dashboard</strong></p>
-        <a href="{% url 'inventory:sales_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+<div>
+    <div class="p-4 p-md-5 mb-4 text-white rounded" style="background-color: royalblue;">
+        <div class="col-md-6 px-0">
+          <h1 class="display-4 fst-italic"><strong>AYBA</strong></h1>
+          <p class="lead my-3">
+              Automate Your Business Activity. 
+              No need for Accounting Expert All you Have To Know The Basic and we well automate the rest for you.
+          </p>
+          <p class="lead mb-0"><a href="{% url 'home:register'%}?next={{ request.path }}" class="text-white fw-bold">Register Now</a></p>
+        </div>
+      </div>
+     <p>
+         {% now "jS F Y H:i" %}
+     </p>
+    
+    <hr>
+     <div class="row row-cols-auto">
+        <div class="col-md-4" style="background-color:#6633ff;">
+            <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+            <p class="text-center" style="color:#fff;"><br><strong>Sales Dashboard</strong></p>
+            <a href="{% url 'inventory:sales_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+        </div>
+        <div class="col-md-4" style="background-color:#3399ff;">
+            <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+            <p class="text-center" style="color:#fff;"><br><strong>Purchases Dashboard</strong></p>
+            <a href="{% url 'inventory:purchases_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+        </div>
+        <div class="col-md-4" style="background-color:#6633ff;">
+            <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+            <p class="text-center" style="color:#fff;"><br><strong>Accounting Dashboard</strong></p>
+            <a href="{% url 'sole_proprietorship:dashboard' %}"><p class="text-center" style="color:#fff;" >Find out more</p></a>
+        </div>
     </div>
-    <div class="col-md-4" style="background-color:#3399ff;">
-        <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
-        <p class="text-center" style="color:#fff;"><br><strong>Purchases Dashboard</strong></p>
-        <a href="{% url 'inventory:purchases_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
-    </div>
-    <div class="col-md-4" style="background-color:#6633ff;">
-        <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
-        <p class="text-center" style="color:#fff;"><br><strong>Accounting Dashboard</strong></p>
-        <a href="{% url 'sole_proprietorship:dashboard' %}"><p class="text-center" style="color:#fff;" >Find out more</p></a>
-    </div>
+    <hr>
+    
+    <div class="row mb-2">
+        <div class="col-md-6">
+          <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative" style="background-color: white;">
+            <div class="col p-4 d-flex flex-column position-static">
+              <strong class="d-inline-block mb-2 text-primary">Partnership</strong>
+              <h3 class="mb-0" style="color: black;">new partner admission</h3>
+              <p class="card-text mb-auto"  style="color: black;">Caculate Required journal entry for new partner admission</p>
+              <a href="{% url 'new_partner_admission:new_partner_admission' %}" class="stretched-link">Continue reading</a>
+            </div>
+            <div class="col-auto d-none d-lg-block">
+              <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
+    
+                <image href="https://porterfieldcpa.com/wp-content/uploads/2019/10/partnership-shaking-hands-b.jpg" height="100%" width="100%"/>
+    
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative" style="background-color: white;">
+              <div class="col p-4 d-flex flex-column position-static">
+                <strong class="d-inline-block mb-2 text-primary">Managerial Accounting</strong>
+                <h3 class="mb-0" style="color: black;">Cost Volume Profit Analysis</h3>
+                <p class="card-text mb-auto"  style="color: black;"></p>
+                <a href="#" class="stretched-link">Continue reading</a>
+              </div>
+              <div class="col-auto d-none d-lg-block">
+                <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
+      
+                  <image href="https://cdn.wallstreetmojo.com/wp-content/uploads/2018/12/Cost-Volume-Profit-Analysis-CVP.png" height="100%" width="100%"/>
+      
+                </svg>
+              </div>
+            </div>
+          </div>
+        
+     
+      </div>
 </div>
-<hr>
+
 {% endblock %}

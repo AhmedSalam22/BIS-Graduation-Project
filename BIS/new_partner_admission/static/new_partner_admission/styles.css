@@ -45,3 +45,8 @@ body {
       
       vertical-align: center;
   }
+
+  .header-app {
+    background-color: black;
+    color: white;
+  }
