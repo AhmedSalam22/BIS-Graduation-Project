@@ -692,7 +692,7 @@ class TransactionUpdateView(LoginRequiredMixin, View):
         formset = TransactionFormSet(instance=transaction)
         return render(request, self.template_name, {'formset': formset, 'helper': self.helper})
 
-
+    @transaction.atomic
     def post(self, request, pk,  *args, **kwargs):
         queryset = Transaction.objects.filter(journal__account__owner=request.user, pk=pk).distinct()
         transaction = get_object_or_404(queryset)

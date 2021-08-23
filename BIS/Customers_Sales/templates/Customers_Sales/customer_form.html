@@ -37,8 +37,11 @@
           {{  forms.cutomer_note_form.media }} 
           <div class="tab-pane fade" id="note" role="tabpanel" aria-labelledby="note-tab">{{ forms.cutomer_note_form|crispy }}</div>
           <br>
-          <button type="submit" class="btn btn-primary">Submit</button>
-      </form>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{{ request.META.HTTP_REFERER}}';return false;">Cancel</button>
+          </div>
+          </form>
 
       </div>
     </div>

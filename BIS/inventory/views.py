@@ -9,7 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.forms import ( PaymentSalesTermForm , PurchaseInventoryForm , InventoryPriceFormset ,
     InventoryPriceFormsetHelper , InventoryReturnForm , PayInvoiceForm  , ReportingPeriodConfigForm,
     PurchaseFilter, InventoryForm, ImageFormest,ImageFormsetHelper, ImageFormSet, InventoryAllowanceForm,
-    SalesForm, SoldItemFormset, SalesReturnForm, SalesAllowaceForm, SalesPaymentForm, SalesFilterForm
+    SalesForm, SoldItemFormset, SalesReturnForm, SalesAllowaceForm, SalesPaymentForm, SalesFilterForm,
+    SalesAllowanceFormSet
 
     )
 from sole_proprietorship.models import Journal, Accounts
@@ -23,7 +24,9 @@ import base64
 from io import BytesIO
 from django.http import HttpResponse, JsonResponse
 from django_filters.views import FilterView
-from inventory.crispy_forms import (PurchaseFilterHelper, InventoryFilterHelper, SalesFormsetHelper)
+from inventory.crispy_forms import (PurchaseFilterHelper, InventoryFilterHelper, SalesFormsetHelper,
+    SalesAllowanceFormSetHelper
+)
 from django.db import transaction
 from inventory.filter_forms import InventoryFilter
 from django.core import serializers
@@ -934,6 +937,30 @@ class FetchInventoryAvailableForSale(LoginRequiredMixin, View):
                     ], safe=False
                 )
 
+
+class UpdateSalesAllowanceView(LoginRequiredMixin, View):
+    template_name = 'inventory/sales_allowance_update.html'
+    helper = SalesAllowanceFormSetHelper()
+    message_success = 'Your Sales Allowance has been updated successfully'
+
+    def get(self, request, sales_pk, *args, **kwargs):
+        queryset = Sale.objects.filter(owner=request.user, pk=sales_pk)
+        sale = get_object_or_404(queryset)
+        formset = SalesAllowanceFormSet(instance=sale)
+        return render(request, self.template_name, {'formset': formset, 'helper': self.helper})
+
+    @transaction.atomic
+    def post(self, request, sales_pk,  *args, **kwargs):
+        queryset = Sale.objects.filter(owner=request.user, pk=sales_pk)
+        sale = get_object_or_404(queryset)
+        formset = SalesAllowanceFormSet(request.POST, instance=sale)
+        if formset.is_valid():
+            formset.save()
+            messages.success(request, self.message_success)
+            return redirect(
+                reverse_lazy('inventory:sale_detail', args=[sales_pk])
+                )
+        return render(request, self.template_name, {'formset': formset, 'helper': self.helper})
 
 class Test(LoginRequiredMixin , View):
 

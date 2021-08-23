@@ -22,7 +22,9 @@ ImageFormSet = inlineformset_factory(
     Inventory, InventoryImag, fields=('img',), extra = 3
     )
 
-
+SalesAllowanceFormSet = inlineformset_factory(
+    Sale, SalesAllowance, fields=('date', 'amount') , extra=1
+    )
 
 class PurchaseFilter(django_filters.FilterSet, DateMixin):
     class Meta:

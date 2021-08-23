@@ -45,7 +45,8 @@ urlpatterns = [
     path('test' , views.Test.as_view() , name="test"),
     path('pos', views.POSView.as_view(), name='pos'),
     path('inventory_available_for_sale', views.FetchInventoryAvailableForSale.as_view(), name='inventory_available_for_sale'),
-    path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table")
+    path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table"),
+    path('sales_allowance_update/<int:sales_pk>', views.UpdateSalesAllowanceView.as_view(), name='sales_allowance_update' ),
 
 
 ]

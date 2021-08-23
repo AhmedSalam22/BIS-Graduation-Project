@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
     {% with total_amount_paid=sale.total_amount_paid paid=sale.paid  sales_return_amount=sale.sales_return net_sales=sale.net_sales allowance=sale.allowance %}
-    <div class="d-grid gap-2 col-6 mx-auto">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
         <button class="btn btn-light" type="button" onclick="printMe()"><i class="far fa-file-pdf"> PDF</i></button>
         <button class="btn btn-light" type="button"><i class="far fa-file-excel"> Excel</i></button>
         {% if paid == False %}
@@ -73,6 +73,11 @@
                                         <tr>
                                             <td>Allowance</td>
                                             <td class="p-0 m-0 p-1 text-danger"><strong>{{ sale.sales_allowance }}</strong></td>
+                                            <td>  
+                                                <a href="{% url 'inventory:sales_allowance_update' sale.id %}">
+                                                <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                                </a>
+                                            </td>
                                         </tr>
                                     {% endif %}
                                     {% if sales_return_amount > 0 %}

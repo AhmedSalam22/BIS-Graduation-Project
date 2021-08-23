@@ -921,7 +921,13 @@ class Sale(DueDateMixin, models.Model):
     @cached_property
     def total_amount_paid(self):
         query = self.salespayment_set.aggregate(Sum('amount'))
-        return query['amount__sum'] if query['amount__sum'] != None else 0
+        if query['amount__sum'] != None:
+            return query['amount__sum']
+        else:
+            if self.term.terms == PaymentSalesTerm.Term.CASH.value:
+                return self.net_sales
+            else:
+                return 0
 
     @cached_property
     def first_payment(self) -> bool:

@@ -58,3 +58,16 @@ class SalesFormsetHelper(FormHelper):
             Div(Row(Column('item') , Column('sale_price') , Column('quantity') ) , css_class="link-formset" )
         )
         self.form_tag = False
+
+
+                                     
+class SalesAllowanceFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout = Layout(
+           Div(
+                Row(Column('date'), Column('amount', 'DELETE') ),
+           )
+        )
+        self.render_required_fields = True
+        self.form_tag = False

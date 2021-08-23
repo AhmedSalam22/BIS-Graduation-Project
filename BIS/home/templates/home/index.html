@@ -4,4 +4,24 @@
  <p>
      {% now "jS F Y H:i" %}
  </p>
+ 
+<hr>
+ <div class="row row-cols-auto">
+    <div class="col-md-4" style="background-color:#6633ff;">
+        <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+        <p class="text-center" style="color:#fff;"><br><strong>Sales Dashboard</strong></p>
+        <a href="{% url 'inventory:sales_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+    </div>
+    <div class="col-md-4" style="background-color:#3399ff;">
+        <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+        <p class="text-center" style="color:#fff;"><br><strong>Purchases Dashboard</strong></p>
+        <a href="{% url 'inventory:purchases_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+    </div>
+    <div class="col-md-4" style="background-color:#6633ff;">
+        <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+        <p class="text-center" style="color:#fff;"><br><strong>Accounting Dashboard</strong></p>
+        <a href="{% url 'sole_proprietorship:dashboard' %}"><p class="text-center" style="color:#fff;" >Find out more</p></a>
+    </div>
+</div>
+<hr>
 {% endblock %}

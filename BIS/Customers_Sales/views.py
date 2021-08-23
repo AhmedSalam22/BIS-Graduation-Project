@@ -78,7 +78,8 @@ class Home(LoginRequiredMixin, TemplateView):
 class CustomerListView(LoginRequiredMixin, ListView):
     template_name = 'Customers_Sales/customer_list.html'
     model = Customer
-
+    paginate_by = 20
+    ordering  = ['-id']
 
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset().filter(

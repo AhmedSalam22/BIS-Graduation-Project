@@ -1,32 +1,22 @@
 {% extends "home/base.html" %}
-
+{% block title %} Update Trandaction{% endblock %}
 {% block content %}
-
 <div class="card shadow">
     <div class="card-header py-3">
-        <p class="text-primary m-0 font-weight-bold"> {% block cardheader %}{% endblock %}</p>
+        <p class="text-primary m-0 font-weight-bold">update transaction </p>
     </div>
     <div class="card-body">
-    {% block delete %} {% endblock %}
         <div >
           {% load crispy_forms_tags %}  
           <form action="" method="post">
-          {% csrf_token %}
-          {% block formblock %}
-            {{ form|crispy }}
-          {% endblock %}
-          <hr>
-          <div class="d-grid gap-2">
+            {% csrf_token %}
+            {% crispy formset helper %}
             <button type="submit" class="btn btn-primary">Submit</button>
             <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{{ request.META.HTTP_REFERER}}';return false;">Cancel</button>
-          </div>
           </form>
       </diV>
     </div>
 </div>
-
-  {% block js %}
-
-  {% endblock %}
-
 {% endblock %}
+
+
