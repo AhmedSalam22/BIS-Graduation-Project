@@ -81,7 +81,7 @@ def prepare_finacial_statement(df):
 class ConfigRequiredMixin:
      def dispatch(self, request, *args, **kwargs):
         if not hasattr(request.user, 'fs_reporting_period'):
-            messages.info(request , "it's look its is your first time.Please Complete the Reporting setting first before continue")
+            messages.info(request , "“It looks like it’s your first time. Please complete the Report setting first before continuing")
             return redirect(reverse("sole_proprietorship:ReportingPeriodConfig"))
         return super().dispatch(request, *args, **kwargs)
 
@@ -96,7 +96,7 @@ class AccountsListView(ListView):
         return qs.filter(owner=self.request.user).values('account', 'normal_balance', 'account_type', 'id')
 
 
-class AccountsCreateView(OwnerCreateView):
+class AccountsCreateView(LoginRequiredMixin, CreateView):
     template_name = 'sole_proprietorship/accounts_form.html'
     form_class = AccountsForm
     
@@ -105,11 +105,25 @@ class AccountsCreateView(OwnerCreateView):
         kwargs['user'] = self.request.user # pass the 'user' in kwargs
         return kwargs 
 
+    def form_valid(self, form):
+        """If the form is valid, save the associated model."""
+        self.object = form.save(commit=False)
+        self.object .owner = self.request.user
+        self.object.save()
+        messages.success(self.request, 'Your account has been created.')
+
+        return super().form_valid(form)
 
 
 class AccountsUpdateView(OwnerUpdateView):
     model = Accounts
-    fields = ['account', 'normal_balance' , 'account_type']
+    fields = ('account', 'normal_balance', 'account_type', 'classification')
+
+    def form_valid(self, form):
+        """If the form is valid, save the associated model."""
+        self.object = form.save()
+        messages.success(self.request, 'Account has been updated.')
+        return super().form_valid(form)
 
 class AccountsDeleteView(OwnerDeleteView):
     model = Accounts
@@ -174,7 +188,7 @@ class ExportTrsanctionView(LoginRequiredMixin, View):
                 )  for transaction in queryset for journal in transaction.journal_set.all() 
             ),
         content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="journal{}.csv"'.format(timezone.now())
+        response['Content-Disposition'] = 'attachment; filename="journal{}.csv"'.format(timezone.now().isoformat())
         return response
 
 
@@ -854,3 +868,8 @@ class FetchAccounts(LoginRequiredMixin, View):
                     ], safe=False
                 )
 
+class FinancialAnalysisView(LoginRequiredMixin, View):
+    template_name = 'sole_proprietorship/financial_analysis.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)

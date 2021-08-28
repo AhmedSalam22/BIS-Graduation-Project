@@ -1,0 +1,66 @@
+{% extends "sole_proprietorship/index.html" %}
+
+{% block css%}
+<style>
+    table thead tr th {
+        background-color: #1085fa !important;
+        text-align: center;
+        color: white;
+    }
+
+    table tbody tr {
+        font-weight: bold;
+        color: black;
+    }
+</style>
+{% endblock %}
+
+{% block content%}
+{% include "sole_proprietorship/reporting_header_base.html" %}
+
+ <h3 class="text-dark mb-0">Finacial Analysis</h3>
+ <div class="card shadow">
+    <div class="card-body">
+        <table class="dataframe table table-hover table-borderless">
+            <thead>
+                <tr>
+                    <th colspan="3">The ratios of profitability analysis</th>
+                </tr>
+                <tr>
+                    <th>Ratio</th>
+                    <th>Result</th>
+                    <th>Explanation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Net Profit Margin or rate / return on sales</td>
+                    <td>Result</td>
+                    <td>This ratio measures the net profit achieved by each pound of net sales.</td>
+                </tr>
+                <tr>
+                    <td>Gross Profit margin</td>
+                    <td>Result</td>
+                    <td>Measures the gross profit achieved by each by each bound of net sales</td>
+                </tr>
+                <tr>
+                    <td>Total asset turnover</td>
+                    <td>Result</td>
+                    <td>Measures the ability of the firm to generate net sales through the active use of assets in different operations of the firm.</td>
+                </tr>
+                <tr>
+                    <td>Rate of return on assets/ Return on Investment</td>
+                    <td>Result</td>
+                    <td>Measures net profit achieved by each pound of total assets</td>
+                </tr>
+                <tr>
+                    <td>Rate of return on total equity</td>
+                    <td>Result</td>
+                    <td>Measures the ability of Owner's equity to generate net profit</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -19,7 +19,7 @@ class Register(View):
             user = form.save()
             # using django builtin sesesion to enable user login automatically after the sighn up successfuly
             login(request, user)
-            messages.success(request, 'your account has been created successfully you are  now log in')
+            messages.success(request, 'your account has been created successfully you are now logged in')
             return redirect(reverse_lazy("home:home"))
         return render(request, "registration/register.html", {"form":form})
 

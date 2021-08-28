@@ -1,5 +1,14 @@
 {% extends "sole_proprietorship/index.html" %}
 {% load static%}
+
+{% block css %}
+<style>
+    th {
+        position: sticky;
+        top: 0;
+    }
+</style>
+{% endblock %}
 {% block content %}
 <div class="card">
     <div class="card-body">
@@ -16,9 +25,9 @@
     <div class="spinner row">
 
     </div>
-    <div style="overflow-x:auto; height: 900px;">
+    <div style="overflow-x:auto; height: 800px;">
         <table class="table table-hover table-borderless datatable">
-            <thead class="table-dark" style="position: sticky;">
+            <thead class="table-dark">
                 <tr>
                     <th colspan="5" style="text-align: center;" id="account"> </th>
                 </tr>

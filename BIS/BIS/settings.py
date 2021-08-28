@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     # my_app
     'home.apps.HomeConfig',
     'home.apps.AdminConfig',
+    'django.contrib.admindocs',
     'projects',
     'sole_proprietorship.apps.SoleProprietorshipConfig',
     'new_partner_admission', 
@@ -75,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'django.contrib.admindocs.middleware.XViewMiddleware',
     
 
 ]

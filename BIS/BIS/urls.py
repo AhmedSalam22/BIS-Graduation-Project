@@ -20,6 +20,7 @@ from django.conf.urls.static import static
 import debug_toolbar
 # from home.views import my_custom_page_not_found_view
 urlpatterns = [
+    path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('__debug__' , include(debug_toolbar.urls)),
     path("" , include("home.urls")) , 

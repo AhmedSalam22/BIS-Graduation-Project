@@ -1,6 +1,7 @@
 
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 
 class OwnerListView(LoginRequiredMixin,ListView):
     """
@@ -21,6 +22,8 @@ class OwnerCreateView(LoginRequiredMixin, CreateView):
         object = form.save(commit=False)
         object.owner = self.request.user
         object.save()
+        messages.success(self.request, 'Done.')
+
         return super(OwnerCreateView, self).form_valid(form)
 
 class OwnerUpdateView(LoginRequiredMixin, UpdateView):
