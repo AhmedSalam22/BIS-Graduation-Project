@@ -1,4 +1,89 @@
 from django.db import models, connection
+import pandas as pd
+
+class FinancialAnalysis(models.Manager):
+    SQL = """
+            SELECT   account_type , account, classification, sum(helper) as balance, sum(current_period) as current_period,
+                sum(previous_period) as previous_period
+                FROM (
+                    SELECT 
+                            a.classification,
+                            a.account_type , a.account  , a.normal_balance ,
+                            t.date,
+                            CASE
+                                WHEN j.transaction_type = a.normal_balance Then  j.balance
+                                ELSE ( -1 * j.balance)
+                            END as helper,
+                            CASE
+                                WHEN t.date >= %s AND  j.transaction_type = a.normal_balance Then  j.balance
+                                WHEN t.date >= %s  AND j.transaction_type <> a.normal_balance Then  ( -1 * j.balance)
+                            END as current_period,
+                            CASE
+                                WHEN t.date < %s AND  j.transaction_type = a.normal_balance Then  j.balance
+                                WHEN t.date < %s  AND j.transaction_type <> a.normal_balance Then  ( -1 * j.balance)
+                            END as previous_period
+                        FROM sole_proprietorship_journal as j
+                        JOIN sole_proprietorship_accounts as a
+                        on j.account_id = a.id
+                        JOIN sole_proprietorship_transaction as t
+                        ON j.transaction_id = t.id
+                        where a.owner_id = %s  AND t.date <= %s ) as temp_table
+                GROUP by account_type , account, classification
+                ORDER by balance DESC
+    """
+
+    def data_frame(self, owner):
+        with connection.cursor() as cursor:
+            cursor.execute(self.SQL, [
+                owner.fs_reporting_period.start_date,
+                owner.fs_reporting_period.start_date,
+                owner.fs_reporting_period.start_date,
+                owner.fs_reporting_period.start_date,
+                owner.id,
+                owner.fs_reporting_period.end_date
+            ])
+            df = pd.DataFrame(cursor.fetchall() , columns=['account_type',	'account',	'classification',	'balance',	'current_period',	'previous_period'])
+        return df
+
+    def analysis(self, owner):
+        data = {}
+        df = self.data_frame(owner)
+
+        net_sales = df.query('classification == "Sales"')['balance'].sum() - df.query('classification == "Revenue-Contra"')['balance'].sum()
+        gross_profit = net_sales - df.query('classification == "COGS"')['balance'].sum()
+        operating_income = gross_profit - df.query('classification == "Operating Expense"')['balance'].sum()
+        net_income = operating_income + df.query('classification == "Other Revenue and gains"')['balance'].sum() - df.query('classification == "Other Expenses And Losses"')['balance'].sum()
+        avg_total_assets = (df.query('account_type == "Assest"')['previous_period'].sum() + df.query('account_type == "Assest"')['balance'].sum()) / 2
+        beg_equity = (
+            df.query('account_type == "Investment"')['previous_period'].sum()  +
+            df.query('account_type == "Revenue"')['previous_period'].sum()  -
+            df.query('account_type == "Expenses"')['previous_period'].sum() -
+            df.query('account_type == "Drawings"')['previous_period'].sum()
+        )
+
+        end_equity = (
+            df.query('account_type == "Investment"')['balance'].sum()  +
+            df.query('account_type == "Revenue"')['balance'].sum()  -
+            df.query('account_type == "Expenses"')['balance'].sum() -
+            df.query('account_type == "Drawings"')['balance'].sum()
+        )
+        
+        avg_total_equity = (beg_equity + end_equity) / 2
+
+        data['net_profit_margin'] = ( net_income / net_sales ) if net_sales != 0 else 0
+        data['gross_profit_margin'] = ( gross_profit / net_sales ) if net_sales != 0 else 0
+        data['total_assets_turnover'] = ( net_sales / avg_total_assets ) if avg_total_assets != 0 else 0
+        data['rate_of_return_on_assets'] = ( net_income / avg_total_assets ) if avg_total_assets != 0 else 0
+        data['rate_of_return_on_total_equity'] = ( net_income / avg_total_equity ) if avg_total_equity != 0 else 0
+
+
+
+        #convert data into percentages %
+        for key, value in data.items():
+            data[key] = round(value * 100, 2)
+
+
+        return data
 
 class AccountManager(models.Manager):
     def beginning_balance(self, owner_id, end_date, account):

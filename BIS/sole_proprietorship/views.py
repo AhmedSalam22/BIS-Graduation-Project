@@ -87,7 +87,7 @@ class ConfigRequiredMixin:
 
 
 
-class AccountsListView(ListView):
+class AccountsListView(LoginRequiredMixin, ListView):
     # paginate_by = 10
     model = Accounts
 
@@ -108,7 +108,7 @@ class AccountsCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         """If the form is valid, save the associated model."""
         self.object = form.save(commit=False)
-        self.object .owner = self.request.user
+        self.object.owner = self.request.user
         self.object.save()
         messages.success(self.request, 'Your account has been created.')
 
@@ -868,8 +868,9 @@ class FetchAccounts(LoginRequiredMixin, View):
                     ], safe=False
                 )
 
-class FinancialAnalysisView(LoginRequiredMixin, View):
+class FinancialAnalysisView(LoginRequiredMixin, ConfigRequiredMixin, View):
     template_name = 'sole_proprietorship/financial_analysis.html'
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
+        ctx = Accounts.financial.analysis(request.user)
+        return render(request, self.template_name, ctx)

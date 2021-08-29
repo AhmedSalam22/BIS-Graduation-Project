@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
-from sole_proprietorship.managers import TransactionManager, AccountManager
+from sole_proprietorship.managers import TransactionManager, AccountManager, FinancialAnalysis
 from inventory.helper import Helper
 from django.db.models import Q 
 from datetime import timedelta
@@ -525,6 +525,7 @@ class Accounts(models.Model):
 
     objects = models.Manager() # The default manager.
     my_objects = AccountManager()
+    financial = FinancialAnalysis()
 
     def __str__(self):
         return self.account
