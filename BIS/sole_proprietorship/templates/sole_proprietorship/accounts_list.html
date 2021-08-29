@@ -25,7 +25,9 @@
                             <th>Account</th>
                             <th>Normal Balance</th>
                             <th>Account Type</th>
+                            <th>Classification</th>
                             <th>Action</th>
+                            
 
                         </tr>
                     </thead>
@@ -34,9 +36,10 @@
                             {% if accounts_list %}
                             {% for accounts in accounts_list %}
                             <tr>
-                            <td><strong>{{ accounts.account}}</strong></td>
-                            <td><strong>{{ accounts.normal_balance}}</strong></td>
-                            <td><strong>{{ accounts.account_type}}</strong></td>
+                            <td><strong>{{ accounts.account }}</strong></td>
+                            <td><strong>{{ accounts.normal_balance }}</strong></td>
+                            <td><strong>{{ accounts.account_type }}</strong></td>
+                            <td><strong>{{ accounts.classification|default:" " }}</strong></td>
                             <td>
                                 <a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">
                                     <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>

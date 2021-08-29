@@ -69,18 +69,39 @@ class FinancialAnalysis(models.Manager):
         )
         
         avg_total_equity = (beg_equity + end_equity) / 2
+        current_assets_q = """
+        classification == "Current Assets" or classification == "Cash" or classification == "Marketable securities or short-term investments" \
+        or classification == "Receivable" or classification == "Inventory" or classification == "prepaids"
+        """
+        current_assets = df.query(current_assets_q)['balance'].sum()
+        current_liability = df.query('classification == "Current liabilities" ')['balance'].sum()
+
 
         data['net_profit_margin'] = ( net_income / net_sales ) if net_sales != 0 else 0
         data['gross_profit_margin'] = ( gross_profit / net_sales ) if net_sales != 0 else 0
         data['total_assets_turnover'] = ( net_sales / avg_total_assets ) if avg_total_assets != 0 else 0
         data['rate_of_return_on_assets'] = ( net_income / avg_total_assets ) if avg_total_assets != 0 else 0
         data['rate_of_return_on_total_equity'] = ( net_income / avg_total_equity ) if avg_total_equity != 0 else 0
-
-
-
+        
         #convert data into percentages %
         for key, value in data.items():
             data[key] = round(value * 100, 2)
+            
+        data['current_ratio'] =  ( current_assets / current_liability ) if current_liability != 0 else 0
+        data['acid_test_ratio'] = (
+            df.query('classification == "Cash" or classification == "Marketable securities or short-term investments" or classification == "Receivable"')['balance'].sum() /
+            current_liability
+            ) if current_liability != 0 else 0
+        data['quick_ratio'] = (
+            (current_assets - (df.query('classification == "Inventory" or classification == "prepaids"')['balance'].sum())) / current_liability
+            ) if current_liability != 0 else 0
+
+        data['cash_ratio'] = (
+            df.query('classification == "Cash" or classification == "Marketable securities or short-term investments" ')['balance'].sum() /
+            current_liability
+            ) if current_liability != 0 else 0
+
+
 
 
         return data

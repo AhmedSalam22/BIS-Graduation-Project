@@ -444,32 +444,26 @@ class Accounts(models.Model):
 
         ]
 
-    # class Classification(models.TextChoices):
-        # CURRENT_LIABILITY = 'CL', _('Current Liability')
-        # LONG_TERM_LIABILITY = 'LTL', _('Long-Term Liability')
-        # LONG_TERM_LIABILITY_CONTRA = 'LTLC', _('Long-Term Liability-Contra')
-
-        # CURRENT_ASSET = 'CA', _('Current Asset')
-        # CURRENT_ASSET_CONTRA = 'CAC', _('Current Asset-Contra')
-        # LONG_TERM_INVESTMENT = 'LTI', _('Long Term investmen')
-        # PLANT_ASSET = 'PA', _('Plant Asset')
-        # PLANT_ASSET_CONTRA = 'PAC', _('Plant Asset-Contra')
-
-        # INTANGIBLE_ASSET = 'IA', _('Intangible Asset')
-        # STOCKHOLDERS_EQUITY = 'SE', _("Stockholder's equity")
-        # STOCKHOLDERS_EQUITY_CONTRA = 'SEC', _("Stockholder's equity-Contra")
-        # TEMPORARY_ACCOUNT_CLOSED_TO_RETAINED_EARNINGS = 'TACTRE', _('Temorary account closed to retained earnings')   
-        # TEMPORARY_ACCOUNT_CLOSED_TO_OWNERS_CAPITA = 'TACTOC', _('Temorary account closed to OWners Capital')   
-        # INCOME_TAX_EXPENSE = 'ITE', _('Income Tax Expense')
-
-        # SALES = 'Sales', _('Sales')
-        # REVENUE_CONTRA = 'Revenue-Contra', _('Revenue-Contra')
-        # COST_OF_GOODS_SOLD = 'COGS', _('Cost of Goods Sold')
-        # OPERATING_EXPENSE = 'Operating Expense', _('Operating Expense')
-        # OTHER_REVENUE_GAINS = 'Other Revenue and gains', _('Other Revenue and gains')
-        # OTHER_EXPENSES_LOSSES = 'Other Expenses And Losses', _('Other Expenses And Losses')
       
     CLASSIFICATION_CHOICES = [
+        ('Current Assets', (
+                ('Current Assets', 'Current Assets'),
+                ('Cash', 'Cash'),
+                ('Marketable securities or short-term investments', 'Marketable securities or short-term investments'),
+                ('Receivable', 'Receivable'),
+                ('Inventory', 'Inventory'),
+                ('prepaids', 'prepaids')
+
+            )
+        ),
+        ('Property, plant, and equipment', 'Property, plant, and equipment'),
+        ('Intangible assets', 'Intangible assets'),
+        ('Long-term investments', 'Long-term investments'),
+        ('Contra Assets', 'Contra Assets'),
+        ('Liabilities', (
+            ('Current liabilities', 'Current liabilities'),
+            ('Long-term liabilities', 'Long-term liabilities')
+        )),
         ('Revenue', (
                 ('Sales', 'Sales'),
                 ('Other Revenue and gains', 'Other Revenue and gains')
@@ -484,13 +478,6 @@ class Accounts(models.Model):
         )
     ]
         
-
-
-
-
-
-
-
     # account , Type , Normal Balance 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     account = models.CharField(max_length = 250)

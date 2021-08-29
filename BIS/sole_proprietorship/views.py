@@ -93,7 +93,7 @@ class AccountsListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        return qs.filter(owner=self.request.user).values('account', 'normal_balance', 'account_type', 'id')
+        return qs.filter(owner=self.request.user).values('account', 'normal_balance', 'account_type', 'id', 'classification')
 
 
 class AccountsCreateView(LoginRequiredMixin, CreateView):
@@ -870,7 +870,13 @@ class FetchAccounts(LoginRequiredMixin, View):
 
 class FinancialAnalysisView(LoginRequiredMixin, ConfigRequiredMixin, View):
     template_name = 'sole_proprietorship/financial_analysis.html'
-
+    message_warning = """
+    In oder to use this feature you should complete all fields for classification on Account table
+    """
+    
     def get(self, request, *args, **kwargs):
+        if Accounts.objects.filter(owner = request.user, classification__isnull = True).count()  > 0:
+            messages.warning(request, self.message_warning)
+
         ctx = Accounts.financial.analysis(request.user)
         return render(request, self.template_name, ctx)
