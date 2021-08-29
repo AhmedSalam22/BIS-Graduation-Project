@@ -18,13 +18,49 @@
 {% block content%}
 {% include "sole_proprietorship/reporting_header_base.html" %}
 
- <h3 class="text-dark mb-0">Finacial Analysis</h3>
- <div class="card shadow">
-    <div class="card-body">
-        {% include "sole_proprietorship/profitability_analysis.html" %}
-        {% include "sole_proprietorship/liquidity_analysis.html" %}
 
+<div class="card">
+    <div class="card-header">Finacial Analysis</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-3">
+                <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active" id="v-pills-profitability-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profitability" type="button" role="tab" aria-controls="v-pills-v-pills-profitability" aria-selected="true">Profitability Analysis</button>
+                    <button class="nav-link" id="v-pills-liquidity-tab" data-bs-toggle="pill" data-bs-target="#v-pills-liquidity" type="button" role="tab" aria-controls="v-pills-liquidity" aria-selected="false">Liquidity Analysis</button>
+                    
+                </div>
+            </div>
+              
+            <div class="col-9">
+                <div class="tab-content" id="v-pills-tabContent">
+                    <div class="tab-pane fade show active" id="v-pills-profitability" role="tabpanel" aria-labelledby="v-pills-profitability-tab">
+                        {% include "sole_proprietorship/profitability_analysis.html" %}
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-liquidity" role="tabpanel" aria-labelledby="v-pills-liquidity-tab">
+                        {% include "sole_proprietorship/liquidity_analysis.html" %}  
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
+              
+            
+
+
+
 {% endblock %}
+{% block footer %}
+<script>
+    $(".nav-link").click(function() {
+        $(".nav-link").removeClass('active');
+    $(this).addClass('active');
+        $('.tab-pane.fade').removeClass('show active');
+    $($(this).attr('data-bs-target')).addClass('show active');
+    });
+</script>
+{% endblock %}
+
+

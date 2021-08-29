@@ -879,4 +879,7 @@ class FinancialAnalysisView(LoginRequiredMixin, ConfigRequiredMixin, View):
             messages.warning(request, self.message_warning)
 
         ctx = Accounts.financial.analysis(request.user)
+        ctx['start_date'] = request.user.fs_reporting_period.start_date
+        ctx['end_date'] = request.user.fs_reporting_period.end_date
+        
         return render(request, self.template_name, ctx)
