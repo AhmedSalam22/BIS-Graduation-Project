@@ -406,8 +406,8 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
         cash_outflow = cash_flow.query('cash_flow == "Cash Outflow"')
 
         cash_flow_fig = go.Figure(data=[
-            go.Bar(name='Cash Inflow', x=cash_inflow['year_month'], y=[20, 14, 23]),
-            go.Bar(name='Cash Outflow', x=cash_outflow['year_month'], y=[12, 18, 29])
+            go.Bar(name='Cash Inflow', x=cash_inflow['year_month'], y=cash_inflow['balance']),
+            go.Bar(name='Cash Outflow', x=cash_outflow['year_month'], y=cash_outflow['balance'])
         ])
         # Change the bar mode
         cash_flow_fig.update_layout(barmode='group', title_text='Cash Flow')
