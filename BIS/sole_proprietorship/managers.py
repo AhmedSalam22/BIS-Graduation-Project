@@ -76,7 +76,10 @@ class FinancialAnalysis(models.Manager):
         current_assets = df.query(current_assets_q)['balance'].sum()
         current_liability = df.query('classification == "Current liabilities" ')['balance'].sum()
 
+        avg_inventory = (df.query('classification == "Inventory"')['previous_period'].sum() + df.query('classification == "Inventory"')['balance'].sum()) / 2
 
+
+        #profitability analysis
         data['net_profit_margin'] = ( net_income / net_sales ) if net_sales != 0 else 0
         data['gross_profit_margin'] = ( gross_profit / net_sales ) if net_sales != 0 else 0
         data['total_assets_turnover'] = ( net_sales / avg_total_assets ) if avg_total_assets != 0 else 0
@@ -87,6 +90,7 @@ class FinancialAnalysis(models.Manager):
         for key, value in data.items():
             data[key] = round(value * 100, 2)
             
+        #liquidiy analysis
         data['current_ratio'] =  ( current_assets / current_liability ) if current_liability != 0 else 0
         data['acid_test_ratio'] = (
             df.query('classification == "Cash" or classification == "Marketable securities or short-term investments" or classification == "Receivable"')['balance'].sum() /
@@ -101,7 +105,10 @@ class FinancialAnalysis(models.Manager):
             current_liability
             ) if current_liability != 0 else 0
 
-
+        
+        #operating cycle
+        data['inventory_turnover_in_times'] =  (df.query('classification == "COGS"')['balance'].sum() / avg_inventory ) if avg_inventory != 0 else 0
+        data['inventory_turnover_in_days'] = (365 / data['inventory_turnover_in_times']) if data['inventory_turnover_in_times'] != 0 else 0
 
 
         return data
@@ -228,6 +235,30 @@ class AccountManager(models.Manager):
             data = cursor.fetchall()
         return data
 
+    def cash_flow(self, owner):
+        with connection.cursor() as cursor:
+            cursor.execute(""" 
+               SELECT 
+                    CASE
+                        WHEN j.transaction_type = a.normal_balance Then 'Cash Inflow'
+                        ELSE ('Cash Outflow')
+                    END as cash_flow,
+                    to_char(t.date, 'yyyy-Month') as "year_month",
+                    to_char(t.date, 'mm')::integer as "month_num",
+                    SUM(j.balance)as balance
+                FROM sole_proprietorship_journal as j
+                JOIN sole_proprietorship_accounts as a
+                on j.account_id = a.id
+                JOIN sole_proprietorship_transaction as t
+                ON j.transaction_id = t.id
+                where  a.owner_id = %s  AND t.date >= %s AND t.date <= %s   and a.classification = 'Cash'
+                GROUP BY   cash_flow, "month_num", "year_month"
+                ORDER BY "month_num"
+                                                    """ , [owner.id,
+                                                            owner.fs_reporting_period.start_date,
+                                                            owner.fs_reporting_period.end_date])
+            df = pd.DataFrame(cursor.fetchall(), columns=['cash_flow', 'year_month','month_num', 'balance'])
+        return df
 
 class TransactionManager(models.Manager):
     def total_debit_and_total_credit(self, owner_id, end_date=None):

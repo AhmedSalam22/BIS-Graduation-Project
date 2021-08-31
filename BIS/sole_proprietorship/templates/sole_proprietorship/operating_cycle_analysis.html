@@ -1,0 +1,41 @@
+<table class="dataframe table  table-borderless">
+    <thead>
+        <tr>
+            <th colspan="3">The ratios of operating cycle</th>
+        </tr>
+        <tr>
+            <th>Ratio</th>
+            <th>Result </th>
+            <th>Explanation</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Inventory turnover in times</td>
+            <td>{{ inventory_turnover_in_times|floatformat:2 }}</td>
+            <td>This ratio indicates how many times per year the inventory converted to Acc. Rec..</td>
+        </tr>
+        <tr>
+            <td>Inventory turnover in days</td>
+            <td>{{ inventory_turnover_in_days|floatformat:2}}</td>
+            <td>measures the length of time that it will take to use up the inventory through sales</td>
+        </tr>
+        <tr>
+            <td>Acc. Rec. turnover in times</td>
+            <td>result</td>
+            <td>indicates how many times per year the acc. rec. converted to Liquidity (cash)</td>
+        </tr>
+        <tr>
+            <td>Acc. Rec. turnover in days</td>
+            <td>result</td>
+            <td>measures the length of time which is required to convert the acc. rec. into cash (Liquidity)</td>
+        </tr>
+        <tr>
+            <td>Operating Cycle</td>
+            <td>result</td>
+            <td>This ratio is estimated the days required to realize cash from inventory</td>
+        </tr>
+        
+        
+    </tbody>
+</table>

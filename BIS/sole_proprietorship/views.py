@@ -315,7 +315,7 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
         ctx = {
             'data': query ,
             'Total_Debit' :total_debit ,
-            'Total_Credit' : total_credit , 
+            'Total_Credit' : total_credit 
         }
         # dic acumulation to get the blance for oue expanded account equation (Assest = Liabilities + revenues - Expenses + investment - Drawings )
         for var in query:
@@ -399,13 +399,21 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
         fig3.update_layout(title_text='accounts type')
         # accounts_fig = plotly.offline.plot(fig3, auto_open = False, output_type="div")
         accounts_fig =  fig3.to_html(full_html=False, include_plotlyjs=False)
-   
+
+        #cash_flow
+        cash_flow = Accounts.my_objects.cash_flow(owner)
+        cash_inflow = cash_flow.query('cash_flow == "Cash Inflow"')
+        cash_outflow = cash_flow.query('cash_flow == "Cash Outflow"')
+
+        cash_flow_fig = go.Figure(data=[
+            go.Bar(name='Cash Inflow', x=cash_inflow['year_month'], y=[20, 14, 23]),
+            go.Bar(name='Cash Outflow', x=cash_outflow['year_month'], y=[12, 18, 29])
+        ])
+        # Change the bar mode
+        cash_flow_fig.update_layout(barmode='group', title_text='Cash Flow')
+        cash_flow_fig =  cash_flow_fig.to_html(full_html=False, include_plotlyjs=False)
 
         account_form = AccountForm(user=owner)
-        # q2 = data.query("account_id == '{}' ".format(request.GET.get("account") , None))
-        # line_fig = px.line(q2, x="date", y="balance_negative")
-        # line_fig = plotly.offline.plot(line_fig, auto_open = False, output_type="div")
-        # print(' line chart', timezone.now() - start )
 
         ctx = {
             "total_transaction" : total_transaction , 
@@ -416,9 +424,9 @@ class Dashboard(LoginRequiredMixin,ConfigRequiredMixin, View):
             "equity" : equity  , 
             "accounts_fig" : accounts_fig , 
             "account_form" : account_form ,
-            # "line_fig": line_fig , 
             "start_date": request.user.fs_reporting_period.start_date,
             "end_date": request.user.fs_reporting_period.end_date,
+            "cash_flow_fig": cash_flow_fig
         }
 
         return render(request , "sole_proprietorship/dashboard.html"  , ctx)

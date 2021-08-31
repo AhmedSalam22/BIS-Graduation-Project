@@ -41,7 +41,9 @@
                     <button class="nav-link" id="v-pills-income_statement-tab" data-bs-toggle="pill" data-bs-target="#v-pills-income_statement" type="button" role="tab" aria-controls="v-pills-income_statement" aria-selected="false">Income Statement</button>
                     <button class="nav-link" id="v-pills-equity_statement-tab" data-bs-toggle="pill" data-bs-target="#v-pills-equity_statement" type="button" role="tab" aria-controls="v-pills-equity_statement" aria-selected="false">Equity Statement</button>
                     <button class="nav-link" id="v-pills-balance_sheet-tab" data-bs-toggle="pill" data-bs-target="#v-pills-balance_sheet" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">Balance Sheet</button>
-                  </div>
+                    <button class="nav-link" id="v-pills-cash-flow-tab" data-bs-toggle="pill" data-bs-target="#v-pills-cash-flow" type="button" role="tab" aria-controls="v-pills-cash-flow" aria-selected="false">Cash Flow Statement</button>
+  
+                </div>
             </div>
               
             <div class="col-9">
@@ -59,8 +61,9 @@
                     </div>
                     <div class="tab-pane fade" id="v-pills-balance_sheet" role="tabpanel" aria-labelledby="v-pills-balance_sheet-tab">
                         {% include "sole_proprietorship/balance_sheet.html" %}
-
-
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-cash-flow" role="tabpanel" aria-labelledby="v-pills-cash-flow-tab">
+                        {% include "sole_proprietorship/cash_flow_statement.html" %}
                     </div>
                  </div>
             </div>
