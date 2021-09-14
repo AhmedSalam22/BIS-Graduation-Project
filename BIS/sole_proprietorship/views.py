@@ -489,13 +489,35 @@ class ViewPDF(FinancialStatements):
 class TransactionsPDFView(LoginRequiredMixin, View):
     template_name = 'sole_proprietorship/transaction_pdf.html'
 
+    @property
+    def report_header(self):
+        header = {
+            'start_date': None,
+            'end_date' : None
+        }
+
+        if self.request.session.get('export_journal'):
+            if self.request.session.get('export_journal', {}).get('date__gte'):
+                header['start_date'] = self.request.session.get('export_journal').get('date__gte')
+            else:
+                header['start_date'] = self.request.user.fs_reporting_period.start_date
+
+            if self.request.session.get('export_journal', {}).get('date__lte'):
+                header['end_date'] = self.request.session.get('export_journal').get('date__lte')
+            else:
+                header['end_date'] = self.request.user.fs_reporting_period.end_date
+        return header
+
     def get(self, request, *args, **kwargs):
         f = TransactionFilter(request.session.get('export_journal'))
         queryset = f.qs.prefetch_related(
             'journal_set' , 'journal_set__account'
-        ).filter(journal__account__owner=request.user).distinct()
+        ).filter(journal__account__owner=request.user).distinct().order_by(
+            'id',
+            'date'        
+        )
 
-        pdf = render_to_pdf(self.template_name, {'transaction_list': queryset})
+        pdf = render_to_pdf(self.template_name, {'transaction_list': queryset, 'request': request, **self.report_header})
         return HttpResponse(pdf, content_type='application/pdf')
 
 
