@@ -179,6 +179,14 @@ class PaymentSalesTerm(models.Model):
     def __str__(self):
         return self.config
 
+class Category(models.Model):
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    category = models.CharField(max_length=250)
+
+    def __str__(self):
+        return f'{self.category}'
+
+
 class Inventory(models.Model):
     """
     Create Inventory table in db.
@@ -198,6 +206,8 @@ class Inventory(models.Model):
         blank= True
     )
     general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
+    category = models.ManyToManyField(Category)
+
 
     def __str__(self):
         return self.item_name

@@ -78,6 +78,10 @@ class FinancialAnalysis(models.Manager):
 
         avg_inventory = (df.query('classification == "Inventory"')['previous_period'].sum() + df.query('classification == "Inventory"')['balance'].sum()) / 2
 
+        avg_gross_receivables = (
+            (df.query('classification == "Receivable"')['previous_period'].sum() -  df.query('classification == "Allowance for Doubtful Accounts"')['previous_period'].sum() ) /
+            + (df.query('classification == "Receivable"')['balance'].sum() -  df.query('classification == "Allowance for Doubtful Accounts"')['balance'].sum() ) 
+        ) / 2
 
         #profitability analysis
         data['net_profit_margin'] = ( net_income / net_sales ) if net_sales != 0 else 0
@@ -109,7 +113,9 @@ class FinancialAnalysis(models.Manager):
         #operating cycle
         data['inventory_turnover_in_times'] =  (df.query('classification == "COGS"')['balance'].sum() / avg_inventory ) if avg_inventory != 0 else 0
         data['inventory_turnover_in_days'] = (365 / data['inventory_turnover_in_times']) if data['inventory_turnover_in_times'] != 0 else 0
-
+        data['acc_rec_turnover_in_times'] = ( net_sales / avg_gross_receivables ) if avg_gross_receivables != 0 else 0
+        data['acc_rec_turnover_in_days'] = ( 365 / data['acc_rec_turnover_in_times'] ) if data['acc_rec_turnover_in_times'] != 0 else 0
+        data['operating_cycle'] = data['acc_rec_turnover_in_days']  + data['inventory_turnover_in_days']
 
         return data
 

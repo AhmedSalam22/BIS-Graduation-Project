@@ -459,7 +459,13 @@ class Accounts(models.Model):
         ('Property, plant, and equipment', 'Property, plant, and equipment'),
         ('Intangible assets', 'Intangible assets'),
         ('Long-term investments', 'Long-term investments'),
-        ('Contra Assets', 'Contra Assets'),
+        ('Contra', (
+            ('Contra Assets', 'Contra Assets'),
+            ('Allowance for Doubtful Accounts', 'Allowance for Doubtful Accounts'),
+            ('Revenue-Contra', 'Revenue-Contra')
+
+            )
+        ),
         ('Liabilities', (
             ('Current liabilities', 'Current liabilities'),
             ('Long-term liabilities', 'Long-term liabilities')
@@ -472,7 +478,6 @@ class Accounts(models.Model):
         ('Expenses', (
                 ('COGS', 'Cost of Goods Sold'),
                 ('Operating Expense', 'Operating Expense'),
-                ('Revenue-Contra', 'Revenue-Contra'),
                 ('Other Expenses And Losses', 'Other Expenses And Losses')
             )
         )
@@ -541,7 +546,7 @@ class Transaction(models.Model):
     date = models.DateField()
     comment = models.CharField(max_length=2500 , null= True , blank=True )
 
-  
+    # we will change this in future uing JSONFIELD
     purchase_inventory = models.ForeignKey('inventory.PurchaseInventory', null=True, blank=True, on_delete=models.CASCADE)
     inventory_price = models.ForeignKey('inventory.InventoryPrice', null=True , blank=True, on_delete=models.CASCADE)
     inventory_return = models.ForeignKey('inventory.InventoryReturn' , null=True, blank=True, on_delete=models.CASCADE)
