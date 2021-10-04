@@ -1,88 +1,219 @@
 {% extends "home/base.html" %}
+{% block css %}
+<style>
+  h1, h2, h3, h4, h5, h6 {
+    color: black;
+    font-weight: 700;
+  }
 
-{% block header %}
-  {% if not user.is_authenticated %}
-  <header class="bg-primary bg-gradient text-white" style="height: 300px; margin: -32px;">
+  i {
+    color: cornflowerblue;
+  }
+</style>
+
+{% endblock %}
+
+{% block landing %}
+  
+  <header class="bg-primary bg-gradient text-white" {% if user.is_authenticated %} style="height: 300px; margin: -32px;" {% else %} style="height: 300px;" {% endif %}>
     <div class="container px-4 text-center" style="padding: 35px;">
-        <h1 class="fw-bolder">Welcome to AYBA</h1>
+        <h1 class="fw-bolder" style="color: white;">Welcome to AYBA</h1>
         <p class="lead">Automate Your Business Activity No need for Accounting Expert All you Have To Know The Basic and we well automate the rest for you. </p>
         <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:register'%}?next={{ request.path }}">Register</a>
         <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:login' %}?next={{ request.path }}">Login</a>
 
     </div>
   </header>
-  {% endif %}
+
+    <!--START FEATURES-->
+    <section class="section" id="features" style="margin-top: -30px;background-color: white;padding-top: 30px;">
+      <div class="container">
+          <div class="row">
+              <div class="col-12">
+                  <div class="text-center fw-bold">
+                      <h3>Features</h3>
+                      <p class="text-muted slogan"></p>
+                  </div>
+              </div>
+          </div>
+
+          <div class="row mt-4">
+              <div class="col-md-4 services-box">
+                  <div class="text-center p-3">
+                      <i class="fas fa-list-alt fa-5x"></i>
+                      <h5 class="pt-4">Accounting</h5>
+                      <p class="text-gray pt-2"> People's habits and lifestyles can change - and CalorieTracker.io
+                          understands that. Our models adjust themselves daily to your habits and data to keep you on
+                          top of it all.</p>
+                  </div>
+              </div>
+
+              <div class="col-md-4 services-box">
+                  <div class="text-center p-3">
+                    <i class="fas fa-boxes fa-5x"></i>
+                    <h5 class="pt-4">Inventory</h5>
+                    <p class="text-gray pt-2"> We strive to display your progress in an
+                        intuitive, comprehensible manner. See your overall progress
+                        from your personalized analytics dashboard.
+                    </p>
+                  </div>
+              </div>
+
+              <div class="col-md-4 services-box">
+                  <div class="text-center p-3">
+                      <i class="fa fa-shopping-cart fa-5x"></i>
+                      <h5 class="pt-4">Purchases </h5>
+                      <p class="text-gray pt-2"> From caloric intake to weight, progress pictures and
+                          more. CalorieTracker.io is constantly expanding to provide a secure, all-in-one space to
+                          document your full fitness journey.</p>
+                  </div>
+              </div>
+
+              <div class="col-md-4 services-box">
+                  <div class="text-center p-3">
+                      <i class="fa fa-cash-register fa-5x"></i>
+                      <h5 class="pt-4">Sales</h5>
+                      <p class="text-gray pt-2"> Breakdown your patterns numerically and visually. Find out where
+                          you're on track and where you can improve to get to your goals faster.</p>
+                  </div>
+              </div>
+
+              <div class="col-md-4 services-box">
+                  <div class="text-center p-3">
+                      <i class="far fa-chart-bar fa-5x"></i>
+                      <h5 class="pt-4">Dashboard</h5>
+                      <p class="text-gray pt-2"> Update your data and access your insights at your convenience.
+                          CalorieTracker.io is crossplatform and works on mobile, desktop and tablet.</p>
+                  </div>
+              </div>
+
+              <div class="col-md-4 services-box">
+                  <div class="text-center p-3">
+                    <i class="fas fa-file-export fa-5x"></i>
+                    <h5 class="pt-4">Export</h5>
+                      <p class="text-gray pt-2"> Already use another tracking system? Import or sync your
+                          CalorieTracker.io account with services like MyFitnessPal or your personal CSV with the
+                          click of a button.</p>
+                  </div>
+              </div>
+
+          </div>
+
+      </div>
+  </section>
+  <!--END FEATURES-->
+
+<section class="section" id="community" style="background-color: ghostwhite;padding-top: 20px;">
+  <div class="container">
+
+      <div class="row">
+          <div class="col-12">
+              <div class="text-center">
+                  <h3>Join the Community</h3>
+                  <p class="text-muted slogan">Join the conversation with us & check us out on social media!</p>
+              </div>
+          </div>
+      </div>
+
+      <div class="row mt-4 row-cols-auto justify-content-center">
+          <div class="col col-md-3 col-sm-6">
+              <div class="text-center p-3">
+                  <a href="https://www.youtube.com/channel/UCPwkYkS1jHQiv-ulscS3cRg"><i class="fab fa-youtube fa-3x"></i></a>
+                  <h5 class="pt-4">YouTube</h5>
+                  <p class="text-gray pt-2"></p>
+              </div>
+          </div>
+          <div class="col col-md-3 col-sm-6">
+              <div class="text-center p-3">
+                  <a href="https://www.facebook.com/AYBA0"><i class="fab fa-facebook-square fa-3x"></i></a>
+                  <h5 class="pt-4">Facebook</h5>
+                  <p class="text-gray pt-2"></p>
+              </div>
+          </div>
+          <div class="col col-md-3 col-sm-6">
+            <div class="text-center p-3">
+                <a href="#"><i class="fab fa-twitter fa-3x"></i></a>
+                <h5 class="pt-4">Twitter</h5>
+                <p class="text-gray pt-2"></p>
+            </div>
+        </div>
+          <div class="col col-md-3 col-sm-6">
+              <div class="text-center p-3">
+                  <a href="#"><i class="fab fa-whatsapp fa-3x"></i></a>
+                  <h5 class="pt-4">Whatsapp</h5>
+                  <p class="text-gray pt-2"></p>
+              </div>
+          </div>
+      </div>
+  </div>
+</section>
 {% endblock %}
 
-
 {% block content %}
-
-
-
-<div>
-    
-     <p>
-         Time and Date Since Request: {% now "jS F Y H:i" %}
-     </p>
-    
-    <hr>
-     <div class="row row-cols-auto">
-        <div class="col-md-4" style="background-color:#6633ff;">
-            <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
-            <p class="text-center" style="color:#fff;"><br><strong>Sales Dashboard</strong></p>
-            <a href="{% url 'inventory:sales_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
-        </div>
-        <div class="col-md-4" style="background-color:#3399ff;">
-            <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
-            <p class="text-center" style="color:#fff;"><br><strong>Purchases Dashboard</strong></p>
-            <a href="{% url 'inventory:purchases_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
-        </div>
-        <div class="col-md-4" style="background-color:#6633ff;">
-            <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
-            <p class="text-center" style="color:#fff;"><br><strong>Accounting Dashboard</strong></p>
-            <a href="{% url 'sole_proprietorship:dashboard' %}"><p class="text-center" style="color:#fff;" >Find out more</p></a>
-        </div>
-    </div>
-    <hr>
-    
-    <div class="row mb-2">
-        <div class="col-md-6">
-          <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative" style="background-color: white;">
-            <div class="col p-4 d-flex flex-column position-static">
-              <strong class="d-inline-block mb-2 text-primary">Partnership</strong>
-              <h3 class="mb-0" style="color: black;">new partner admission</h3>
-              <p class="card-text mb-auto"  style="color: black;">Caculate Required journal entry for new partner admission</p>
-              <a href="{% url 'new_partner_admission:new_partner_admission' %}" class="stretched-link">Continue reading</a>
-            </div>
-            <div class="col-auto d-none d-lg-block">
-              <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
-    
-                <image href="https://porterfieldcpa.com/wp-content/uploads/2019/10/partnership-shaking-hands-b.jpg" height="100%" width="100%"/>
-    
-              </svg>
-            </div>
+  {% if  user.is_authenticated %} 
+  <div>
+      <p>
+          Time and Date Since Request: {% now "jS F Y H:i" %}
+      </p>
+      
+      <hr>
+      <div class="row row-cols-auto">
+          <div class="col-md-4" style="background-color:#6633ff;">
+              <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+              <p class="text-center" style="color:#fff;"><br><strong>Sales Dashboard</strong></p>
+              <a href="{% url 'inventory:sales_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
           </div>
-        </div>
-        <div class="col-md-6">
+          <div class="col-md-4" style="background-color:#3399ff;">
+              <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+              <p class="text-center" style="color:#fff;"><br><strong>Purchases Dashboard</strong></p>
+              <a href="{% url 'inventory:purchases_dashboard' %}"><p class="text-center" style="color:#fff;">Find out more</p></a>
+          </div>
+          <div class="col-md-4" style="background-color:#6633ff;">
+              <p class="text-center"><i class="far fa-chart-bar" style="color:#fff;font-size:40px;padding:20px;padding-bottom:0;"></i></p>
+              <p class="text-center" style="color:#fff;"><br><strong>Accounting Dashboard</strong></p>
+              <a href="{% url 'sole_proprietorship:dashboard' %}"><p class="text-center" style="color:#fff;" >Find out more</p></a>
+          </div>
+      </div>
+      <hr>
+      
+      <div class="row mb-2">
+          <div class="col-md-6">
             <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative" style="background-color: white;">
               <div class="col p-4 d-flex flex-column position-static">
-                <strong class="d-inline-block mb-2 text-primary">Managerial Accounting</strong>
-                <h3 class="mb-0" style="color: black;">Cost Volume Profit Analysis</h3>
-                <p class="card-text mb-auto"  style="color: black;"></p>
-                <a href="#" class="stretched-link">Continue reading</a>
+                <strong class="d-inline-block mb-2 text-primary">Partnership</strong>
+                <h3 class="mb-0" style="color: black;">new partner admission</h3>
+                <p class="card-text mb-auto"  style="color: black;">Caculate Required journal entry for new partner admission</p>
+                <a href="{% url 'new_partner_admission:new_partner_admission' %}" class="stretched-link">Continue reading</a>
               </div>
               <div class="col-auto d-none d-lg-block">
                 <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
       
-                  <image href="https://cdn.wallstreetmojo.com/wp-content/uploads/2018/12/Cost-Volume-Profit-Analysis-CVP.png" height="100%" width="100%"/>
+                  <image href="https://porterfieldcpa.com/wp-content/uploads/2019/10/partnership-shaking-hands-b.jpg" height="100%" width="100%"/>
       
                 </svg>
               </div>
             </div>
           </div>
+          <div class="col-md-6">
+              <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative" style="background-color: white;">
+                <div class="col p-4 d-flex flex-column position-static">
+                  <strong class="d-inline-block mb-2 text-primary">Managerial Accounting</strong>
+                  <h3 class="mb-0" style="color: black;">Cost Volume Profit Analysis</h3>
+                  <p class="card-text mb-auto"  style="color: black;"></p>
+                  <a href="#" class="stretched-link">Continue reading</a>
+                </div>
+                <div class="col-auto d-none d-lg-block">
+                  <svg class="bd-placeholder-img" width="200" height="250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false">
         
-     
-      </div>
-</div>
-
+                    <image href="https://cdn.wallstreetmojo.com/wp-content/uploads/2018/12/Cost-Volume-Profit-Analysis-CVP.png" height="100%" width="100%"/>
+        
+                  </svg>
+                </div>
+              </div>
+            </div>
+          
+      
+        </div>
+  </div>
+  {% endif %}
 {% endblock %}

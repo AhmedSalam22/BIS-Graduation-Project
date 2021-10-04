@@ -20,17 +20,21 @@
     <link rel="stylesheet" href="{% static 'home/css/mycss.css' %}">
     {% block css %} {% endblock %}
     {% block javascript_top %} {% endblock %}
-
+    <style>
+        #mySidenav li a {
+            color: black;
+        }
+    </style>
 </head>
 
 <body id="page-top" class="sidebar-toggled">
     <div id="wrapper">
        {% if user.is_authenticated %}
-        {% include 'home/sidebar.html' %}
+            {% include 'home/sidebar.html' %}
        {% endif %}
         <div class="d-flex flex-column" id="content-wrapper">
             <div id="content">
-                <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top">
+                <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top" {% if not user.is_authenticated %} style="position: fixed;width: 100%;z-index: 10;" {% endif %}>
                     <div class="container-fluid">
                         {% if user.is_authenticated %}
                             <button class="btn btn-link d-xxl-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
@@ -42,6 +46,23 @@
 
                             </div>
                         </div>
+                        {% if not user.is_authenticated %}
+                        <ul class="navbar-nav ml-auto" id="mySidenav" style="color: black;">
+                            <li class="nav-item">
+                                <a href="/" class="nav-link active">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#features" class="nav-link">Features</a>
+                            </li>
+                            
+                          
+                            <li class="nav-item">
+                                <a href="#community" class="nav-link">Community</a>
+                            </li>
+                          
+                        </ul>
+        
+                        {% endif %}
                         {% if user.is_authenticated %}
                         <div>
                             <ul class="navbar-nav ml-auto">
@@ -211,9 +232,12 @@
 
                     </div>
                 </nav>
-            
-                {% block header %} {% endblock %}
+                {% if not user.is_authenticated %}
+                    {% block landing %} {% endblock %}
+                {% endif %}
+                  
 
+                
                 <div class="container-fluid">
                     {% block container %}
 
