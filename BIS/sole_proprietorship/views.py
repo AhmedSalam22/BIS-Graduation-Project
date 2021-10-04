@@ -35,7 +35,7 @@ from django.db import transaction
 from django.utils.safestring import mark_safe
 import plotly.figure_factory as ff
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
-
+# from django_renderpdf.views import PDFView
 
 def prepare_data_frame( journal  ,  accounts):
     accounts = pd.DataFrame(accounts)
@@ -188,7 +188,7 @@ class ExportTrsanctionView(LoginRequiredMixin, View):
                 )  for transaction in queryset for journal in transaction.journal_set.all() 
             ),
         content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="journal{}.csv"'.format(timezone.now().isoformat())
+        response['Content-Disposition'] = 'attachment; filename="journal.csv"'
         return response
 
 
@@ -482,9 +482,24 @@ class ViewPDF(FinancialStatements):
     def get(self, request, *args, **kwargs):
         # ctx = self.financial_sataements_by_pandas()
         ctx = self.financial_sataements_by_sql()
+        ctx['start_date'] = request.user.fs_reporting_period.start_date
+        ctx['end_date'] = request.user.fs_reporting_period.end_date
+        ctx['company_name'] = request.user.fs_reporting_period.company_name or 'AYBA'
+        
         pdf = render_to_pdf('sole_proprietorship/FS_report.html', ctx)
         return HttpResponse(pdf, content_type='application/pdf')
 
+
+# class FinancialStatementsPDF(FinancialStatements, PDFView):
+#     """Generate Financial Statements for your business.
+
+#     A PDFView behaves pretty much like a TemplateView, so you can treat it as such.
+#     """
+#     template_name = 'sole_proprietorship/financial_statements.html'
+
+#     def get_context_data(self, *args, **kwargs):
+#         """Pass some extra context to the template."""
+#         return self.financial_sataements_by_sql()
 
 class TransactionsPDFView(LoginRequiredMixin, View):
     template_name = 'sole_proprietorship/transaction_pdf.html'
@@ -492,20 +507,17 @@ class TransactionsPDFView(LoginRequiredMixin, View):
     @property
     def report_header(self):
         header = {
-            'start_date': None,
-            'end_date' : None
+            'start_date': self.request.user.fs_reporting_period.start_date,
+            'end_date' : self.request.user.fs_reporting_period.end_date
         }
 
         if self.request.session.get('export_journal'):
             if self.request.session.get('export_journal', {}).get('date__gte'):
                 header['start_date'] = self.request.session.get('export_journal').get('date__gte')
-            else:
-                header['start_date'] = self.request.user.fs_reporting_period.start_date
-
+ 
             if self.request.session.get('export_journal', {}).get('date__lte'):
                 header['end_date'] = self.request.session.get('export_journal').get('date__lte')
-            else:
-                header['end_date'] = self.request.user.fs_reporting_period.end_date
+          
         return header
 
     def get(self, request, *args, **kwargs):
@@ -648,13 +660,17 @@ class AccountsImport(LoginRequiredMixin , View):
         if form.is_valid():
             excel_file = form.cleaned_data['file']
             df = pd.read_excel(excel_file)
+            accounts_to_create = []
             for dic in df.to_dict('records'):
-                account = Accounts(owner=request.user , 
-                                    account=dic["account"] ,
-                                    normal_balance = dic["normal_balance"] , 
-                                    account_type = dic["account_type"] 
-                                     )
-                account.save()
+                accounts_to_create.append(
+                    Accounts(
+                            owner=request.user , 
+                            account=dic["account"] ,
+                            normal_balance = dic["normal_balance"] , 
+                            account_type = dic["account_type"]
+                            )
+                )
+            Accounts.objects.bulk_create(accounts_to_create)
             messages.success(request, 'Your Chat of Accounts Imported Successfuly')
         return HttpResponseRedirect(reverse("sole_proprietorship:all"))
 

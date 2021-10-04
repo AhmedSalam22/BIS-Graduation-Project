@@ -24,6 +24,7 @@ urlpatterns = [
     path("export_journal" , views.ExportJournal.as_view() , name = "export_journal") ,
     path("dashboard" , views.Dashboard.as_view() , name ="dashboard") ,
     path("DownloadFS" , views.ViewPDF.as_view() , name = "fsdonwload") , 
+    # path("financial_statements_PDF" , views.FinancialStatementsPDF.as_view() , name = "fs_pdf") , 
     path('DownloadXLSX' , views.ExportFainacialStatementsToExcel.as_view() ,name="excelDownload"),
     path('accounts/import' , views.AccountsImport.as_view() , name="ImportAccounts" ) ,
     # path('pivotTable' , views.PivotTable.as_view()  , name="pivottable"),

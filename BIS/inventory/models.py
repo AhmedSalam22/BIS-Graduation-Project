@@ -187,6 +187,34 @@ class Category(models.Model):
         return f'{self.category}'
 
 
+class InventoryAnalysis(models.Manager):
+
+    def inventory_analysis(self, owner):
+        Inventory.objects.annotate(
+            units_purchases=Coalesce(Sum('inventoryprice__number_of_unit', output_field=models.IntegerField()), Value(0)),
+            units_return_from_purchases=Coalesce(Sum('inventoryprice__inventoryreturn__num_returned', output_field=models.IntegerField()), Value(0)),
+            net_units_purchases = ExpressionWrapper(
+                F('units_purchases') - F('units_return_from_purchases'), output_field=models.IntegerField()
+                ),
+            units_sold=Coalesce(Sum('inventoryprice__sold_item__quantity', output_field=models.IntegerField()), Value(0)),
+            units_return_from_sales=Coalesce(Sum('inventoryprice__sold_item__salesreturn__num_returned', output_field=models.IntegerField()), Value(0)),
+            net_units_sold = ExpressionWrapper(
+                F('units_sold') - F('units_return_from_sales'), output_field=models.IntegerField()
+            ),
+            
+        ).values(
+            'id',
+            'item_name',
+            'units_purchases',
+            'units_return_from_purchases',
+            'net_units_purchases',
+            'units_sold',
+            'units_return_from_sales',
+            'net_units_sold'
+        )
+
+
+
 class Inventory(models.Model):
     """
     Create Inventory table in db.
@@ -211,6 +239,9 @@ class Inventory(models.Model):
 
     def __str__(self):
         return self.item_name
+
+
+
 
 
 def inventory_imag_directory_path(instance, filename):

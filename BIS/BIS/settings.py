@@ -215,3 +215,6 @@ DEBUG_TOOLBAR_PANELS = [
 if DEBUG:
     import mimetypes
     mimetypes.add_type("application/javascript", ".js", True)
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
