@@ -480,12 +480,11 @@ def render_to_pdf(template_src, context_dict={}):
 #Opens up page as PDF
 class ViewPDF(FinancialStatements):
     def get(self, request, *args, **kwargs):
-        # ctx = self.financial_sataements_by_pandas()
         ctx = self.financial_sataements_by_sql()
         ctx['start_date'] = request.user.fs_reporting_period.start_date
         ctx['end_date'] = request.user.fs_reporting_period.end_date
         ctx['company_name'] = request.user.fs_reporting_period.company_name or 'AYBA'
-        
+
         pdf = render_to_pdf('sole_proprietorship/FS_report.html', ctx)
         return HttpResponse(pdf, content_type='application/pdf')
 

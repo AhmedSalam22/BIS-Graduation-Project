@@ -1,19 +1,28 @@
 {% extends "home/base.html" %}
 
+{% block header %}
+  {% if not user.is_authenticated %}
+  <header class="bg-primary bg-gradient text-white" style="height: 300px; margin: -32px;">
+    <div class="container px-4 text-center" style="padding: 35px;">
+        <h1 class="fw-bolder">Welcome to AYBA</h1>
+        <p class="lead">Automate Your Business Activity No need for Accounting Expert All you Have To Know The Basic and we well automate the rest for you. </p>
+        <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:register'%}?next={{ request.path }}">Register</a>
+        <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:login' %}?next={{ request.path }}">Login</a>
+
+    </div>
+  </header>
+  {% endif %}
+{% endblock %}
+
+
 {% block content %}
+
+
+
 <div>
-    <div class="p-4 p-md-5 mb-4 text-white rounded" style="background-color: royalblue;">
-        <div class="col-md-6 px-0">
-          <h1 class="display-4 fst-italic"><strong>AYBA</strong></h1>
-          <p>
-              Automate Your Business Activity. 
-              No need for Accounting Expert All you Have To Know The Basic and we well automate the rest for you.
-          </p>
-          <p class="lead mb-0"><a href="{% url 'home:register'%}?next={{ request.path }}" class="text-white fw-bold">Register Now</a></p>
-        </div>
-      </div>
+    
      <p>
-         {% now "jS F Y H:i" %}
+         Time and Date Since Request: {% now "jS F Y H:i" %}
      </p>
     
     <hr>

@@ -20,11 +20,17 @@
 
 {% endblock %}
 
-{% block breadcrumb %}
+{% block breadcrumbs %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'Customer_Sales:home' %}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'inventory:sales_list' %}">Sales</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'Customer_Sales:customer_list' %}">Customers</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'inventory:create_sales' %}">Sales</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'inventory:create_sales_return' %}">Sales Return</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'inventory:create_sales_allowance' %}">Sales allowance</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'inventory:create_sales_payment' %}">Receive Payment</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'inventory:sales_dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'inventory:pos' %}">pos</a></li>
     </ol>
 </nav>
 {% endblock %}
