@@ -18,7 +18,7 @@
     <div class="card-body">
         <form method="get">
             {{ form }}
-            <button type="submit" class="btn btn-primary">Run Report</button>
+            <button id="run-report" type="submit" class="btn btn-primary">Run Report</button>
             <button type="button" class="btn btn-primary" onclick="generatePDF()">PDF</button>
 
         </form>
@@ -106,7 +106,7 @@
         }
         return tr;
     }
-    document.querySelector('form button').addEventListener('click', function (event) {
+    document.querySelector('#run-report').addEventListener('click', function (event) {
         event.preventDefault();
         $('#spinner').toggle();
         $.ajax({

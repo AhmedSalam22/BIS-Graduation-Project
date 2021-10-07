@@ -35,6 +35,8 @@ from django.db import transaction
 from django.utils.safestring import mark_safe
 import plotly.figure_factory as ff
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
+import functools
+
 # from django_renderpdf.views import PDFView
 
 def prepare_data_frame( journal  ,  accounts):
@@ -244,6 +246,7 @@ class JournalDeleteView(OwnerDeleteView):
         return qs.filter(account__owner=self.request.user)
 
 class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
+    template_name  = "sole_proprietorship/financial_statements.html"
     def financial_sataements_by_pandas(self):
         owner=self.request.user
         # Accounts.objects.filter(owner=owner)[0].journal_set.values()
@@ -332,7 +335,7 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
         ctx['start_date'] = request.user.fs_reporting_period.start_date
         ctx['end_date'] = request.user.fs_reporting_period.end_date
 
-        return render(request , "sole_proprietorship/financial_statements.html"  , ctx)
+        return render(request , self.template_name  , ctx)
       
 
 
@@ -489,16 +492,13 @@ class ViewPDF(FinancialStatements):
         return HttpResponse(pdf, content_type='application/pdf')
 
 
-# class FinancialStatementsPDF(FinancialStatements, PDFView):
-#     """Generate Financial Statements for your business.
 
-#     A PDFView behaves pretty much like a TemplateView, so you can treat it as such.
-#     """
-#     template_name = 'sole_proprietorship/financial_statements.html'
+# class PrintView(FinancialStatements, PDFView):
 
 #     def get_context_data(self, *args, **kwargs):
 #         """Pass some extra context to the template."""
 #         return self.financial_sataements_by_sql()
+
 
 class TransactionsPDFView(LoginRequiredMixin, View):
     template_name = 'sole_proprietorship/transaction_pdf.html'

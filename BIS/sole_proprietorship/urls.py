@@ -41,6 +41,8 @@ urlpatterns = [
     path('DetailAccountTypeView', views.DetailAccountTypeView.as_view(), name='detail_account_type'),
     path('fetch_accounts', views.FetchAccounts.as_view(), name='fetch_accounts'),
     path('financial_analysis', views.FinancialAnalysisView.as_view(), name='financial_analysis'),
+    # path('test', views.PrintView.as_view()),
+
 
 
 

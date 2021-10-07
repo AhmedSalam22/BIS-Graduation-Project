@@ -18,7 +18,7 @@
   <header class="bg-primary bg-gradient text-white" {% if user.is_authenticated %} style="height: 300px; margin: -32px;" {% else %} style="height: 300px;" {% endif %}>
     <div class="container px-4 text-center" style="padding: 35px;">
         <h1 class="fw-bolder" style="color: white;">Welcome to AYBA</h1>
-        <p class="lead">Automate Your Business Activity No need for Accounting Expert All you Have To Know The Basic and we well automate the rest for you. </p>
+        <p class="lead">Automate Your Business Activity No need for Accounting Expert All you Have To Know The Basic and we will automate the rest for you. </p>
         <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:register'%}?next={{ request.path }}">Register</a>
         <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:login' %}?next={{ request.path }}">Login</a>
 
@@ -42,9 +42,11 @@
                   <div class="text-center p-3">
                       <i class="fas fa-list-alt fa-5x"></i>
                       <h5 class="pt-4">Accounting</h5>
-                      <p class="text-gray pt-2"> People's habits and lifestyles can change - and CalorieTracker.io
-                          understands that. Our models adjust themselves daily to your habits and data to keep you on
-                          top of it all.</p>
+                      <p class="text-gray pt-2">
+                        Complete Your accounting cycle from identifying the transaction and analyze it,
+                         journalize, ledger, and prepare your financial statements and financial analysis.
+
+                      </p>
                   </div>
               </div>
 
