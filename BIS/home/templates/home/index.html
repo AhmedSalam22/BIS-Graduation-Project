@@ -9,13 +9,21 @@
   i {
     color: cornflowerblue;
   }
+
+  .services-box:hover {
+    background-color: ghostwhite;
+    transform: scale(105%);
+    transition: all;
+
+}
+
 </style>
 
 {% endblock %}
 
 {% block landing %}
   
-  <header class="bg-primary bg-gradient text-white" {% if user.is_authenticated %} style="height: 300px; margin: -32px;" {% else %} style="height: 300px;" {% endif %}>
+  <header class="bg-primary bg-gradient text-white" {% if user.is_authenticated %} style="margin: -32px;" {% endif %}>
     <div class="container px-4 text-center" style="padding: 35px;">
         <h1 class="fw-bolder" style="color: white;">Welcome to AYBA</h1>
         <p class="lead">Automate Your Business Activity No need for Accounting Expert All you Have To Know The Basic and we will automate the rest for you. </p>
@@ -118,28 +126,28 @@
       </div>
 
       <div class="row mt-4 row-cols-auto justify-content-center">
-          <div class="col col-md-3 col-sm-6">
+          <div class="col-6 col-md-3 col-sm-6">
               <div class="text-center p-3">
                   <a href="https://www.youtube.com/channel/UCPwkYkS1jHQiv-ulscS3cRg"><i class="fab fa-youtube fa-3x"></i></a>
                   <h5 class="pt-4">YouTube</h5>
                   <p class="text-gray pt-2"></p>
               </div>
           </div>
-          <div class="col col-md-3 col-sm-6">
+          <div class="col-6 col-md-3 col-sm-6">
               <div class="text-center p-3">
                   <a href="https://www.facebook.com/AYBA0"><i class="fab fa-facebook-square fa-3x"></i></a>
                   <h5 class="pt-4">Facebook</h5>
                   <p class="text-gray pt-2"></p>
               </div>
           </div>
-          <div class="col col-md-3 col-sm-6">
+          <div class="col-6 col-md-3 col-sm-6">
             <div class="text-center p-3">
                 <a href="#"><i class="fab fa-twitter fa-3x"></i></a>
                 <h5 class="pt-4">Twitter</h5>
                 <p class="text-gray pt-2"></p>
             </div>
         </div>
-          <div class="col col-md-3 col-sm-6">
+          <div class="col-6 col-md-3 col-sm-6">
               <div class="text-center p-3">
                   <a href="#"><i class="fab fa-whatsapp fa-3x"></i></a>
                   <h5 class="pt-4">Whatsapp</h5>
@@ -149,14 +157,15 @@
       </div>
   </div>
 </section>
-{% endblock %}
+{% endblock %} 
 
 {% block content %}
   {% if  user.is_authenticated %} 
   <div>
-      <p>
-          Time and Date Since Request: {% now "jS F Y H:i" %}
-      </p>
+    <div class="alert alert-primary" role="alert">
+      Time and Date Since Request for server: {% now "jS F Y H:i" %}
+    </div>
+    
       
       <hr>
       <div class="row row-cols-auto">

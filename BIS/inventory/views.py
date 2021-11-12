@@ -455,14 +455,18 @@ class Dash:
     @cached_property
     def money_recieved(self):
         # query one ignore if it's already pay in cash
-        query = Sale.sales.all_sales(owner_id=self.owner_id).filter(sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).aggregate(money_revieved=Coalesce(Sum('total_amt_paid'),0))
+        query = Sale.sales.all_sales(owner_id=self.owner_id).filter(
+            sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date
+            ).aggregate(
+                money_revieved=Coalesce(Sum('total_amt_paid', output_field=FloatField()),0.0)
+            )
         # to avoid the above issue
         query2 = Sale.sales.all_sales(
             owner_id=self.owner_id
             ).filter(
                 term__terms = PaymentSalesTerm.Term.CASH.value
             ).aggregate(
-                money_revieved=Coalesce(Sum('netsales'), 0)
+                money_revieved=Coalesce(Sum('netsales'), 0.0)
             )
 
         return query['money_revieved'] + query2['money_revieved']
@@ -487,18 +491,19 @@ class Dash:
         """
         result = dict()
         aged_receivables = ['0-30', '31-60', '61-90', 'over 90 days']
+
         query = Sale.sales.all_sales(self.owner_id).filter(status='UNPAID', sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).annotate(
-            days_overdue= TruncDate(Now()) - F('due_date') ,
+            days_overdue=  ExtractDay(timezone.now().date() - F('due_date')) ,
             aged_receivables=Case(
-                When(days_overdue__day__lte = 30, then=Value('0-30')),
-                When(days_overdue__day__lte = 60, then=Value('31-60')),
-                When(days_overdue__day__lte = 90, then=Value('61-90')),
-                When(days_overdue__day__gt = 90, then=Value('over 90 days')),
+                When(days_overdue__lte = 30, then=Value('0-30')),
+                When(days_overdue__lte = 60, then=Value('31-60')),
+                When(days_overdue__lte = 90, then=Value('61-90')),
+                When(days_overdue__gt = 90, then=Value('over 90 days')),
                 output_field= CharField(max_length=50)
             )
         )
         for age_receivable in aged_receivables:
-            result[age_receivable] = query.filter(aged_receivables=age_receivable).aggregate(total_amt_unpaid__sum=Coalesce(Sum('total_amt_unpaid'), 0))['total_amt_unpaid__sum']
+            result[age_receivable] = query.filter(aged_receivables=age_receivable).aggregate(total_amt_unpaid__sum=Coalesce(Sum('total_amt_unpaid'), 0.0))['total_amt_unpaid__sum']
         return result
         
     @property
@@ -864,7 +869,10 @@ class SalesDashboradView(LoginRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['form'] = Dash.reporting_period_form()
         if self.request.GET.get('start_date', None) != None:
-            Dash.start_date,  Dash.end_date = self.request.GET.get('start_date'), self.request.GET.get('end_date')
+            Dash.start_date = self.request.GET.get('start_date')
+
+        if self.request.GET.get('end_date', None) != None:
+             Dash.end_date = self.request.GET.get('end_date')
 
         ctx['start_date'], ctx['end_date'] = Dash.start_date, Dash.end_date
 

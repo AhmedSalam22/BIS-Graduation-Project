@@ -234,7 +234,7 @@ class Inventory(models.Model):
         blank= True
     )
     general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
-    category = models.ManyToManyField(Category)
+    category = models.ManyToManyField(Category, null=True, blank=True)
 
 
     def __str__(self):
@@ -289,7 +289,7 @@ class SaleManager(models.Manager):
             owner__id = owner_id
         ).annotate(
             total_sales= ExpressionWrapper(
-                 Sum(F('sold_item__sale_price') * F('sold_item__quantity')) 
+                 Sum(F('sold_item__sale_price') * F('sold_item__quantity'), output_field=FloatField()) 
                 , output_field= FloatField()
             ),
             sales_return_amt  = ExpressionWrapper(
@@ -297,19 +297,19 @@ class SaleManager(models.Manager):
                     Sum(
                         (
                             F('sold_item__sale_price') * F('salesreturn__num_returned')
-                        )
+                        ), output_field = FloatField()
                         ),
-                    0
+                    0.0
                     ),
                 output_field= FloatField()
                 ),  
             allowance=ExpressionWrapper(
-                Coalesce(Sum('salesallowance__amount'), 0),
+                Coalesce(Sum('salesallowance__amount',  output_field= FloatField()), 0.0),
                 output_field= FloatField()
 
             ),
-            netsales= F('total_sales') - F('sales_return_amt')- F('allowance'),
-            total_amt_paid= Coalesce(Sum('salespayment__amount'), 0)
+            netsales = ExpressionWrapper(F('total_sales') - F('sales_return_amt')- F('allowance'),  output_field= FloatField()),
+            total_amt_paid= Coalesce(Sum('salespayment__amount',  output_field= FloatField()), 0.0)
         
         ).annotate(
             amt_after_discount = ExpressionWrapper(
@@ -329,7 +329,7 @@ class SaleManager(models.Manager):
                 output_field= models.CharField(max_length=6)
             )
         ).annotate(
-            total_amt_unpaid = F('netsales') - F('total_amt_paid'),
+            total_amt_unpaid = ExpressionWrapper(F('netsales') - F('total_amt_paid'), output_field= FloatField()),
             customer_name=Concat(F('customer__first_name'), Value(' '), F('customer__middle_name'), Value(' '), F('customer__last_name'))
           
         )
