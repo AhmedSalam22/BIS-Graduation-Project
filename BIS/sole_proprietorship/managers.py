@@ -3,33 +3,29 @@ import pandas as pd
 
 class FinancialAnalysis(models.Manager):
     SQL = """
-            SELECT   account_type , account, classification, sum(helper) as balance, sum(current_period) as current_period,
-                sum(previous_period) as previous_period
-                FROM (
-                    SELECT 
-                            a.classification,
-                            a.account_type , a.account  , a.normal_balance ,
-                            t.date,
-                            CASE
-                                WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                ELSE ( -1 * j.balance)
-                            END as helper,
-                            CASE
-                                WHEN t.date >= %s AND  j.transaction_type = a.normal_balance Then  j.balance
-                                WHEN t.date >= %s  AND j.transaction_type <> a.normal_balance Then  ( -1 * j.balance)
-                            END as current_period,
-                            CASE
-                                WHEN t.date < %s AND  j.transaction_type = a.normal_balance Then  j.balance
-                                WHEN t.date < %s  AND j.transaction_type <> a.normal_balance Then  ( -1 * j.balance)
-                            END as previous_period
-                        FROM sole_proprietorship_journal as j
-                        JOIN sole_proprietorship_accounts as a
-                        on j.account_id = a.id
-                        JOIN sole_proprietorship_transaction as t
-                        ON j.transaction_id = t.id
-                        where a.owner_id = %s  AND t.date <= %s ) as temp_table
-                GROUP by account_type , account, classification
-                ORDER by balance DESC
+           	SELECT 
+                a.account_type,
+                a.account , a.classification,
+                sum(CASE
+                    WHEN j.transaction_type = a.normal_balance Then  j.balance
+                    ELSE ( -1 * j.balance)
+                END) as balance, 
+                sum(CASE
+                    WHEN t.date >= %s AND  j.transaction_type = a.normal_balance Then  j.balance
+                    WHEN t.date >= %s  AND j.transaction_type <> a.normal_balance Then  ( -1 * j.balance)
+                END) as current_period,
+                sum(CASE
+                    WHEN t.date < %s AND  j.transaction_type = a.normal_balance Then  j.balance
+                    WHEN t.date < %s  AND j.transaction_type <> a.normal_balance Then  ( -1 * j.balance)
+                END) as previous_period
+            FROM sole_proprietorship_journal as j
+            JOIN sole_proprietorship_accounts as a
+                on j.account_id = a.id
+            JOIN sole_proprietorship_transaction as t
+                ON j.transaction_id = t.id
+            where a.owner_id = %s  AND t.date <= %s 
+            GROUP by a.account_type , a.account, a.classification
+            ORDER by balance DESC
     """
 
     def data_frame(self, owner):
@@ -43,6 +39,7 @@ class FinancialAnalysis(models.Manager):
                 owner.fs_reporting_period.end_date
             ])
             df = pd.DataFrame(cursor.fetchall() , columns=['account_type',	'account',	'classification',	'balance',	'current_period',	'previous_period'])
+            print("Data Frame\n", df)
         return df
 
     def analysis(self, owner):

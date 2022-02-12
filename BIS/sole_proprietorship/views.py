@@ -285,22 +285,21 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
         
     def get_data(self):
         with connection.cursor() as cursor:
-            cursor.execute(""" 
-            SELECT   account_type , account  , normal_balance , sum(helper) as balance FROM (
-                                                    SELECT * ,
-                                                    CASE
-                                                        WHEN j.transaction_type = a.normal_balance Then  j.balance
-                                                        ELSE ( -1 * j.balance)
-                                                    END as helper 
-                                                    FROM sole_proprietorship_journal as j
-                                                    JOIN sole_proprietorship_accounts as a
-                                                    on j.account_id = a.id
-                                                    JOIN sole_proprietorship_transaction as t
-                                                    ON j.transaction_id = t.id
-                                                    where a.owner_id = %s  AND t.date <= %s
-                                    ) as temp_table
-    GROUP by account_type , account, normal_balance
-    ORDER by balance DESC
+            cursor.execute("""  
+                    SELECT account_type , account  , normal_balance ,
+                        SUM(CASE
+                            WHEN j.transaction_type = a.normal_balance Then  j.balance
+                            ELSE ( -1 * j.balance)
+                        END) as balance 
+                        FROM sole_proprietorship_journal as j
+                        JOIN sole_proprietorship_accounts as a
+                        on j.account_id = a.id
+                        JOIN sole_proprietorship_transaction as t
+                        ON j.transaction_id = t.id
+                        where a.owner_id = %s  AND t.date <= %s
+                                                
+                GROUP by account_type , account, normal_balance
+                ORDER by balance DESC
                                                     """ , [self.request.user.id ,
                                                            self.request.user.fs_reporting_period.end_date
                                                            
