@@ -179,12 +179,12 @@ class PaymentSalesTerm(models.Model):
     def __str__(self):
         return self.config
 
-class Category(models.Model):
-    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    category = models.CharField(max_length=250)
+# class Category(models.Model):
+#     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+#     category = models.CharField(max_length=250)
 
-    def __str__(self):
-        return f'{self.category}'
+#     def __str__(self):
+#         return f'{self.category}'
 
 
 class InventoryAnalysis(models.Manager):
@@ -234,7 +234,7 @@ class Inventory(models.Model):
         blank= True
     )
     general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
-    category = models.ManyToManyField(Category, null=True, blank=True)
+    # category = models.ManyToManyField(Category, null=True, blank=True)
 
 
     def __str__(self):

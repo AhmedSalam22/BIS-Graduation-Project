@@ -1,6 +1,6 @@
 from django.contrib import admin
 from inventory.models import (Inventory , InventoryPrice , PaymentSalesTerm , PurchaseInventory,
- InventoryImag , InventoryReturn, PayInvoice, Category)
+ InventoryImag , InventoryReturn, PayInvoice)
 # Register your models here.
 
 
@@ -11,4 +11,3 @@ admin.site.register(PurchaseInventory)
 admin.site.register(InventoryImag)
 admin.site.register(InventoryReturn)
 admin.site.register(PayInvoice)
-admin.site.register(Category)
