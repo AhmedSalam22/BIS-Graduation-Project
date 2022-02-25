@@ -11,6 +11,7 @@ matplotlib==3.3.4
 xhtml2pdf==0.2.4
 django_debug_toolbar==3.2
 six==1.15.0
+reportlab==3.6.6
 whitenoise
 psycopg2-binary
 ipython
