@@ -209,16 +209,22 @@ SoldItemFormset =  formset_factory(SoldItemForm)
 ImageFormest = formset_factory(ImageForm)
 
 class InventoryReturnForm(forms.ModelForm):
+    invoice = forms.ModelChoiceField(queryset=PurchaseInventory.objects.all(), required=False)
     class Meta:
         model = InventoryReturn
-        fields = '__all__'
+        fields = ['invoice', 'inventory_price', 'date', 'num_returned']
         widgets = {
             'date': forms.widgets.DateInput(attrs={'type': 'date'}),
         }
+    
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)        
         self.fields["date"].initial = timezone.localdate()
+
+
+
         
 class DateInput(forms.DateInput):
     input_type = 'date'

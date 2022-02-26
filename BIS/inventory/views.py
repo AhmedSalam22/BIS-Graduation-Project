@@ -315,6 +315,7 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
     def get(self,request,*args, **kwargs):
         form = InventoryReturnForm()
         form.fields['inventory_price'].queryset = InventoryPrice.objects.filter(inventory__owner=request.user).select_related('inventory')
+        form.fields['invoice'].queryset = PurchaseInventory.objects.filter(owner=request.user)
         if kwargs.get('pk', None) != None: 
             inventory_price = get_object_or_404(InventoryPrice , pk=kwargs.get('pk') , inventory__owner=request.user)
             form.fields['inventory_price'].initial = inventory_price
@@ -324,7 +325,9 @@ class CreatePurchaseReturnView(LoginRequiredMixin ,View):
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         owner = request.user
-        query = get_object_or_404(InventoryPrice , pk=kwargs.get('pk')  , inventory__owner=owner)
+        if kwargs.get('pk', None) != None: 
+            get_object_or_404(InventoryPrice , pk=kwargs.get('pk')  , inventory__owner=owner)
+
         form = InventoryReturnForm(data=request.POST)
         if form.is_valid():
             obj = form.save(commit=True)
@@ -770,7 +773,7 @@ class PurchaseAllowanceView(LoginRequiredMixin, View):
 class FetchInventoryPriceView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         inventory_prices = InventoryPrice.objects.select_related('inventory').filter(purchase_inventory__owner= request.user,
-                            purchase_inventory=request.GET.get('purchase_inventory')
+                            purchase_inventory=request.GET.get('purchase_inventory') or request.GET.get('invoice')
                             ).distinct().values('pk', 'inventory__item_name', 'cost_per_unit')
 
         return JsonResponse(
