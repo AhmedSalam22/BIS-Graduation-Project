@@ -77,22 +77,18 @@
 <br>
    <div class="container-fluid">
     {% comment %} <h3 class="text-dark mb-4">journal</h3> {% endcomment %}
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-primary" href="{% url 'sole_proprietorship:journal_create' %}">
+            Add a Transaction 
+          </a> 
+          <a class="btn btn-primary" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:export_transactions_csv' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (CSV)</a>
+          <a class="btn btn-primary" role="button" href="{% url 'sole_proprietorship:export_transactions_pdf' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
+       
+    </div>
+    <br>
     <div class="card shadow">
         <div class="card-header py-3">
             <p class="text-primary m-0 font-weight-bold">journal</p>
-        </div>
-        <div class="card-body">
-          
-            <div class="d-grid gap-2 d-md-block">
-                <a class="btn btn-primary" href="{% url 'sole_proprietorship:journal_create' %}">
-                    Add a Transaction 
-                  </a> 
-                  <a class="btn btn-primary" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:export_transactions_csv' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (CSV)</a>
-                  <a class="btn btn-primary" role="button" href="{% url 'sole_proprietorship:export_transactions_pdf' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
-               
-            </div>
-           
-
         </div>
         <div class="card-body">
             <div class="row">
