@@ -6,9 +6,7 @@
                 <th>Account</th>
                 <th>Debit </th>
                 <th>Credit </th>
-                <th>comment</th>
                 <th>Action</th>
-
             </tr>
         </thead>
            
@@ -19,7 +17,7 @@
                    
                     {% for journal in transaction.journal_set.all %}
 
-                        <tr {% if forloop.last %} class="end-of-transaction" {% else %} class="start-of-transaction" {% endif %}>
+                        <tr class="transaction">
                             {% if forloop.first %}
                                 <td><strong>{{ transaction.date}}</strong></td>                      
                             {% else %}
@@ -35,7 +33,7 @@
                                 <td><strong>{{ journal.balance}}</strong></td>
                             {% endif %}
                             {% if forloop.first %}
-                            <td><strong>{{ transaction.comment|default:" "}}</strong></td>
+
                             <td>
                                 <a href="{% url 'sole_proprietorship:transaction_update' transaction.id %}">
                                     <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
@@ -46,12 +44,19 @@
                             </td>
                             {% else %}
                                 <td><strong></strong></td>   
-                                <td><strong></strong></td>   
 
                             {% endif %}
                             
                             
                         </tr>
+                        {% if forloop.last %}
+                        <tr >
+                            <td></td>
+                            <td colspan="3"><strong>{{ transaction.comment|default:" "}}</strong></td>
+
+                        </tr>
+                       
+                        {% endif %}
 
                     {% endfor %}
 

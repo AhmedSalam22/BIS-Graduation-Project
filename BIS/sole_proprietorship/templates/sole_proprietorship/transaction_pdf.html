@@ -45,7 +45,6 @@
                 <th style="text-align:left">Account</th>
                 <th style="text-align:left">Debit </th>
                 <th style="text-align:left">Credit </th>
-                <th style="text-align:left">comment</th>
 
             </tr>
         </thead>
@@ -72,13 +71,15 @@
                                 <td><strong></strong></td>
                                 <td><strong>{{ journal.balance}}</strong></td>
                             {% endif %}
-                            {% if forloop.first %}
-                            <td><strong>{{ transaction.comment|default:" "}}</strong></td>
+                            
+                            {% if forloop.last %}
+                            <tr>
+                                <td></td>
+                                <td colspan="3"><strong>{{ transaction.comment|default:" "}}</strong></td>
 
-                            {% else %}
-                                <td><strong></strong></td>   
-
-                            {% endif %}
+                            </tr>
+                       
+                         {% endif %}
                             
                             
                         </tr>
