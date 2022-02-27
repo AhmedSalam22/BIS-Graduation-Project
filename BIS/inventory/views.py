@@ -38,6 +38,7 @@ from django.db.models.functions import Coalesce, ExtractDay, Concat, Now, Cast, 
 from django.db.models import Func, DateTimeField, CharField, DateField 
 from django.utils.functional import cached_property
 from django.db.models.expressions import RawSQL
+from datetime import timedelta
 
 class DaysInterval(Func):
     function = 'make_interval'
@@ -496,12 +497,12 @@ class Dash:
         aged_receivables = ['0-30', '31-60', '61-90', 'over 90 days']
 
         query = Sale.sales.all_sales(self.owner_id).filter(status='UNPAID', sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).annotate(
-            days_overdue=  ExtractDay(timezone.now().date() - F('due_date')) ,
+            # days_overdue=  ExtractDay(timezone.now().date() - F('due_date')) ,
             aged_receivables=Case(
-                When(days_overdue__lte = 30, then=Value('0-30')),
-                When(days_overdue__lte = 60, then=Value('31-60')),
-                When(days_overdue__lte = 90, then=Value('61-90')),
-                When(days_overdue__gt = 90, then=Value('over 90 days')),
+                When(due_date__lt = (timezone.now().date() - timedelta(days=90) ), then=Value('over 90 days')),
+                When(due_date__lt = (timezone.now().date() - timedelta(days=60) ), then=Value('61-90')),
+                When(due_date__lt = (timezone.now().date() - timedelta(days=30) ), then=Value('31-60')),
+                When(due_date__lt = (timezone.now().date() ), then=Value('0-30')),
                 output_field= CharField(max_length=50)
             )
         )

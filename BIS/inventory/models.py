@@ -246,11 +246,7 @@ class Inventory(models.Model):
 
 def inventory_imag_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return 'inventory/inventory_imgs/user_{0}/{3}/{2}{1}'.format(instance.inventory.owner,
-     filename ,
-     timezone.now() , 
-     instance.inventory.item_name
-      )
+    return f'inventory/inventory_imgs/user_{instance.inventory.owner}/{instance.inventory.item_name}/{filename}'
 
 class InventoryImag(models.Model):
     """
@@ -262,8 +258,6 @@ class InventoryImag(models.Model):
 
     inventory  = models.ForeignKey(Inventory , on_delete=models.CASCADE , related_name="imgs" )
     img = models.ImageField(upload_to=inventory_imag_directory_path,
-                                null=True,
-                                blank=True,
                                 editable=True,
                                 help_text="Inventory image")
     
