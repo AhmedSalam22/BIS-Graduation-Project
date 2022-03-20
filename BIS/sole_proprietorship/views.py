@@ -134,7 +134,7 @@ class AccountsDeleteView(OwnerDeleteView):
 class TransactionListView(LoginRequiredMixin, FilterView):
     paginate_by = 10
     model = Transaction
-    ordering = ["-id", "-date", "journal__transaction_type"]
+    ordering = ["-date"]
     template_name = "sole_proprietorship/transaction_list.html"
     filterset_class = TransactionFilter
     helper = TransactionFilterHelper()
