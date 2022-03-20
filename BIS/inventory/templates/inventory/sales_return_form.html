@@ -1,0 +1,42 @@
+{% extends 'home/form.html' %}
+{% block cardheader %} Sales Return {% endblock %}
+{% block formblock %}
+    {{ form.non_field_errors }}
+    {% load crispy_forms_tags %}
+    {{ form|crispy }}
+{% endblock %}
+{% block footer %} 
+<script>
+    const saleElement = document.getElementById('id_sale');
+    const soldItem = document.getElementById('id_sold_item');
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+
+    async function fetchSoldItems() {
+        soldItem.innerHTML = '';
+        const url = new URL('{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url "inventory:fetch_sold_items" %}');
+        const data = {"sale": saleElement.value };
+        url.search = new URLSearchParams(data);
+        const fetchPromies = await fetch(url,{
+            method: 'GET',
+            headers: {
+                 'Content-Type': 'application/json',
+                 "X-CSRFToken": csrftoken
+            }
+        });
+        const content = await fetchPromies.json();
+        content.forEach(([pk, description]) => {
+            const option = document.createElement('option');
+            option.value = pk;
+            option.innerText = description;
+            soldItem.appendChild(option);
+        });
+        //console.log(content);
+    }
+
+    saleElement.addEventListener('change', function (event) {
+        console.log('saleElement has been changed');
+        fetchSoldItems();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "sole_proprietorship/index.html" %}
+
+{% block css%}
+<style>
+    table thead tr th {
+        background-color: #1085fa !important;
+        text-align: center;
+        color: white;
+       
+    }
+
+    table tbody tr {
+        font-weight: bold;
+        color: black;
+    }
+
+    .table tbody {
+        border: 1px solid;
+        
+    }
+
+    
+</style>
+{% endblock %}
+
+{% block content%}
+{% include "sole_proprietorship/reporting_header_base.html" %}
+
+<div class="d-sm-flex  align-items-center mb-4">
+    <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:excelDownload' %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (xlsx)</a>
+   <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:fsdonwload' %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
+</div>
+
+
+<div class="card">
+    <div class="card-header">Finacial Statements</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-3">
+                <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-trial-balance" type="button" role="tab" aria-controls="v-pills-v-pills-trial-balance" aria-selected="true">Trial Balance</button>
+                    <button class="nav-link" id="v-pills-income_statement-tab" data-bs-toggle="pill" data-bs-target="#v-pills-income_statement" type="button" role="tab" aria-controls="v-pills-income_statement" aria-selected="false">Income Statement</button>
+                    <button class="nav-link" id="v-pills-equity_statement-tab" data-bs-toggle="pill" data-bs-target="#v-pills-equity_statement" type="button" role="tab" aria-controls="v-pills-equity_statement" aria-selected="false">Equity Statement</button>
+                    <button class="nav-link" id="v-pills-balance_sheet-tab" data-bs-toggle="pill" data-bs-target="#v-pills-balance_sheet" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">Balance Sheet</button>
+                    <button class="nav-link" id="v-pills-cash-flow-tab" data-bs-toggle="pill" data-bs-target="#v-pills-cash-flow" type="button" role="tab" aria-controls="v-pills-cash-flow" aria-selected="false">Cash Flow Statement</button>
+  
+                </div>
+            </div>
+              
+            <div class="col-9">
+                <div class="tab-content" id="v-pills-tabContent">
+                    <div class="tab-pane fade show active" id="v-pills-trial-balance" role="tabpanel" aria-labelledby="v-pills-trial-balance-tab">
+                      {% include "sole_proprietorship/trial_balance.html" %}
+  
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-income_statement" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+                      {% include "sole_proprietorship/income_statement.html" %}
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-equity_statement" role="tabpanel" aria-labelledby="v-pills-equity_statement-tab">
+                      {% include "sole_proprietorship/equity_statement.html" %}
+
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-balance_sheet" role="tabpanel" aria-labelledby="v-pills-balance_sheet-tab">
+                        {% include "sole_proprietorship/balance_sheet.html" %}
+                    </div>
+                    <div class="tab-pane fade" id="v-pills-cash-flow" role="tabpanel" aria-labelledby="v-pills-cash-flow-tab">
+                        {% include "sole_proprietorship/cash_flow_statement.html" %}
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+              
+            
+
+
+
+{% endblock %}
+{% block footer %}
+<script>
+    $(".nav-link").click(function() {
+        $(".nav-link").removeClass('active');
+    $(this).addClass('active');
+        $('.tab-pane.fade').removeClass('show active');
+    $($(this).attr('data-bs-target')).addClass('show active');
+    });
+   
+</script>
+{% endblock %}

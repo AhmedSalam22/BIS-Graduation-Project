@@ -1,0 +1,100 @@
+{% extends "sole_proprietorship/index.html" %}
+{% load static %}
+{% block css %}
+
+{% endblock %}
+{% block content %}
+   <div class="container-fluid">
+    <h3 class="text-dark mb-4">Accounts</h3>
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <p class="text-primary m-0 font-weight-bold">Accounts</p>
+        </div>
+     
+        <div class="card-body">
+            <div class="d-grid gap-2">
+                <a class="btn btn-primary" href="{% url 'sole_proprietorship:accounts_create' %}">Add Account</a> 
+                 <a  class="btn btn-primary" href="{% url 'sole_proprietorship:ImportAccounts' %}">
+                  Import Accounts (XLSX)
+                </a>
+            </div>
+            <div class="table-responsive table mt-2" role="grid" aria-describedby="dataTable_info">
+                <table class="table table-hover table-borderless datatable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Account</th>
+                            <th>Normal Balance</th>
+                            <th>Account Type</th>
+                            <th>Classification</th>
+                            <th>Action</th>
+                            
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                       
+                            {% if accounts_list %}
+                            {% for accounts in accounts_list %}
+                            <tr>
+                            <td><strong>{{ accounts.account }}</strong></td>
+                            <td><strong>{{ accounts.normal_balance }}</strong></td>
+                            <td><strong>{{ accounts.account_type }}</strong></td>
+                            <td><strong>{{ accounts.classification|default:" " }}</strong></td>
+                            <td>
+                                <a href="{% url 'sole_proprietorship:accounts_update' accounts.id %}">
+                                    <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                </a> 
+                                <a href="{% url 'sole_proprietorship:accounts_delete' accounts.id %}">
+                                <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                </a>
+                            </td>
+                            </tr>
+                            {% endfor %}
+                          {% else %}
+                            <p>There are no accounts in the database.</p>
+                          {% endif %}
+
+                    </tbody>
+        
+                </table>
+            </div>
+            {% comment %} <div class="row">
+                <div class="col-md-6 align-self-center">
+                    <!-- <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing 1 to 10 of 27</p> -->
+                </div>
+                <div class="col-md-6">
+                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                        <div class="pagination">
+                            <span class="step-links">
+                                {% if page_obj.has_previous %}
+                                    <a href="?page=1">&laquo; first</a>
+                                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                                {% endif %}
+                        
+                                <span class="current">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                                </span>
+                        
+                                {% if page_obj.has_next %}
+                                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <!-- <ul class="pagination">
+                            <li class="page-item disabled"><a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">«</span></a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li>
+                        </ul> -->
+                    </nav>
+                </div>
+            </div> {% endcomment %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+{% include "home/dataTableFooter.html" %}
+{% endblock %}

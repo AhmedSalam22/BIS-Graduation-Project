@@ -1,0 +1,157 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block javascript_top %}
+    <script src="{% static 'home/js/plotly-2.2.0.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center p-3 my-3 text-black  rounded shadow-sm" style="background-color:#ffffff">
+    <div class="me-3"><i class="fa fa-calendar text-gray-300"></i></div>
+    <div class="lh-1">
+      <small>this report generates from {{ start_date }} to {{ end_date }} </small>
+              <!-- Button trigger modal -->
+    <button type="button" id="ModalLaunch" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <strong>
+        <i class="fas fa-cogs"></i>
+            Settings
+        </strong>
+    </button>
+    </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ModalLabel">Settings</h5>
+        <button type="button" class="btn-close ModalClose" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="get">
+        <div class="modal-body">
+            {% load crispy_forms_tags %}
+            {% crispy form %}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary ModalClose" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+ 
+    
+<div class="row">
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-primary py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Number of Purchases</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.count }}</span></div>
+                    
+                        <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total purchases amount</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.total_purchases }}</span></div>
+                    
+                        <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Net Purchases amount</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.net_purchases }}</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-warning py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>total units returned</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.num_returend }}</span></div>
+                        <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>Total Cost of units returned</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.cost_returned }}</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-success py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>Net amount paid</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.total_amount_paid }}</span></div>
+
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-danger py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-danger font-weight-bold text-xs mb-1"><span>Number of unpaid invoice</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.unpaid_count }}</span></div>
+                        <div class="text-uppercase text-danger font-weight-bold text-xs mb-1"><span>UNPAID Invoices Cost</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ purchases_analysis.total_amount_unpaid }}</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col" >
+        {{ supplier_total_purchases_fig|safe }}
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        {{ cost_returned|safe }}
+    </div>
+</div>
+<hr>
+
+<div class="row" style="background-color: white;">
+        <div class="col-md-6" >
+            {{ vendors_to_pay_tbl|safe }}
+        </div>
+    
+        <div class="col-md-6" >
+            {{ df_fig1|safe }}
+        </div>
+ 
+</div>
+
+<hr>
+
+
+{% endblock %}
+{% block footer %}
+{% include "home/dataTableFooter.html" %}
+<script>
+    $(document).ready(function() {
+        $('#ModalLaunch').click(function () {
+            $('#settingsModal').modal({
+                show: true,
+                closeOnEscape: true
+            });
+        });
+        $(".ModalClose").click(function(){
+             $('#settingsModal').modal("hide");
+        });
+    });
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'home/form.html' %}
+{% block cardheader %} Purchase Return {% endblock %}
+{% block formblock %}
+    {% load crispy_forms_tags %}
+    {{ form|crispy }}
+{% endblock %}
+
+{% block js %}
+<script>
+    function option(inventory_price) {
+        let option = document.createElement('option');
+        option.value = inventory_price.pk;
+        option.innerText = `${inventory_price.inventory__item_name} $${inventory_price.cost_per_unit} per unit`;
+        return option;  
+    }
+    function inventoryPrices(data) {
+        const inventory_prices = document.getElementById('id_inventory_price');
+        inventory_prices.innerHTML = '';
+        
+        for (const inventory_price of data) {
+              inventory_prices.appendChild(option(inventory_price));
+        }
+
+    }
+    document.querySelector('#id_invoice').addEventListener('change', function (event) {
+        console.log('test');
+        $.ajax({
+        url: "{% url 'inventory:fetch_inventory_price' %}",
+        type: "GET",
+        dataType: "JSON",
+        data: $('form').serialize(),
+        success: function(data) {
+            console.log(data);
+            inventoryPrices(data);
+
+        },
+        error : function(xhr,errmsg,err) {
+            console.log(`${xhr.status} ${xhr.responseText} \nerrmsg= ${errmsg}\n err: ${err}`); // provide a bit more info about the error to the console
+        }
+        });
+    });
+</script>
+{% endblock %}

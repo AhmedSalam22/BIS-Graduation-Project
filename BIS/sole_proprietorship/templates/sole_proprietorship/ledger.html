@@ -1,0 +1,134 @@
+{% extends "sole_proprietorship/index.html" %}
+{% load static%}
+
+{% block css %}
+<style>
+    th {
+        position: sticky;
+        top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block javascript_top %} 
+
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="get">
+            {{ form }}
+            <button id="run-report" type="submit" class="btn btn-primary">Run Report</button>
+            <button type="button" class="btn btn-primary" onclick="generatePDF()">PDF</button>
+
+        </form>
+    </div>
+</div>
+<br>
+<br>
+<div class="container-fluid">
+    <div style="overflow-x:auto; height: 800px;">
+        <div class="text-center">
+            <div id="spinner" class="spinner-border" role="status" style="display: none;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <table id="ledger" class="table table-hover table-borderless datatable">
+            <thead class="table-dark">
+                <tr>
+                    <th colspan="5" style="text-align: center;" id="account"> </th>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <th>Comment</th>
+                    <th>Debit</th>
+                    <th>Credit</th>
+                    <th>balance</th>
+                </tr>
+            </thead>
+            <tbody id="ledgerBodyTable" style="background-color:white">
+    
+            </tbody>
+          </table>  
+    </div>
+        
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.debug.js"></script>
+<script type="module" src="https://unpkg.com/jspdf-autotable@3.5.20/dist/jspdf.plugin.autotable.js"></script>
+<script>
+
+    function generatePDF(){
+        const pdf = new jsPDF();
+        pageHeight = pdf.internal.pageSize.height;
+        pageWdith = pdf.internal.pageSize.width;
+        pdf.text(pageWdith / 2, 10, 'Ledger', 'center');
+        pdf.autoTable({ html: '#ledger' });
+        window.open(pdf.output('bloburl'), '_blank');
+        // doc.save('ledger.pdf');
+    }
+    function createTableBody(begginingBalance, data){
+        const tbody = document.querySelector('#ledgerBodyTable');
+        tbody.innerHTML = `
+                <td></td>
+                <td>Beggining Balance</td>
+                <td></td>
+                <td></td>
+                <td>${begginingBalance}</td>
+        `;
+        let endingBalance = begginingBalance;
+        for (const array of data) {
+            endingBalance += array[3];
+            tbody.appendChild(createRow(array, endingBalance));
+        }
+
+    }
+
+
+    function createRow([date, comment, transaction_type, amount], balance) {
+        const tr = document.createElement('tr');
+        comment  = comment ? comment : ` `;
+        if (transaction_type=== 'Debit') {
+            tr.innerHTML = `
+                <td>${date}</td>
+                <td>${comment}</td>
+                <td>${Math.abs(amount)}</td>
+                <td></td>
+                <td>${balance}</td>
+            `
+        } else {
+            tr.innerHTML = `
+                <td>${date}</td>
+                <td>${comment}</td>
+                <td></td>
+                <td>${Math.abs(amount)}</td>
+                <td>${balance}</td>
+            `
+        }
+        return tr;
+    }
+    document.querySelector('#run-report').addEventListener('click', function (event) {
+        event.preventDefault();
+        $('#spinner').toggle();
+        $.ajax({
+        url: "{% url 'sole_proprietorship:fetch_ledger' %}",
+        type: "GET",
+        dataType: "JSON",
+        data: $('form').serialize(),
+        success: function(data) {
+            // console.log(data.begginingBalance);
+            // console.log(data.data);
+            $('#account').html($("#id_account option:selected" ).text()); 
+            createTableBody(data.begginingBalance, data.data);
+            $('#spinner').toggle();
+
+        },
+        error : function(xhr,errmsg,err) {
+            console.log(`${xhr.status} ${xhr.responseText} \nerrmsg= ${errmsg}\n err: ${err}`); // provide a bit more info about the error to the console
+        }
+        });
+    });
+ 
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block css %}
+    <style>
+        table {
+            font-weight: bold;
+            color: black;
+        }
+    </style>
+{% endblock %}
+{% block javascript_top %}
+    <script src="{% static 'home/js/plotly-2.2.0.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center p-3 my-3 text-black  rounded shadow-sm" style="background-color:#ffffff">
+    <div class="me-3"><i class="fa fa-calendar text-gray-300"></i></div>
+    <div class="lh-1">
+      <small>this report generates from {{ start_date }} to {{ end_date }} </small>
+              <!-- Button trigger modal -->
+    <button type="button" id="ModalLaunch" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <strong>
+        <i class="fas fa-cogs"></i>
+            Settings
+        </strong>
+    </button>
+    </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ModalLabel">Settings</h5>
+        <button type="button" class="btn-close ModalClose" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="get">
+        <div class="modal-body">
+            {% load crispy_forms_tags %}
+            {{ form|crispy }}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary ModalClose" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">ٌRun report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+ 
+    
+<div class="row">
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-primary py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Number of Sales</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ num_sales }}</span></div>
+                    
+                        <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total Sales amount</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ total_sales }} </span></div>
+                    
+                        <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Net Sales amount</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ net_sales }}</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-warning py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>total units returned</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ sales_return_unit }}</span></div>
+                        <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>Total Cost of units returned</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ sales_return_amt }}</span></div>
+                        <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>Allowance</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{  sales_allowance }}</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-success py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>ٌMoney Reveived</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ money_recieved }}</span></div>
+
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3 mb-4">
+        <div class="card shadow border-left-danger py-2">
+            <div class="card-body">
+                <div class="row align-items-center no-gutters">
+                    <div class="col mr-2">
+                        <div class="text-uppercase text-danger font-weight-bold text-xs mb-1"><span>Number of unpaid invoice</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ num_unpaid_invoice }}</span></div>
+                        <div class="text-uppercase text-danger font-weight-bold text-xs mb-1"><span>UNPAID Invoices Cost</span></div>
+                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{ amount_unpaid_sales }}</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6" id="agedReceivables">
+        {{ aged_receivables_pie_chart|safe }}
+    </div>
+
+    <div class="col-md-6" id="agedReceivablesTable">
+        {{ aged_receivables_tbl|safe }}
+    </div>
+</div>
+<hr>
+<div class="row" style="background-color: white;">
+    <div class="col" id="customersWhoOweMoney">
+        <h3 style="color: black;font-weight: bold; font-style: italic;">customers who owe money</h3>
+
+        {{ customers_who_owe_money|safe }}
+    </div>
+</div>
+<hr>
+{% endblock %}
+{% block footer %}
+{% include "home/dataTableFooter.html" %}
+<script>
+    $(document).ready(function() {
+        $('#ModalLaunch').click(function () {
+            $('#settingsModal').modal({
+                show: true,
+                closeOnEscape: true
+            });
+        });
+        $(".ModalClose").click(function(){
+             $('#settingsModal').modal("hide");
+        });
+    });
+</script>
+
+
+{% endblock %}

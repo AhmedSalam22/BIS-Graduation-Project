@@ -1,0 +1,6 @@
+{% extends 'home/form.html' %}
+{% block cardheader %} Pay your Invoice {% endblock %}
+{% block formblock %}
+    {% load crispy_forms_tags %}
+    {{ form|crispy }}
+{% endblock %}

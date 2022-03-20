@@ -1,0 +1,97 @@
+<head>
+    <style>
+        @page {
+            size: a4 portrait;
+            @frame content_frame {          /* Content Frame */
+                left: 50pt; width: 512pt; top: 15pt; height: 750pt;
+            }
+            @frame footer_frame {           /* Another static Frame */
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+        }
+    
+    table tbody tr {
+        margin-bottom: 3px;
+    }
+    .end-of-transaction  {
+    border-bottom-width: 2px !important;
+    border-style: dashed;
+    }
+
+    .start-of-transaction {
+        border-bottom-width: 0px !important;
+        border-style: none;
+    }
+
+    </style>
+    </head>
+    
+    <body>
+        <!-- Content for Static Frame 'footer_frame' -->
+        <div id="footer_content">(c) - page <pdf:pagenumber>
+            of <pdf:pagecount>
+        </div>
+        <hr>
+            <h1 style="text-align:center">Journal for {{ request.user.fs_reporting_period.company_name|default:"AYBA" }}</h1>
+            <h3 style="text-align:center">this report generates from {{ start_date }} to {{ end_date }}</h1>
+        <hr>
+
+        <!-- HTML Content -->
+    <table width="100%">
+        <thead>
+            <tr>
+                <th style="text-align:left">Date</th>
+                <th style="text-align:left">Account</th>
+                <th style="text-align:left">Debit </th>
+                <th style="text-align:left">Credit </th>
+
+            </tr>
+        </thead>
+           
+        <tbody>
+            
+              {% if transaction_list %}
+                {% for transaction in transaction_list %}
+                   
+                    {% for journal in transaction.journal_set.all %}
+                        <tr {% if forloop.last %} class="end-of-transaction" {% else %} class="start-of-transaction" {% endif %}>
+                        <tr>
+                            {% if forloop.first %}
+                                <td><strong>{{ transaction.date}}</strong></td>                      
+                            {% else %}
+                                <td><strong></strong></td>   
+                            {% endif %}
+                            {% if journal.transaction_type == "Debit" %}
+                                <td><strong>{{ journal.account}}</strong></td>
+                                <td><strong>{{ journal.balance}}</strong></td>
+                                <td><strong></strong></td>
+                            {% else %}
+                                <td><strong>&nbsp;&nbsp;&nbsp;&nbsp;{{ journal.account}}</strong></td>
+                                <td><strong></strong></td>
+                                <td><strong>{{ journal.balance}}</strong></td>
+                            {% endif %}
+                            
+                            {% if forloop.last %}
+                            <tr>
+                                <td></td>
+                                <td colspan="3"><strong>{{ transaction.comment|default:" "}}</strong></td>
+
+                            </tr>
+                       
+                         {% endif %}
+                            
+                            
+                        </tr>
+                    {% endfor %}
+
+                {% endfor %}
+              {% else %}
+                <p>There are no accounts in the database.</p>
+              {% endif %}
+
+           
+        </tbody>
+    </table>
+    <hr>
+    </body>
