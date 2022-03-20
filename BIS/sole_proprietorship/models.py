@@ -77,6 +77,12 @@ class TransactionSignal:
             status=Transaction.Status.PURCHASE_RETURN.value,
             comment=f"return {instance.num_returned} from {instance.inventory_price.inventory} to {instance.inventory_price.purchase_inventory.supplier}"
         )
+        Journal.objects.create(
+                    account = Helper.cash_or_accounts_payable(instance.inventory_price.purchase_inventory),
+                    balance=  balance ,
+                    transaction_type="Debit" , 
+                    transaction = transaction 
+                    )
 
         Journal.objects.create(
                 account = instance.inventory_price.inventory.general_ledeger_account,
@@ -84,13 +90,8 @@ class TransactionSignal:
                 transaction_type="Credit" ,
                 transaction = transaction 
               
-                )
-        Journal.objects.create(
-                    account = Helper.cash_or_accounts_payable(instance.inventory_price.purchase_inventory),
-                    balance=  balance ,
-                    transaction_type="Debit" , 
-                    transaction = transaction 
-                    )
+        )
+        
 
 
     

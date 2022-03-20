@@ -18,3 +18,4 @@ ipython
 django-crispy-forms
 openpyxl
 docutils
+xlsx-streaming

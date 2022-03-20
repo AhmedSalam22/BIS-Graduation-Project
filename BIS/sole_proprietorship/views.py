@@ -134,7 +134,7 @@ class AccountsDeleteView(OwnerDeleteView):
 class TransactionListView(LoginRequiredMixin, FilterView):
     paginate_by = 10
     model = Transaction
-    ordering = ["-date"]
+    ordering = ["-id", "-date", "journal__transaction_type"]
     template_name = "sole_proprietorship/transaction_list.html"
     filterset_class = TransactionFilter
     helper = TransactionFilterHelper()
@@ -193,7 +193,28 @@ class ExportTrsanctionView(LoginRequiredMixin, View):
         response['Content-Disposition'] = 'attachment; filename="journal.csv"'
         return response
 
+class ExportTrsanctionExcelView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        import xlsx_streaming
+     
+        f = TransactionFilter(request.session.get('export_journal'))
+        queryset = f.qs.prefetch_related(
+            'journal_set' , 'journal_set__account'
+        ).filter(journal__account__owner=request.user).distinct().values_list('id', 'date','journal__account__account', 'journal__balance', 'journal__transaction_type' ,'comment')
 
+        with open('journal.xlsx', 'wb') as template:
+            stream = xlsx_streaming.stream_queryset_as_xlsx(
+                queryset,
+                template,
+                batch_size=50
+            )
+
+        response = StreamingHttpResponse(
+            stream,
+            content_type='application/vnd.xlsxformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename=journal.xlsx'
+        return response
 
 class JournalCreateView(LoginRequiredMixin , View):
     template_name = 'sole_proprietorship/journal_form.html'
@@ -548,8 +569,8 @@ class ExportFainacialStatementsToExcel(FinancialStatements):
 
         
         worksheet.write('A1', 'Business Information System', bold)
-        worksheet.write('A2', 'Instructor Dr.Mona Ganna', bold)
-        worksheet.write('A3', 'Student: Ahmed Maher Fouzy Mohamed Salam', bold)
+        worksheet.write('A2', 'Instructor Dr. Gouda', bold)
+        worksheet.write('A3', 'AYBA Team', bold)
         worksheet.write('A5' , "Trial Balance" , bold)
         worksheet.write('B6' , "Debit" , bold)
         worksheet.write('C6' , "Credit" , bold)

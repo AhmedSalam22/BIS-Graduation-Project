@@ -26,7 +26,12 @@
   <header class="bg-primary bg-gradient text-white" {% if user.is_authenticated %} style="margin: -32px;" {% endif %}>
     <div class="container px-4 text-center" style="padding: 35px;">
         <h1 class="fw-bolder" style="color: white;">Welcome to AYBA</h1>
-        <p class="lead">Automate Your Business Activity No need for Accounting Expert All you Have To Know The Basic and we will automate the rest for you. </p>
+        <p class="lead">
+          This is a graduation project <br>
+          <strong>Under Supervision of</strong> <br>
+          <i>Prof. Dr. Gouda Abd El-Raouf Zaghloul</i><br>
+          Automate Your Business Activity No need for Accounting Expert All you Have To Know The Basic and we will automate the rest for you. 
+        </p>
         <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:register'%}?next={{ request.path }}">Register</a>
         <a class="btn btn-lg btn-light fw-bold"  style="margin-bottom: 20px;" href="{% url 'home:login' %}?next={{ request.path }}">Login</a>
 
@@ -62,10 +67,10 @@
                   <div class="text-center p-3">
                     <i class="fas fa-boxes fa-5x"></i>
                     <h5 class="pt-4">Inventory</h5>
-                    <p class="text-gray pt-2"> We strive to display your progress in an
+                    <!-- <p class="text-gray pt-2"> We strive to display your progress in an
                         intuitive, comprehensible manner. See your overall progress
                         from your personalized analytics dashboard.
-                    </p>
+                    </p> -->
                   </div>
               </div>
 
@@ -73,9 +78,9 @@
                   <div class="text-center p-3">
                       <i class="fa fa-shopping-cart fa-5x"></i>
                       <h5 class="pt-4">Purchases </h5>
-                      <p class="text-gray pt-2"> From caloric intake to weight, progress pictures and
+                      <!-- <p class="text-gray pt-2"> From caloric intake to weight, progress pictures and
                           more. CalorieTracker.io is constantly expanding to provide a secure, all-in-one space to
-                          document your full fitness journey.</p>
+                          document your full fitness journey.</p> -->
                   </div>
               </div>
 
@@ -83,8 +88,8 @@
                   <div class="text-center p-3">
                       <i class="fa fa-cash-register fa-5x"></i>
                       <h5 class="pt-4">Sales</h5>
-                      <p class="text-gray pt-2"> Breakdown your patterns numerically and visually. Find out where
-                          you're on track and where you can improve to get to your goals faster.</p>
+                      <!-- <p class="text-gray pt-2"> Breakdown your patterns numerically and visually. Find out where
+                          you're on track and where you can improve to get to your goals faster.</p> -->
                   </div>
               </div>
 
@@ -92,8 +97,8 @@
                   <div class="text-center p-3">
                       <i class="far fa-chart-bar fa-5x"></i>
                       <h5 class="pt-4">Dashboard</h5>
-                      <p class="text-gray pt-2"> Update your data and access your insights at your convenience.
-                          CalorieTracker.io is crossplatform and works on mobile, desktop and tablet.</p>
+                      <!-- <p class="text-gray pt-2"> Update your data and access your insights at your convenience.
+                          CalorieTracker.io is crossplatform and works on mobile, desktop and tablet.</p> -->
                   </div>
               </div>
 
@@ -101,9 +106,9 @@
                   <div class="text-center p-3">
                     <i class="fas fa-file-export fa-5x"></i>
                     <h5 class="pt-4">Export</h5>
-                      <p class="text-gray pt-2"> Already use another tracking system? Import or sync your
+                      <!-- <p class="text-gray pt-2"> Already use another tracking system? Import or sync your
                           CalorieTracker.io account with services like MyFitnessPal or your personal CSV with the
-                          click of a button.</p>
+                          click of a button.</p> -->
                   </div>
               </div>
 

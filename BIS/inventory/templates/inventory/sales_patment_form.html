@@ -1,7 +1,0 @@
-{% extends 'home/form.html' %}
-{% block cardheader %} Receive payment  {% endblock %}
-{% block formblock %}
-    {{ form.non_field_errors }}
-    {% load crispy_forms_tags %}
-    {{ form|crispy }}
-{% endblock %}

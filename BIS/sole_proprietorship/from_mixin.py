@@ -13,9 +13,6 @@ class TransactionValidation:
                 totalDebit += form.cleaned_data.get('balance', 0)
             else:
                 totalCredit += form.cleaned_data.get('balance', 0)
-
-     
-
         
         if totalDebit != totalCredit:
             raise ValidationError(_(f"Total Debit ={totalDebit} is not equal to Toal Credit = {totalCredit}"))
