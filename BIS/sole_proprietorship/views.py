@@ -36,7 +36,6 @@ from django.utils.safestring import mark_safe
 import plotly.figure_factory as ff
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
 import functools
-
 # from django_renderpdf.views import PDFView
 
 def prepare_data_frame( journal  ,  accounts):
@@ -357,6 +356,62 @@ class FinancialStatements(LoginRequiredMixin, ConfigRequiredMixin, View):
 
         return render(request , self.template_name  , ctx)
       
+# class FinancialStatementsDataMixin:
+#     def get_data(self):
+#         with connection.cursor() as cursor:
+#             cursor.execute("""  
+#                     SELECT account_type , account  , normal_balance ,
+#                         SUM(CASE
+#                             WHEN j.transaction_type = a.normal_balance Then  j.balance
+#                             ELSE ( -1 * j.balance)
+#                         END) as balance 
+#                         FROM sole_proprietorship_journal as j
+#                         JOIN sole_proprietorship_accounts as a
+#                         on j.account_id = a.id
+#                         JOIN sole_proprietorship_transaction as t
+#                         ON j.transaction_id = t.id
+#                         where a.owner_id = %s  AND t.date <= %s
+                                                
+#                 GROUP by account_type , account, normal_balance
+#                 ORDER by balance DESC
+#                                                     """ , [self.request.user.id ,
+#                                                            self.request.user.fs_reporting_period.end_date
+                                                           
+#                                                             ])
+
+#             # query result will be some thing like this ('Assest', 'Computer equipment','Debit', 7000.0)
+#             query = list(cursor)
+#         return query
+
+#     def financial_sataements_by_sql(self):
+#         query = self.get_data()
+#         total_debit = sum([ var[3] for var in query if var[2] == "Debit"])
+#         total_credit = sum([ var[3] for var in query if var[2] == "Credit"])
+
+#         ctx = {
+#             'data': query ,
+#             'Total_Debit' :total_debit ,
+#             'Total_Credit' : total_credit 
+#         }
+#         # dic acumulation to get the blance for oue expanded account equation (Assest = Liabilities + revenues - Expenses + investment - Drawings )
+#         for var in query:
+#             ctx[var[0]] = ctx.get(var[0] , 0) + var[3]
+
+#         ctx["net_income"] = ctx.get('Revenue' , 0) - ctx.get('Expenses' , 0)
+#         ctx['equity'] = ctx.get('Investment' , 0)  + ctx["net_income"] - ctx.get('Drawings' , 0)
+        
+#         return ctx
+
+# class FinancialStatementsPDFView(LoginRequiredMixin, FinancialStatementsDataMixin , PDFView):
+#     template_name = 'sole_proprietorship/testpdf.html'
+
+#     def get_context_data(self, *args, **kwargs):
+#         """Pass some extra context to the template."""
+#         ctx = self.financial_sataements_by_sql()
+#         ctx['start_date'], ctx['end_date'] = None, None
+#         # ctx['start_date'] = self.request.user.fs_reporting_period.start_date
+#         # ctx['end_date'] = self.request.user.fs_reporting_period.end_date
+#         return ctx
 
 
 
@@ -520,7 +575,7 @@ class ViewPDF(FinancialStatements):
 #         return self.financial_sataements_by_sql()
 
 
-class TransactionsPDFView(LoginRequiredMixin, View):
+class TransactionsPDFView(LoginRequiredMixin, ConfigRequiredMixin, View):
     template_name = 'sole_proprietorship/transaction_pdf.html'
 
     @property
@@ -948,3 +1003,27 @@ class FinancialAnalysisView(LoginRequiredMixin, ConfigRequiredMixin, View):
         ctx['end_date'] = request.user.fs_reporting_period.end_date
         
         return render(request, self.template_name, ctx)
+
+
+class PivotTableView(LoginRequiredMixin , View):
+    template_name = "sole_proprietorship/pivot_table.html"
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+class JournalDataJsonView(LoginRequiredMixin , View):
+
+
+    def get(self , request , *args , **kwargs):
+        import json
+
+        data = Transaction.objects.prefetch_related(
+            'journal_set' , 'journal_set__account'
+        ).filter(journal__account__owner=self.request.user).distinct().values('date', 'comment', 'journal__balance', 'journal__account__account', 'journal__transaction_type')
+        df = pd.DataFrame(data)
+        # df['date'] = pd.to_datetime(df['date'], format='%d%m%Y', errors='coerce')
+        
+        response = HttpResponse(content_type='application/json')
+        # response['Content-Disposition'] = 'attachment; filename="somefilename.json"'
+        df.to_json(response, orient='records', date_format='iso')
+
+        return response

@@ -4,12 +4,27 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/printThis/1.15.0/printThis.min.js" integrity="sha512-d5Jr3NflEZmFDdFHZtxeJtBzk0eB+kkRXWFQqEc1EKmolXjHm2IKCA7kTvXBNjIYzjXfD5XzIjaaErpkZHCkBg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   {% endblock %}
 {% block content %}
-<div class="d-grid gap-2 col-6 mx-auto">
-  <button class="btn btn-light" type="button" onclick="printMe()"><i class="far fa-file-pdf"> PDF</i></button>
-  <button class="btn btn-light" type="button"><i class="far fa-file-excel"> Excel</i></button>
+
+<div class="d-sm-flex  align-items-center mb-4">
+  <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="#" onclick="printMe()"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; PDF1</a>
+ <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'inventory:supplier_invoice' purchaseinventory.pk  %}"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;PDF2</a>
   {% if purchaseinventory.status == 0 %}
-    <button class="btn btn-light" type="button"><strong><a href="{% url "inventory:pay_invoice" purchaseinventory.pk %}" target="blank"><i class="fab fa-amazon-pay"> Pay Invoice</i></a></strong></button>
+  <button class="btn btn-light" type="button"><strong><a href="{% url "inventory:pay_invoice" purchaseinventory.pk %}" target="blank"><i class="fab fa-amazon-pay"> Pay Invoice</i></a></strong></button>
   {% endif %}
+</div>
+
+<div class="d-grid gap-2 col-6 mx-auto">
+  <!-- <button class="btn btn-light" type="button" onclick="printMe()"><i class="far fa-file-pdf"> PDF</i></button>
+    <button class="btn btn-light" type="button">
+      <a href="{% url 'inventory:supplier_invoice' purchaseinventory.pk  %}">
+
+        <i class="far fa-file-excel"> PDF2</i>
+      
+    </button> -->
+
+  <!-- {% if purchaseinventory.status == 0 %}
+    <button class="btn btn-light" type="button"><strong><a href="{% url "inventory:pay_invoice" purchaseinventory.pk %}" target="blank"><i class="fab fa-amazon-pay"> Pay Invoice</i></a></strong></button>
+  {% endif %} -->
 </div>
 <div class="invoice-receipt">
   {% include 'inventory/purchase_detail_abstract.html'%}

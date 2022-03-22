@@ -39,6 +39,7 @@ from django.db.models import Func, DateTimeField, CharField, DateField
 from django.utils.functional import cached_property
 from django.db.models.expressions import RawSQL
 from datetime import timedelta
+from django_renderpdf.views import PDFView
 
 class DaysInterval(Func):
     function = 'make_interval'
@@ -380,7 +381,15 @@ class DetailPurchaseInventoryView(OwnerDetailView):
     template_name = "inventory/purchase_detail.html"
 
 
-    
+class SupplierInvoicePDFView(LoginRequiredMixin, PDFView):
+   
+    template_name = 'inventory/supplier_invoice.html'
+
+    def get_context_data(self, *args, **kwargs):
+        """Pass some extra context to the template."""
+        context = super().get_context_data(*args, **kwargs)
+        context['purchaseinventory'] = get_object_or_404(PurchaseInventory, pk=kwargs['pk'], owner=self.request.user)
+        return context   
 
 
 class DeletePurchaseInventoryView(OwnerDeleteView):

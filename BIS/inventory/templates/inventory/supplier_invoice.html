@@ -1,0 +1,130 @@
+{% load static %}
+<html>
+  <head>
+
+    <meta charset="utf-8">
+    <link href="{% static 'home/css/invoice/invoice.css' %}" media="print" rel="stylesheet">
+    <title>Invoice</title>
+    <meta name="description" content="Invoice demo sample">
+  </head>
+
+  <body>
+    <h1>Invoice</h1>
+
+    <aside>
+      <address id="from">
+
+      </address>
+
+      <address id="to">
+        {{ purchaseinventory.supplier }}
+        term: {{ purchaseinventory.term }}
+     
+      </address>
+    </aside>
+    <dl id="informations">
+      <dt>Invoice number</dt>
+      <dd>{{ purchaseinventory.pk }}</dd>
+      <dt>Date</dt>
+      <dd>{{ purchaseinventory.purchase_date }}</dd>
+    </dl>
+
+    <table>
+      <thead>
+        <tr>
+          <th>item</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for price in purchaseinventory.inventoryprice_set.all %}
+        <tr>
+            <td>{{ price.inventory }}</td>
+            <td>{{ price.cost_per_unit}}</td>
+            <td>{{ price.number_of_unit}}</td>
+            <td>{{ price.total_cost}}</td>
+        </tr>
+        {% endfor %}
+        {% if  purchaseinventory.num_returend >= 1 %}
+          <tr><td colspan="4" style="text-align: center;color: gray;">List of Returned Item</td></tr>
+          <tr>
+            <th>Date</th>
+            <th>item</th>
+            <th>Num</th>
+            <th></th>
+          </tr>
+          {% for inventoryprice in purchaseinventory.inventoryprice_set.all %}
+            {% for return in inventoryprice.inventoryreturn_set.all %}
+            <tr>
+                <td>{{  return.date }}</td>
+                <td>{{ inventoryprice.inventory }}</td>
+                <td>{{ return.num_returned }}</td>
+                <td></td>
+
+            </tr>
+            {% endfor %}
+          {% endfor %}
+        {% endif %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="padding-left: 70%;">Total</td>
+          <td>{{ purchaseinventory.check_total_amount }}</td>
+        </tr>
+        {% if purchaseinventory.frieght_in %}
+          <tr>
+            <td colspan="3" style="padding-left: 70%;">
+              fright in 
+            </td>
+            <td style="color: red;">{{purchaseinventory.frieght_in }}</td>
+          </tr>
+        {% endif %}
+        {% if purchaseinventory.allowance > 0%}
+        <tr>
+            <td colspan="3" style="padding-left: 70%;">Allowance</td>
+            <td style="color: red;">{{ purchaseinventory.allowance }}</td>
+        </tr>
+        {% endif %}
+        {% if purchaseinventory.num_returend > 0 %}
+          <tr>
+            <td colspan="3" style="padding-left: 70%;">Cost of unit's returned:</td>
+            <td style="color: red;">{{ purchaseinventory.cost_returned }}</td>
+        </tr>
+        {% endif %}
+        {% if purchaseinventory.allowance > 0 or purchaseinventory.num_returend > 0 %}
+        <tr>
+            <td colspan="3" style="padding-left: 70%;">Net Purchases:</td>
+            <td>{{ purchaseinventory.net_purchases }}</td>
+        </tr>
+        {% endif %}
+</tbody>
+       
+      </tfoot>
+    </table>
+
+    <table id="total">
+      <thead>
+        <tr>
+          <th>Due by</th>
+          <th>Total Amount Paid</th>
+          <th>Amount Due</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ purchaseinventory.check_due_date }}</td>
+          <td>{{  purchaseinventory.check_total_amount_paid }}</td>
+          <td>{{ purchaseinventory.check_total_amount_unpaid }}</td>
+          {% if purchaseinventory.status == 0 %}
+            <td style="color:red">UNPAID </td>
+          {% else %}
+            <td>PAID </td>
+          {% endif %}
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

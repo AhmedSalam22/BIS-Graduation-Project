@@ -19,3 +19,4 @@ django-crispy-forms
 openpyxl
 docutils
 xlsx-streaming
+django-renderpdf

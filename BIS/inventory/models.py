@@ -15,6 +15,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models.functions import Coalesce, Concat
 from django.utils.functional import cached_property
+from ckeditor.fields import RichTextField
 
 
 
@@ -229,10 +230,11 @@ class Inventory(models.Model):
 
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     item_name = models.CharField(max_length=250)
-    description = models.TextField(
+    description = RichTextField(
         null= True,
         blank= True
     )
+    
     general_ledeger_account = models.ForeignKey('sole_proprietorship.Accounts',on_delete=models.CASCADE)
     # category = models.ManyToManyField(Category, null=True, blank=True)
 
@@ -779,6 +781,10 @@ class PurchaseInventory(DueDateMixin, models.Model):
             else:
                 return 0
         return query
+
+
+    def check_total_amount_unpaid(self):
+        return self.check_net_purchase() - self.check_total_amount_paid()
 
     def save(self, *args, **kwargs):
         self.due_date = self.check_due_date()
