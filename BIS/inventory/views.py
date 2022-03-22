@@ -288,6 +288,27 @@ class ListInventoryView(LoginRequiredMixin, FilterContextMixin, FilterView):
         # selected related used to cash the result from FK without hit the database
         return qs
 
+    def get(self, request, *args, **kwargs):
+        request.session['export_purchases'] = request.GET
+        return super().get(request, *args, **kwargs)
+
+
+class PurchasesExcelView(LoginRequiredMixin, View):
+    pass
+    # def get(self, request, *args, **kwargs):
+    #     with BytesIO() as b:
+    #         # Use the StringIO object as the filehandle.
+    #         writer = pd.ExcelWriter(b, engine='xlsxwriter')
+    #         df.to_excel(writer, sheet_name='Sheet1')
+    #         writer.save()
+    #         # Set up the Http response.
+    #         response = HttpResponse(
+    #             b.getvalue(),
+    #             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    #         )
+    #         response['Content-Disposition'] = 'attachment; filename=purchases'
+    #         return response
+
 
     
 class DetailInventoryView(OwnerDetailView):

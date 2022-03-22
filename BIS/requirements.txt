@@ -19,4 +19,6 @@ django-crispy-forms
 openpyxl
 docutils
 xlsx-streaming
+pangocffi
+cffi
 django-renderpdf
