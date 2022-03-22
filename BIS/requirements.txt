@@ -20,5 +20,5 @@ openpyxl
 docutils
 xlsx-streaming
 pangocffi
-cffi
+cairocffi
 django-renderpdf
