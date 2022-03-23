@@ -22,10 +22,10 @@ class PurchaseFilterHelper(FormHelper):
            Div(
                TabHolder(
                     Tab('Date',
-                        Row(
-                            Column('purchase_date__gte', 'purchase_date__lte'),
-                            Column('due_date__gte', 'due_date__lte')
-                        )
+                        Row('purchase_date__gte'),
+                        Row('purchase_date__lte'),
+                        Row('due_date__gte'),
+                        Row('due_date__lte')
                     ),
                     Tab('dropdown',
                         Row(
@@ -37,18 +37,19 @@ class PurchaseFilterHelper(FormHelper):
                     ),
                     Tab(
                         'other',
-                        Row(
-                            Column('num_returend__gte', 'num_returend__lte'),
-                            Column('cost_returned__gte', "cost_returned__lte"),
-                            Column('total_purchases__gte', 'total_purchases__lte'),
-                            Column('net_purchases__gte', 'net_purchases__lte'),
-                            Column('total_amount_paid__gte', 'total_amount_paid__lte')
-                        )
+                        
+                            Row('num_returend__gte', 'num_returend__lte'),
+                            Row('cost_returned__gte', "cost_returned__lte"),
+                            Row('total_purchases__gte', 'total_purchases__lte'),
+                            Row('net_purchases__gte', 'net_purchases__lte'),
+                            Row('total_amount_paid__gte', 'total_amount_paid__lte')
+                        
                     )
                 )
             )
         )
         self.form_tag = False
+        self.disable_csrf = True
 
 
 class SalesFormsetHelper(FormHelper):

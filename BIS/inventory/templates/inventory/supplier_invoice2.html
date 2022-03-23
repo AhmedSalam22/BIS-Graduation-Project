@@ -1,0 +1,159 @@
+<head>
+    <title>Invoice #{{purchaseinventory.pk }}</title>
+    <style>
+        @page {
+        size: a4 portrait;
+        @frame header_frame {           /* Static Frame */
+        -pdf-frame-content: header_content;
+        left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+        }
+        @frame content_frame {          /* Content Frame */
+        left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+        }
+        @frame footer_frame {           /* Another static Frame */
+        -pdf-frame-content: footer_content;
+        left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+        }
+        * {
+            font-size: 105%;
+        }
+        table tr th {
+            padding: 0px;
+            text-align: left;
+        }
+       
+        #invoice-header {
+            background-color:rgba(32, 25, 25, 0.692);
+            text-align: center;
+            color: white;
+            padding-top: 10px;     
+        }
+
+        table tfoot tr td {
+            font-weight: bold;
+        }
+        .invoice-footr {
+            text-align: right;
+            padding-right: 70px;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Content for Static Frame 'header_frame' -->
+    <div id="header_content">
+        <h3>{{ request.user.fs_reporting_period.company_name|default:"AYBA" }} Invoice System</h3>
+    </div>
+    <!-- Content for Static Frame 'footer_frame' -->
+    <div id="footer_content">
+        (c) - page 
+        <pdf:pagenumber>
+        of 
+        <pdf:pagecount>
+    </div>
+    <!-- HTML Content -->
+    <h1 id="invoice-header">Invoice #{{purchaseinventory.pk }} </h1>
+    <table>
+        <tr>
+            <td>Inovice date: {{ purchaseinventory.purchase_date }}</td>
+            <td>{{ purchaseinventory.supplier }}</td>
+        </tr>
+        <tr>
+            <td>Due date: {{ purchaseinventory.check_due_date }}</td>
+            <td>Total Amount Paid: <b>{{  purchaseinventory.check_total_amount_paid }}</b></td>
+        </tr>
+        <tr>
+            {% if purchaseinventory.status == 0 %}
+                <td >Status:<b style="color:red">UNPAID</b> </td>
+            {% else %}
+                <td >Status:<b style="color: green;">PAID</b> </td>
+            {% endif %}
+            <td>Amount due: <b>{{ purchaseinventory.check_total_amount_unpaid }}</b></td>
+        </tr>
+    </table>
+    <hr>
+    <table>
+        <thead>
+            <tr>
+                <th>item</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for price in purchaseinventory.inventoryprice_set.all %}
+            <tr>
+                <td>{{ price.inventory }}</td>
+                <td>{{ price.cost_per_unit}}</td>
+                <td>{{ price.number_of_unit}}</td>
+                <td>{{ price.total_cost}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if  purchaseinventory.num_returend >= 1 %}
+    <h3 style="text-align: center; background-color: gainsboro; padding-top: 10px;">List of Returned Item</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>item</th>
+                <th>Num</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inventoryprice in purchaseinventory.inventoryprice_set.all %}
+            {% for return in inventoryprice.inventoryreturn_set.all %}
+            <tr>
+                <td>{{  return.date }}</td>
+                <td>{{ inventoryprice.inventory }}</td>
+                <td>{{ return.num_returned }}</td>
+                <td></td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    <hr>
+    <table>
+    
+        <tfoot>
+        <tr>
+            <td colspan="3" class="invoice-footr">Total:</td>
+            <td>{{ purchaseinventory.check_total_amount }}</td>
+        </tr>
+        {% if purchaseinventory.frieght_in %}
+        <tr>
+            <td colspan="3" class="invoice-footr">
+                fright in 
+            </td>
+            <td style="color: red;">{{purchaseinventory.frieght_in }}</td>
+        </tr>
+        {% endif %}
+        {% if purchaseinventory.allowance > 0%}
+        <tr>
+            <td colspan="3" class="invoice-footr">Allowance</td>
+            <td style="color: red;">{{ purchaseinventory.allowance }}</td>
+        </tr>
+        {% endif %}
+        {% if purchaseinventory.num_returend > 0 %}
+        <tr>
+            <td colspan="3" class="invoice-footr">Cost of unit's returned:</td>
+            <td>{{ purchaseinventory.cost_returned }}</td>
+        </tr>
+        {% endif %}
+        {% if purchaseinventory.allowance > 0 or purchaseinventory.num_returend > 0 %}
+        <tr>
+            <td colspan="3" class="invoice-footr">Net Purchases:</td>
+            <td>{{ purchaseinventory.net_purchases }}</td>
+        </tr>
+        {% endif %}
+    </tfoot>    
+    </table>
+    <hr>
+</body>
+</html>

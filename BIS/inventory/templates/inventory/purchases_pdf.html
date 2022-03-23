@@ -1,0 +1,90 @@
+<head>
+    <style>
+        @page {
+            size: a4 portrait;
+            @frame content_frame {          /* Content Frame */
+                left: 10pt; width: 600pt; top: 10pt; height: 750pt;
+            }
+            @frame footer_frame {           /* Another static Frame */
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+        }
+    
+        table {
+            width:100%;
+            font-size: 16px;
+        }
+
+  
+
+   
+    table thead tr th {
+        text-align:left;
+    }
+
+   
+    table tbody tr {
+        margin-bottom: 3px;
+    }
+    .end-of-transaction  {
+    border-bottom-width: 2px !important;
+    border-style: dashed;
+    }
+
+    .start-of-transaction {
+        border-bottom-width: 0px !important;
+        border-style: none;
+    }
+
+    </style>
+    </head>
+    
+    <body>
+        <!-- Content for Static Frame 'footer_frame' -->
+        <div id="footer_content">(c) - page <pdf:pagenumber>
+            of <pdf:pagecount>
+        </div>
+        <hr>
+            <h1 style="text-align:center">{{ request.user.fs_reporting_period.company_name|default:"AYBA" }} Purchases</h1>
+        <hr>
+
+        <!-- HTML Content -->
+    <table width="100%">
+        <thead>
+            <tr>
+                <th style="width: 20px;">Id</th>
+                <th>Date</th>
+                <th>Supplier</th>
+                <th>Net purchases</th>
+                <th>Total Amount Paid</th>
+                <th>status</th>
+
+            </tr>
+        </thead>
+           
+        <tbody>
+            
+              {% if purchases %}
+                {% for purchase in purchases %}
+                    <tr>
+                        <td>{{ purchase.id }}</td>
+                        <td>{{ purchase.purchase_date }}</td>
+                        <td>{{ purchase.supplier }}</td>
+                        <td>{{ purchase.net_purchases }}</td>
+                        <td>{{ purchase.total_amount_paid }}</td>
+                        <td>{{ purchase.get_status_display  }}</td>
+
+                    </tr>
+
+
+                {% endfor %}
+              {% else %}
+                <p>There are no accounts in the database.</p>
+              {% endif %}
+
+           
+        </tbody>
+    </table>
+    <hr>
+    </body>

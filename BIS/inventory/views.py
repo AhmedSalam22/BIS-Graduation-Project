@@ -39,6 +39,7 @@ from django.db.models import Func, DateTimeField, CharField, DateField
 from django.utils.functional import cached_property
 from django.db.models.expressions import RawSQL
 from datetime import timedelta
+from home.utils import render_to_pdf
 # from django_renderpdf.views import PDFView
 
 class DaysInterval(Func):
@@ -288,9 +289,7 @@ class ListInventoryView(LoginRequiredMixin, FilterContextMixin, FilterView):
         # selected related used to cash the result from FK without hit the database
         return qs
 
-    def get(self, request, *args, **kwargs):
-        request.session['export_purchases'] = request.GET
-        return super().get(request, *args, **kwargs)
+ 
 
 
 class PurchasesExcelView(LoginRequiredMixin, View):
@@ -396,11 +395,38 @@ class ListPurchaseInventoryView(LoginRequiredMixin, FilterContextMixin, FilterVi
         print('query', qs.query)
         return qs
 
+    def get(self, request, *args, **kwargs):
+        request.session['export_purchases'] = request.GET
+        return super().get(request, *args, **kwargs)
+
 
 class DetailPurchaseInventoryView(OwnerDetailView):
     model = PurchaseInventory
     template_name = "inventory/purchase_detail.html"
 
+
+
+
+class SupplierInvoicePDFView(LoginRequiredMixin, View):
+    template_name = 'inventory/supplier_invoice2.html'
+
+    def get(self, request, *args, **kwargs):
+        ctx = {}
+        ctx['purchaseinventory'] = get_object_or_404(PurchaseInventory, pk=kwargs['pk'], owner=self.request.user)
+        pdf = render_to_pdf(self.template_name, ctx)
+        return HttpResponse(pdf, content_type='application/pdf')
+
+
+class PurchasesPDFView(LoginRequiredMixin, View):
+    template_name = 'inventory/purchases_pdf.html'
+
+    def get(self, request, *args, **kwargs):
+        ctx = {}
+        f = PurchaseFilter(request.session.get('export_purchases'))
+        ctx['purchases'] = f.qs.select_related('supplier').filter(owner=request.user)
+
+        pdf = render_to_pdf(self.template_name , ctx)
+        return HttpResponse(pdf, content_type='application/pdf')
 
 # class SupplierInvoicePDFView(LoginRequiredMixin, PDFView):
    

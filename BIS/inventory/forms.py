@@ -26,7 +26,7 @@ SalesAllowanceFormSet = inlineformset_factory(
     Sale, SalesAllowance, fields=('date', 'amount') , extra=1
     )
 
-class PurchaseFilter(django_filters.FilterSet, DateMixin):
+class PurchaseFilter(DateMixin, django_filters.FilterSet):
     class Meta:
         model = PurchaseInventory
         fields = {
@@ -42,8 +42,8 @@ class PurchaseFilter(django_filters.FilterSet, DateMixin):
                 'total_amount_paid': ['gte', 'lte'],  
                 }
 
-    def __init__(self,   **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args,  **kwargs):
+        super().__init__(*args, **kwargs)
         self.date(
             [
                 DateField(field='purchase_date__gte', initial=False),

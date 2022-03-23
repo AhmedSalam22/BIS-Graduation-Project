@@ -159,7 +159,7 @@ class TransactionFilter(django_filters.FilterSet):
         self.form.fields["date__gte"].label = 'Start Date'
         self.form.fields["date__lte"].widget =forms.widgets.DateInput(attrs={'type': 'date'})
         self.form.fields["date__lte"].label = 'End Date'
-        self.form.fields['comment__icontains'].widget = forms.Textarea(attrs={'rows':2})
+        self.form.fields['comment__icontains'].widget = forms.Textarea(attrs={'rows':2, 'cols':30})
 
 
         
@@ -168,12 +168,15 @@ class TransactionFilterHelper(FormHelper):
         super().__init__(*args, **kwargs)
         self.layout = Layout(
            Div(
-                Row(Column('date__gte', 'date__lte'), 
-                    Column('balance__gte', 'balance__lte'),
-                    Column('comment__icontains') , 
-                ),
-           )
+                Row('date__gte',
+                    'date__lte' ,
+                    'balance__gte',
+                     'balance__lte',
+                    'comment__icontains'
+                ) 
+            ),
         )
+        
         self.form_tag = False
 
 class CustomTransactionFormSet(TransactionValidation, BaseInlineFormSet):

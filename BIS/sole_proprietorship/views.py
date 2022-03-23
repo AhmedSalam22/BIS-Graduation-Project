@@ -23,7 +23,6 @@ import plotly.express as px
 from django_filters.views import FilterView
 from io import BytesIO
 from django.template.loader import get_template
-from xhtml2pdf import pisa
 import xlsxwriter
 # from pivottablejs import pivot_ui
 from django.contrib import messages
@@ -36,6 +35,7 @@ from django.utils.safestring import mark_safe
 import plotly.figure_factory as ff
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
 import functools
+from home.utils import render_to_pdf
 # from django_renderpdf.views import PDFView
 
 def prepare_data_frame( journal  ,  accounts):
@@ -539,20 +539,6 @@ ORDER by balance DESC
     # row = Journal.objects.raw('SELECT * FROM sole_proprietorship_journal ' )
     return HttpResponse(row)
 
-
-def render_to_pdf(template_src, context_dict={}):
-    """
-    src: https://github.com/divanov11/django-html-2-pdf/blob/master/htmltopdf/app/views.py
-
-    https://www.youtube.com/watch?v=5umK8mwmpWM
-    """
-    template = get_template(template_src)
-    html  = template.render(context_dict)
-    result = BytesIO()
-    pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
-    if not pdf.err:
-        return HttpResponse(result.getvalue(), content_type='application/pdf')
-    return None
 
 
 #Opens up page as PDF

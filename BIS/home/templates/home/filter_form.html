@@ -3,7 +3,9 @@
         <form method="get">
             {% load crispy_forms_tags %}  
             {% crispy  filter.form  helper %}
-            <button type="submit" class="btn btn-primary">Search</button>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
         </form>
     </div>
 </div>

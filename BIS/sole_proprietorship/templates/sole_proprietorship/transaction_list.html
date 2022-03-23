@@ -11,131 +11,143 @@
     border-bottom-width: 0px !important;
     border-style: none;
 }
+.form-group {
+    margin-bottom: 1rem;
+    width: 100%;
+}
 
 
 
 </style>
 {% endblock %}
 {% block content %}
-{% if Debit != Credit %}
-<div class="row">
-    <div class="col-12">
-        <div class="card text-white bg-danger shadow">
-            <div class="card-body">
-                <p class="m-0">Danger</p>
-                <strong>
-                    <p class="text-white-50 big m-0">Total Debit is not equal Total Credit
-                    </p>
-                </strong>
-                
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-<br>
-<div class="card">
-    <div class="card-body">
-        <form method="get">
-            {% load crispy_forms_tags %}  
-            {% crispy  filter.form  helper %}
-            <button type="submit" class="btn btn-primary">Search</button>
-        </form>
-    </div>
-</div>
-
-<br>
+    {% if Debit != Credit %}
     <div class="row">
-
-        <div class="col-sm-5 col-md-6">
-            <div class="card shadow border-left-primary py-2">
+        <div class="col-12">
+            <div class="card text-white bg-danger shadow">
                 <div class="card-body">
-                    <div class="row align-items-center no-gutters">
-                        <div class="col mr-2">
-                            <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total Debit</span></div>
-                            <div class="text-dark font-weight-bold h5 mb-0"><span>{{Debit}}</span></div>
-                        </div>
-                        <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
-                    </div>
+                    <p class="m-0">Danger</p>
+                    <strong>
+                        <p class="text-white-50 big m-0">Total Debit is not equal Total Credit
+                        </p>
+                    </strong>
+                    
                 </div>
             </div>
         </div>
-            <div class="col-sm-5 offset-sm-2 col-md-6 offset-md-0">
-                <div class="card shadow border-left-primary py-2">
-                    <div class="card-body">
-                        <div class="row align-items-center no-gutters">
-                            <div class="col mr-2">
-                                <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total Credit</span></div>
-                                <div class="text-dark font-weight-bold h5 mb-0"><span>{{Credit}}</span></div>
-                            </div>
-                            <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
-                        </div>
-                    </div>
-                </div>
-        </div>
     </div>
-<br>
-   <div class="container-fluid">
-    {% comment %} <h3 class="text-dark mb-4">journal</h3> {% endcomment %}
-    <div class="d-grid gap-2 d-md-block">
-        <a class="btn btn-primary btn-sm  d-sm-inline-block" href="{% url 'sole_proprietorship:journal_create' %}">Add a Transaction </a> 
-        <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:export_transactions_xlsx' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;EXPORT (XLSX)</a>
-        <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:export_transactions_csv' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (CSV)</a>
-        <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:export_transactions_pdf' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
-       
-    </div>
+    {% endif %}
     <br>
-    <div class="card">
-        <div class="card-header">journal</div>
-        <div class="card-body">
-            <div class="row">
-                <!-- <div class="col-md-6 text-nowrap">
-                    <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label>Show&nbsp;<select class="form-control form-control-sm custom-select custom-select-sm"><option value="10" selected="">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>&nbsp;</label></div>
-                </div> -->
-                {% comment %} <div class="col-md-6">
-                    <div class="text-md-right dataTables_filter" id="dataTable_filter"><label><input type="search" class="form-control form-control-sm" aria-controls="dataTable" placeholder="Search"></label></div>
-                </div> {% endcomment %}
-            </div>
-            {% include 'sole_proprietorship/transactions_table.html' %}
-            <div class="row">
-                <!-- <div class="col-md-6 align-self-center">
-                    <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing 1 to 10 of 27</p>
-                </div> -->
-                <div class="col-md-6">
-                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                        <!-- <ul class="pagination"> -->
-                      
-
-                            <div class="pagination">
-                            {% load sole_proprietorship_extras %}
-
-
-                                <span class="step-links">
-                                    {% if page_obj.has_previous %}
-                                        <a href="?{% query_transform request page=1 %}">&laquo; first</a>
-                                        <a href="?{% query_transform request page=page_obj.previous_page_number %}">previous</a>
-                                    {% endif %}
-                            
-                                    <span class="current">
-                                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                                    </span>
-                            
-                                    {% if page_obj.has_next %}
-                                        <a href="?{% query_transform request page=page_obj.next_page_number %}">next</a>
-                                        <a href="?{% query_transform request page=page_obj.paginator.num_pages %}">last &raquo;</a>
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <!-- <li class="page-item disabled"><a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true"></span></a></li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item"><a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li> -->
-                        <!-- </ul> -->
-                    </nav>
+    <div class="row">
+        <div class="col-3">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get">
+                        {% load crispy_forms_tags %}  
+                        {% crispy  filter.form  helper %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
+        <div class="col-9">
+            <div class="row">
+
+                <div class="col-sm-5 col-md-6">
+                    <div class="card shadow border-left-primary py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center no-gutters">
+                                <div class="col mr-2">
+                                    <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total Debit</span></div>
+                                    <div class="text-dark font-weight-bold h5 mb-0"><span>{{Debit}}</span></div>
+                                </div>
+                                <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    <div class="col-sm-5 offset-sm-2 col-md-6 offset-md-0">
+                        <div class="card shadow border-left-primary py-2">
+                            <div class="card-body">
+                                <div class="row align-items-center no-gutters">
+                                    <div class="col mr-2">
+                                        <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>Total Credit</span></div>
+                                        <div class="text-dark font-weight-bold h5 mb-0"><span>{{Credit}}</span></div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        <br>
+           <div class="container-fluid">
+            <div class="d-grid gap-2 d-md-block">
+                <a class="btn btn-primary btn-sm  d-sm-inline-block" href="{% url 'sole_proprietorship:journal_create' %}">Add a Transaction </a> 
+                <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:export_transactions_xlsx' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;EXPORT (XLSX)</a>
+                <a class="btn btn-primary btn-sm  d-sm-inline-block" style="margin-right:2px" role="button" href="{% url 'sole_proprietorship:export_transactions_csv' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp; EXPORT (CSV)</a>
+                <a class="btn btn-primary btn-sm  d-sm-inline-block" role="button" href="{% url 'sole_proprietorship:export_transactions_pdf' %}" target="_blank"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Generate Report(PDF)</a>
+               
+            </div>
+            <br>
+            <div class="card">
+                <div class="card-header">journal</div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- <div class="col-md-6 text-nowrap">
+                            <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label>Show&nbsp;<select class="form-control form-control-sm custom-select custom-select-sm"><option value="10" selected="">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>&nbsp;</label></div>
+                        </div> -->
+                        {% comment %} <div class="col-md-6">
+                            <div class="text-md-right dataTables_filter" id="dataTable_filter"><label><input type="search" class="form-control form-control-sm" aria-controls="dataTable" placeholder="Search"></label></div>
+                        </div> {% endcomment %}
+                    </div>
+                    {% include 'sole_proprietorship/transactions_table.html' %}
+                    <div class="row">
+                        <!-- <div class="col-md-6 align-self-center">
+                            <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing 1 to 10 of 27</p>
+                        </div> -->
+                        <div class="col-md-6">
+                            <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                                <!-- <ul class="pagination"> -->
+                              
+        
+                                    <div class="pagination">
+                                    {% load sole_proprietorship_extras %}
+        
+        
+                                        <span class="step-links">
+                                            {% if page_obj.has_previous %}
+                                                <a href="?{% query_transform request page=1 %}">&laquo; first</a>
+                                                <a href="?{% query_transform request page=page_obj.previous_page_number %}">previous</a>
+                                            {% endif %}
+                                    
+                                            <span class="current">
+                                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                                            </span>
+                                    
+                                            {% if page_obj.has_next %}
+                                                <a href="?{% query_transform request page=page_obj.next_page_number %}">next</a>
+                                                <a href="?{% query_transform request page=page_obj.paginator.num_pages %}">last &raquo;</a>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <!-- <li class="page-item disabled"><a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true"></span></a></li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                    <li class="page-item"><a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li> -->
+                                <!-- </ul> -->
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
     </div>
-</div>
+
+
+  
 {% endblock %}
