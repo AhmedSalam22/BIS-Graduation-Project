@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     # 'phonenumber_field',
     'django_filters',
-    'extra_views',
+    # 'extra_views',
     'ckeditor',
     # 'django_extensions',
 

@@ -1,38 +1,55 @@
 {% extends 'home/base.html' %}
 {% block content %}
-<div class="d-sm-flex justify-content-between align-items-center mb-4">
-    <h3 class="text-dark mb-0">Inventory items</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:create_inventory'%}"><i class="fa fa-plus fa-sm text-white-50"></i>&nbsp;Create New Inventory</a>
-</div>   
-{% include 'home/filter_form.html' %}
-<br>
-{% if inventory_list %}    
-    <div class="row">
-        <div class="row row-cols-auto">
-        {% for inventory in inventory_list %}
-                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                    <!-- Card-->
-                    <div class="card">
-                        {% if inventory.imgs.all.0.img.url %}
-                            <img src="{{inventory.imgs.all.0.img.url}}" alt="" class="w-100 card-img-top">
-                        {% else %}
-                            <img src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png" alt="" class="w-100 card-img-top">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ inventory.item_name }} </h5>
-                            <p class="card-text">{{ inventory.description|truncatechars:75 }}</p>
-                            <div><a class="btn btn-primary"  style="width: 100%" href="{% url "inventory:detail_inventory" inventory.id %}" target="blank">See details</a></div>
-                        </div>
-                        
+
+<div class="row">
+    <div class="col-3">
+        <div class="card">
+            <div class="card-body">
+                <form method="get">
+                    {% load crispy_forms_tags %}  
+                    {{  filter.form|crispy }}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Search</button>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
+                </form>
+            </div>
+        </div>        
     </div>
-        {% else %}
-            <p>There is no inventory item in the database yet.</p>
-        {% endif %}
+    <div class="col-9">
+        <div class="d-sm-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-dark mb-0">Inventory items</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="{% url 'inventory:create_inventory'%}"><i class="fa fa-plus fa-sm text-white-50"></i>&nbsp;Create New Inventory</a>
+        </div>   
+        {% if inventory_list %}    
+            <div class="row">
+                <div class="row row-cols-auto">
+                {% for inventory in inventory_list %}
+                        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                            <!-- Card-->
+                            <div class="card">
+                                {% if inventory.imgs.all.0.img.url %}
+                                    <img src="{{inventory.imgs.all.0.img.url}}" alt="" class="w-100 card-img-top">
+                                {% else %}
+                                    <img src="https://www.allianceplast.com/wp-content/uploads/2017/11/no-image.png" alt="" class="w-100 card-img-top">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ inventory.item_name }} </h5>
+                                    <p class="card-text">{{ inventory.description|safe|truncatechars:75 }}</p>
+                                    <div><a class="btn btn-primary"  style="width: 100%" href="{% url "inventory:detail_inventory" inventory.id %}" target="blank">See details</a></div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+                {% else %}
+                    <p>There is no inventory item in the database yet.</p>
+                {% endif %}
+        
+        
+        {% load sole_proprietorship_extras %}
+        {% include 'home/pagination.html' %}
+    </div>
+</div>
 
-
-{% load sole_proprietorship_extras %}
-{% include 'home/pagination.html' %}
 {% endblock %}

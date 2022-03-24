@@ -30,8 +30,8 @@
                             <tr>
                                 <td><strong>{{ supplier.full_name}}</strong></td>
                                 <td>
-                                    <a href="{% url 'suppliers:supplier_update' supplier.id %}">
-                                        <button type="button" class="btn btn-warning"><i class="fas fa-pencil-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                    <a href="{% url 'suppliers:supplier_detail' supplier.id %}">
+                                        <button type="button" class="btn btn-warning"><i class="fa fa-eye d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
                                     </a>
                                     <a href="{% url 'suppliers:supplier_delete' supplier.id %}">
                                         <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
