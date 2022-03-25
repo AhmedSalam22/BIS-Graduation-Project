@@ -439,6 +439,31 @@ class PurchaseManager(models.Manager):
             
         return result
 
+    def aged_payable(self, owner_id, purchase_date_start, purchase_date_end):
+        """
+            return aged payable table 
+             (aged_payable, Sum(total_amt_unpaid))
+        """
+        with connection.cursor() as cursor:
+            cursor.execute("""
+               SELECT aged_payable, Sum(total_amt_unpaid)
+                    FROM(
+                        SELECT 
+                            CASE 
+                                WHEN (CURRENT_DATE - due_date) > 90  THEN 'over 90 days'
+                                WHEN (CURRENT_DATE - due_date) > 60  THEN '61-90'
+                                WHEN (CURRENT_DATE - due_date) > 30  THEN '31-60'
+                                WHEN (CURRENT_DATE - due_date) >= 0  THEN '0-30'
+                                ELSE 'not over due yet'
+                            END as aged_payable,
+                            (net_purchases - total_amount_paid) AS total_amt_unpaid
+                        FROM inventory_purchaseinventory
+                        WHERE status = 0 AND owner_id = %s AND purchase_date >= %s AND purchase_date <= %s
+                    ) as aged_payable_table
+                GROUP BY aged_payable;
+            """, [owner_id, purchase_date_start, purchase_date_end])
+            data = cursor.fetchall()
+        return data  
 
     def notDueAndOverDue(self, owner_id, purchase_date_start, purchase_date_end):
         """
@@ -485,9 +510,7 @@ class PurchaseManager(models.Manager):
             data = cursor.fetchall()
         return data     
 
-    
-    
-
+        
     def avg_cost_per_unit(self , query):
         """
         avg cost per unit

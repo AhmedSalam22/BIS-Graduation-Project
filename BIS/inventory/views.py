@@ -680,6 +680,13 @@ class PurchasesDashboard(LoginRequiredMixin , View):
         df_fig1 = ff.create_table(df_notDueAndOverDue)
         df_fig1 = df_fig1.to_html(full_html=False, include_plotlyjs=False)
 
+        df_aged_payable = pd.DataFrame(
+            PurchaseInventory.purchases.aged_payable(owner.id , start_date , end_date), columns=['Aged Payable', 'Total amount unpaid']
+        )
+        df_aged_payable_fig_tbl = ff.create_table(df_aged_payable).to_html(full_html=False, include_plotlyjs=False)
+        df_aged_payable_fig_pie = go.Figure(data=[go.Pie(labels=df_aged_payable['Aged Payable'], values= df_aged_payable['Total amount unpaid'])] )
+        df_aged_payable_fig_pie.update_layout(title_text= 'Aged Payable')
+        df_aged_payable_fig_pie = df_aged_payable_fig_pie.to_html(full_html=False, include_plotlyjs=False)
 
         df =  pd.DataFrame(
             PurchaseInventory.purchases.vendors_to_pay(owner.id , start_date , end_date),
@@ -732,7 +739,9 @@ class PurchasesDashboard(LoginRequiredMixin , View):
             # "graph3" : graph3,
             'cost_returned': cost_returned,
             'df_fig1': df_fig1,
-            'vendors_to_pay_tbl': vendors_to_pay_tbl
+            'vendors_to_pay_tbl': vendors_to_pay_tbl,
+            'aged_payable_tbl': df_aged_payable_fig_tbl,
+            'aged_payable_fig_pie': df_aged_payable_fig_pie
  
 
         }
