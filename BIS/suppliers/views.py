@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.views.generic import View, TemplateView, DeleteView, ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import Concat
 from django.db.models import Value, F
-from .models import Supplier
+from .models import Supplier, SupplierPhone, SupplierNote, SupplierAddress, SupplierEmail
 from django.contrib import messages
 from suppliers.forms import SupplierForm, SupplierEmailForm, SupplierPhoneForm, SupplierAddressForm, SupplierNoteForm
 
@@ -42,12 +42,12 @@ class CreateSupplierView(LoginRequiredMixin, View):
             supplier.owner = request.user
             supplier.save()
 
-            if supplier_email_form.cleaned_data['email'] != "":
+            if supplier_email_form.cleaned_data['email']:
                 supplier_email = supplier_email_form.save(commit=False)
                 supplier_email.supplier = supplier
                 supplier_email.save()
            
-            if supplier_phone_form.cleaned_data['phone'] != "":
+            if supplier_phone_form.cleaned_data['phone']:
                 supplier_phone = supplier_phone_form.save(commit=False)
                 supplier_phone.supplier = supplier
                 supplier_phone.save()
@@ -57,7 +57,7 @@ class CreateSupplierView(LoginRequiredMixin, View):
                 supplier_address.supplier = supplier
                 supplier_address.save()
 
-            if supplier_note_form.cleaned_data['note'] != "":
+            if supplier_note_form.cleaned_data['note']:
                 supplier_note = supplier_note_form.save(commit=False)
                 supplier_note.supplier = supplier
                 supplier_note.save()
@@ -129,7 +129,7 @@ class SupplierDetailView(LoginRequiredMixin, DetailView):
 
 
 class SupplierUpdateView(LoginRequiredMixin, UpdateView):
-    template_name = "suppliers/create_supplier.html"
+    template_name = "suppliers/update_supplier.html"
     model = Supplier
     fields = ('first_name', 'middle_name', 'last_name')
 
@@ -143,3 +143,112 @@ class SupplierUpdateView(LoginRequiredMixin, UpdateView):
         self.object = form.save()
         messages.success(self.request, 'Supplier has been updated.')
         return super().form_valid(form)
+
+
+class AddFieldToSupplierMixin:
+    Form = None
+    form_ctx_name = 'form'
+    success_url = 'suppliers:supplier_detail'
+    template_name = 'suppliers/add_to_supplier.html'
+    title = None
+
+    def get(self, request, *args, **kwargs):
+        supplier = get_object_or_404(Supplier, pk=kwargs['supplier_id'], owner=request.user)
+        ctx = {
+            self.form_ctx_name: self.Form(),
+            'title': self.title
+        }
+        return render(request, self.template_name, ctx)
+
+
+    def post(self, request, *args, **kwargs):
+        supplier = get_object_or_404(Supplier, pk=kwargs['supplier_id'], owner=request.user)
+        form = self.Form(request.POST)
+
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.supplier = supplier
+            obj.save()
+            return redirect(reverse(self.success_url, args=[supplier.pk]))
+        return render(request, self.tamplate_name, {self.form_ctx_name: form, 'title': self.title})
+
+class AddPhoneView(LoginRequiredMixin, AddFieldToSupplierMixin,  View):
+    Form = SupplierPhoneForm
+    title = 'Phone'
+   
+
+class AddEmailView(LoginRequiredMixin, AddFieldToSupplierMixin,  View):
+    Form = SupplierEmailForm
+    title = 'Email'
+
+class AddNoteView(LoginRequiredMixin, AddFieldToSupplierMixin,  View):
+    Form = SupplierNoteForm
+    title = 'Note'
+
+class AddAddressView(LoginRequiredMixin, AddFieldToSupplierMixin,  View):
+    Form = SupplierAddressForm
+    title = 'Address'
+
+class UpdateDeleteMixin:
+    """
+        Mixin for Supplier Phone,Email, Address , and Note
+    """
+    success_url = 'suppliers:supplier_detail'
+
+    def get_success_url(self):
+        return reverse(self.success_url, args=[self.kwargs['supplier_pk']])
+
+    def get_queryset(self):
+        """ Limit a User to only modifying their own data. """
+        qs = super().get_queryset().filter(supplier__owner=self.request.user)
+        return qs
+
+
+class SupplierPhoneUpdateView(LoginRequiredMixin, UpdateDeleteMixin,  UpdateView):
+    template_name = "suppliers/update_supplier.html"
+    model = SupplierPhone
+    fields = ['phone',]
+
+    def form_valid(self, form):
+        """If the form is valid, save the associated model."""
+        self.object = form.save()
+        messages.success(self.request, 'Supplier Phone has been updated.')
+        return super().form_valid(form)
+
+class SupplierAddressUpdateView(LoginRequiredMixin, UpdateDeleteMixin,  UpdateView):
+    template_name = "suppliers/update_supplier_address.html"
+    model = SupplierAddress
+    fields = ['address1', 'address2', 'zip_code', 'city', 'country']
+
+class SupplierNoteUpdateView(LoginRequiredMixin, UpdateDeleteMixin,  UpdateView):
+    template_name = "suppliers/update_supplier_note.html"
+    model = SupplierNote
+    fields = ['note',]
+
+class SupplierEmailUpdateView(LoginRequiredMixin, UpdateDeleteMixin,  UpdateView):
+    template_name = "suppliers/update_supplier_email.html"
+    model = SupplierEmail
+    fields = ['email',]
+
+
+class SupplierPhoneDeleteView(LoginRequiredMixin, UpdateDeleteMixin, DeleteView):
+    template_name = "suppliers/supplier_phone_delete.html"
+    model = SupplierPhone
+
+
+class SupplierEmailDeleteView(LoginRequiredMixin, UpdateDeleteMixin, DeleteView):
+    template_name = "suppliers/supplier_email_delete.html"
+    model = SupplierEmail
+
+
+class SupplierAddressDeleteView(LoginRequiredMixin, UpdateDeleteMixin, DeleteView):
+    template_name = "suppliers/supplier_address_delete.html"
+    model = SupplierAddress
+
+
+class SupplierNoteDeleteView(LoginRequiredMixin, UpdateDeleteMixin, DeleteView):
+    template_name = "suppliers/supplier_note_delete.html"
+    model = SupplierNote
+
+
+    

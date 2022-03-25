@@ -1,4 +1,19 @@
 {% extends 'home/base.html' %}
+{% block css%}
+  <style>
+    #myTab {
+      background-color: whitesmoke;
+    }
+
+    #myTabContent{
+        color: black;
+        border-style: groove;
+        padding: 20px;
+        margin-top: 10px;
+    }
+
+  </style>
+{% endblock %}
 {% block content %}
 <div class="card">
     <div class="card-body">
@@ -19,18 +34,95 @@
           <div class="tab-content" id="myTabContent">
 
             <div class="tab-pane fade show active" id="General" role="tabpanel" aria-labelledby="general-tab">  
-                <p>Name: {{ supplier.name }}</p>
+                <p>Name: {{ supplier.name }} (<a href="{% url 'suppliers:supplier_update' supplier.pk %}">Update</a>)
+
+                </p>
             </div>
             <div class="tab-pane fade" id="Address" role="tabpanel" aria-labelledby="address-tab">
-        
+              <div class="d-grid gap-2">
+                <a class="btn btn-primary" href="{% url 'suppliers:add_address' supplier.pk %}">Add Address</a>
+                <br><br>
+              </div>
+                <ul class="fa-ul">
+                  {% for address in supplier.supplieraddress_set.all %}
+                      <li>
+                        <i class="fa fa-address-card" aria-hidden="true"></i>
+                        {{address}}
+                        <a href="{% url 'suppliers:update_address' supplier.pk address.pk %}">(Update)</a>
+                        <a href="{% url 'suppliers:delete_address' supplier.pk address.pk %}">(Delete)</a>
+                      </li>
+                  {% empty %}
+                      <li>
+                        <i class="fa fa-address-card" aria-hidden="true"></i>
+                        There is no Address
+                      </li>
+                  {% endfor %}
+                </ul>
             </div>
             <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-            
-        
+              <br>
+
+              <div class="row">
+                <div class="d-grid gap-2">
+                  <a class="btn btn-primary" href="{% url 'suppliers:add_phone' supplier.pk %}">Add Phone Number</a>
+                  <a class="btn btn-primary" href="{% url 'suppliers:add_email' supplier.pk %}">Add Email</a>
+                  <br><br><br>
+
+                </div>
+                  <div class="col-6 phone">
+                    <h3>Phone Numbers</h3>
+                      <ul class="fa-ul">
+                        {% for phone in supplier.supplierphone_set.all %}
+                          <li>
+                            <i class="fa fa-phone"></i>
+                            {{ phone.phone }} 
+                            <a href="{% url 'suppliers:update_phone' supplier.pk phone.pk %}">(Update)</a>
+                            <a href="{% url 'suppliers:delete_phone' supplier.pk phone.pk %}"> (Delete)</a>
+                          </li>
+                        {% empty %}
+                          <li>There is no phone Number</li>
+                        {% endfor %}
+                      </ul>
+                  </div>
+                  <div class="col-6">
+                    <h3>Emails</h3>
+                    <ul class="fa-ul">
+                      {% for email in supplier.supplieremail_set.all %}
+                        <li>
+                          <i class="fa fa-envelope"></i>
+                          {{ email.email }}
+                          <a href="{% url 'suppliers:update_email' supplier.pk email.pk %}">(Update)</a>
+                          <a href="{% url 'suppliers:delete_email' supplier.pk email.pk %}">(Delete)</a>
+                        </li>
+                      {% empty %}
+                        <li class="fa fa-envelope">There is no email</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+              </div>
             </div>
         
             <div class="tab-pane fade" id="note" role="tabpanel" aria-labelledby="note-tab">
-        
+              <div class="d-grid gap-2">
+                <a class="btn btn-primary" href="{% url 'suppliers:add_note' supplier.pk %}">Add Note</a>
+                <br><br>
+              </div>
+              <ul class="fa-ul">
+                {% for note in supplier.suppliernote_set.all %}
+                  <li>
+                    <i class="fa fa-commenting-o" aria-hidden="true"></i>
+                    {{ note.note|safe }}
+                    <a href="{% url 'suppliers:update_note' supplier.pk note.pk %}">(Update)</a>
+                    <a href="{% url 'suppliers:delete_note' supplier.pk note.pk %}">(Delete)</a>
+                  </li>
+                {% empty %}
+                  <li>
+                    <i class="fa fa-commenting-o" aria-hidden="true"></i>
+
+                    There is no Note
+                  </li>
+                {% endfor %}
+              </ul>
             </div>    
         
         </div>
