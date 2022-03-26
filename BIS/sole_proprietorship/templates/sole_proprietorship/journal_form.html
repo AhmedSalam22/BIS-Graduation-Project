@@ -48,9 +48,10 @@
                         {% crispy form helper %}
                 {% endfor %}
                 <hr>
-                <button class="btn btn-primary" type="submit" value="Save">Save</button>
-                <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{{ request.META.HTTP_REFERER}}';return false;">Cancel</button>
-
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{{ request.META.HTTP_REFERER}}';return false;">Cancel</button>
+                </div>
             
    
 </form> 

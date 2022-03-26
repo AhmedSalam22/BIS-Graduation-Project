@@ -40,6 +40,7 @@ from django.utils.functional import cached_property
 from django.db.models.expressions import RawSQL
 from datetime import timedelta
 from home.utils import render_to_pdf
+from home.db import CurrentDate
 # from django_renderpdf.views import PDFView
 
 class DaysInterval(Func):
@@ -553,7 +554,6 @@ class Dash:
         aged_receivables = ['0-30', '31-60', '61-90', 'over 90 days']
 
         query = Sale.sales.all_sales(self.owner_id).filter(status='UNPAID', sales_date__gte= Dash.start_date , sales_date__lte= Dash.end_date).annotate(
-            # days_overdue=  ExtractDay(timezone.now().date() - F('due_date')) ,
             aged_receivables=Case(
                 When(due_date__lt = (timezone.now().date() - timedelta(days=90) ), then=Value('over 90 days')),
                 When(due_date__lt = (timezone.now().date() - timedelta(days=60) ), then=Value('61-90')),
@@ -562,6 +562,7 @@ class Dash:
                 output_field= CharField(max_length=50)
             )
         )
+
         for age_receivable in aged_receivables:
             result[age_receivable] = query.filter(aged_receivables=age_receivable).aggregate(total_amt_unpaid__sum=Coalesce(Sum('total_amt_unpaid'), 0.0))['total_amt_unpaid__sum']
         return result
