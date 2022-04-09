@@ -1,0 +1,29 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <p class="text-primary m-0 font-weight-bold"> Add {{ title }} </p>
+    </div>
+    <div class="card-body">
+        <div >
+          {% load crispy_forms_tags %}  
+          <form action="" method="post">
+          {% csrf_token %}
+            {{ form|crispy }}
+          <hr>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-light" value="Cancel" onclick="window.location.href='{{ request.META.HTTP_REFERER}}';return false;">Cancel</button>
+          </div>
+          </form>
+      </diV>
+    </div>
+</div>
+
+  {% block js %}
+
+  {% endblock %}
+
+{% endblock %}

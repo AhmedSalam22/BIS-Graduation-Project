@@ -3,76 +3,75 @@
 {% block content %}
 <div class="container-fluid">
     <h3 class="text-dark mb-4">Suppliers</h3>
-    <div class="card shadow">
-        <div class="card-header py-3">
-            <p class="text-primary m-0 font-weight-bold">Suppliers</p>
-        </div>
-      
-        <div class="card-body">
-            <div class="d-grid gap-2">
-                <a class="btn btn-primary" href="{% url 'suppliers:create_supplier' %}">Create Supplier</a> 
-               
-            </div>
-            <div class="row">
-            <div class="table-responsive table mt-2  table-hover table-borderless" id="dataTable" role="grid" aria-describedby="dataTable_info">
-                <table class="table">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Name</th>
-                            <th>Action</th>
-
-                        </tr>
-                    </thead>
-                    <tbody>
-                       
-                            {% if supplier_list %}
-                            {% for supplier in supplier_list %}
-                            <tr>
-                                <td><strong>{{ supplier.full_name}}</strong></td>
-                                <td>
-                                    <a href="{% url 'suppliers:supplier_detail' supplier.id %}">
-                                        <button type="button" class="btn btn-warning"><i class="fa fa-eye d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
-                                    </a>
-                                    <a href="{% url 'suppliers:supplier_delete' supplier.id %}">
-                                        <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                          {% else %}
-                            <p>There are no accounts in the database.</p>
-                          {% endif %}
-
-                    </tbody>
-                </table>
-            </div>
-        <div class="row">
-                <div class="col-md-6">
-                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                        <div class="pagination">
-                            <span class="step-links">
-                                {% if page_obj.has_previous %}
-                                    <a href="?page=1">&laquo; first</a>
-                                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-                                {% endif %}
-                        
-                                <span class="current">
-                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                                </span>
-                        
-                                {% if page_obj.has_next %}
-                                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-                                {% endif %}
-                            </span>
+    <div class="row">
+        <div class="col-3">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get">
+                        {% load crispy_forms_tags %}  
+                        {{ filter.form|crispy }}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Search</button>
                         </div>
-    
-                    </nav>
+                    </form>
                 </div>
-            </div> 
+            </div>
+        </div>
+        <div class="col-9">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <p class="text-primary m-0 font-weight-bold">Suppliers</p>
+                </div>
+              
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" href="{% url 'suppliers:create_supplier' %}">Create Supplier</a> 
+                       
+                    </div>
+                    <div class="row">
+                    <div class="table-responsive table mt-2  table-hover table-borderless" id="dataTable" role="grid" aria-describedby="dataTable_info">
+                        <table class="table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Action</th>
+        
+                                </tr>
+                            </thead>
+                            <tbody>
+                               
+                                    {% if supplier_list %}
+                                    {% for supplier in supplier_list %}
+                                    <tr>
+                                        <td><strong>{{ supplier.full_name}}</strong></td>
+                                        <td>
+                                            <a href="{% url 'suppliers:supplier_detail' supplier.id %}">
+                                                <button type="button" class="btn btn-warning"><i class="fa fa-eye d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                            </a>
+                                            <a href="{% url 'suppliers:supplier_delete' supplier.id %}">
+                                                <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                  {% else %}
+                                    <p>There are no accounts in the database.</p>
+                                  {% endif %}
+        
+                            </tbody>
+                        </table>
+                    </div>
+                <div class="row">
+                        <div class="col-md-6">
+                            {% include 'home/pagination_filter.html' %}
+                        </div>
+                    </div> 
+                </div>
+            </div>
+        </div>
         </div>
     </div>
-</div>
+    
 </div>
     
 {% endblock %}

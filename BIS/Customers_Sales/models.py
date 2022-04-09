@@ -7,27 +7,23 @@ from ckeditor.fields import RichTextField
 from home.constant import ISO_3166_CODES
 
 # Create your models here.
-class CustomerType(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    customer_type = models.CharField(max_length=250 , blank=False)
-
-    def __str__(self):
-        return self.customer_type
-
 class Customer(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     first_name  = models.CharField(max_length=50)
     last_name   = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50 , blank=True , null=True)
-    account_number = models.IntegerField(blank=True , null=True)
-    prospect = models.BooleanField()
-    inactive = models.BooleanField()
-    customer_type = models.ForeignKey(CustomerType , on_delete=models.CASCADE , blank=True , null=True)
+
+    name = models.CharField(max_length=150)
 
     @property
     def full_name(self):
         """Returns the customer's full name."""
         return f'{self.first_name} {self.middle_name if self.middle_name != None else ""} {self.last_name}'
+
+
+    def save(self, *args, **kwargs):
+            self.name = f'{self.first_name} {self.middle_name} {self.last_name}'
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name
@@ -120,4 +116,9 @@ class CustomerNote(CustomerCommonFields):
         return f"note:{self.customer.first_name} {self.customer.middle_name} {self.customer.last_name}"
 
 
+class CustomerPhone(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    phone =  models.CharField(max_length = 16, blank=True, null=True)
 
+    def __str__(self):
+        return f'{self.phone}'

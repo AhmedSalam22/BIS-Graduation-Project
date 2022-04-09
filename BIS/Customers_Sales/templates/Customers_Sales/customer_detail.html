@@ -1,0 +1,135 @@
+{% extends 'home/base.html' %}
+{% block css%}
+  <style>
+    #myTab {
+      background-color: whitesmoke;
+    }
+
+    #myTabContent{
+        color: black;
+        border-style: groove;
+        padding: 20px;
+        margin-top: 10px;
+    }
+
+  </style>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <ul class="nav nav-pills nav-justified"  id="myTab" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="general-tab" data-toggle="tab" href="#General" role="tab" aria-controls="General" aria-selected="true">General</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="address-tab" data-toggle="tab" href="#Address" role="tab" aria-controls="Address" aria-selected="false">Address</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Contact</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="note-tab" data-toggle="tab" href="#note" role="tab" aria-controls="note" aria-selected="false">Note</a>
+            </li>
+          </ul>
+          <div class="tab-content" id="myTabContent">
+
+            <div class="tab-pane fade show active" id="General" role="tabpanel" aria-labelledby="general-tab">  
+                <p>Name: {{ customer.name }} (<a href="{% url 'Customer_Sales:customer_update' customer.pk %}">Update</a>)
+
+                </p>
+            </div>
+            <div class="tab-pane fade" id="Address" role="tabpanel" aria-labelledby="address-tab">
+              <div class="d-grid gap-2">
+                <a class="btn btn-primary" href="{% url 'Customer_Sales:add_address' customer.pk %}">Add Address</a>
+                <br><br>
+              </div>
+                <ul class="fa-ul">
+                  {% for address in customer.customeraddress_set.all %}
+                      <li>
+                        <i class="fa fa-address-card" aria-hidden="true"></i>
+                        {{address}}
+                        <a href="{% url 'Customer_Sales:update_address' customer.pk address.pk %}">(Update)</a>
+                        <a href="{% url 'Customer_Sales:delete_address' customer.pk address.pk %}">(Delete)</a>
+                      </li>
+                  {% empty %}
+                      <li>
+                        <i class="fa fa-address-card" aria-hidden="true"></i>
+                        There is no Address
+                      </li>
+                  {% endfor %}
+                </ul>
+            </div>
+            <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+              <br>
+
+              <div class="row">
+                <div class="d-grid gap-2">
+                  <a class="btn btn-primary" href="{% url 'Customer_Sales:add_phone' customer.pk %}">Add Phone Number</a>
+                  <a class="btn btn-primary" href="{% url 'Customer_Sales:add_email' customer.pk %}">Add Email</a>
+                  <br><br><br>
+
+                </div>
+                  <div class="col-6 phone">
+                    <h3>Phone Numbers</h3>
+                      <ul class="fa-ul">
+                        {% for phone in customer.customerphone_set.all %}
+                          <li>
+                            <i class="fa fa-phone"></i>
+                            {{ phone.phone }} 
+                            <a href="{% url 'Customer_Sales:update_phone' customer.pk phone.pk %}">(Update)</a>
+                            <a href="{% url 'Customer_Sales:delete_phone' customer.pk phone.pk %}"> (Delete)</a>
+                          </li>
+                        {% empty %}
+                          <li>There is no phone Number</li>
+                        {% endfor %}
+                      </ul>
+                  </div>
+                  <div class="col-6">
+                    <h3>Emails</h3>
+                    <ul class="fa-ul">
+                      {% for email in customer.customeremail_set.all %}
+                        <li>
+                          <i class="fa fa-envelope"></i>
+                          {{ email.email }}
+                          <a href="{% url 'Customer_Sales:update_email' customer.pk email.pk %}">(Update)</a>
+                          <a href="{% url 'Customer_Sales:delete_email' customer.pk email.pk %}">(Delete)</a>
+                        </li>
+                      {% empty %}
+                        <li class="fa fa-envelope">There is no email</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+              </div>
+            </div>
+        
+            <div class="tab-pane fade" id="note" role="tabpanel" aria-labelledby="note-tab">
+              <div class="d-grid gap-2">
+                <a class="btn btn-primary" href="{% url 'Customer_Sales:add_note' customer.pk %}">Add Note</a>
+                <br><br>
+              </div>
+              <ul class="fa-ul">
+                {% for note in customer.customernote_set.all %}
+                  <li>
+                    <i class="fa fa-commenting-o" aria-hidden="true"></i>
+                    {{ note.note|safe }}
+                    <a href="{% url 'Customer_Sales:update_note' customer.pk note.pk %}">(Update)</a>
+                    <a href="{% url 'Customer_Sales:delete_note' customer.pk note.pk %}">(Delete)</a>
+                  </li>
+                {% empty %}
+                  <li>
+                    <i class="fa fa-commenting-o" aria-hidden="true"></i>
+
+                    There is no Note
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>    
+        
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}

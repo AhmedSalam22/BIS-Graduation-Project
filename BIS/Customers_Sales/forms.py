@@ -1,5 +1,11 @@
 from django import forms
-from .models import Customer , CustomerAddress , CustomerEmail , CustomerType  , CustomerNote
+from .models import (
+    Customer, 
+    CustomerAddress, 
+    CustomerEmail, 
+    CustomerNote,
+    CustomerPhone
+)
 
 class CustomerForm(forms.ModelForm):
     class Meta:
@@ -7,10 +13,7 @@ class CustomerForm(forms.ModelForm):
         fields = ['first_name',
           'middle_name' , 
           'last_name' , 
-          'account_number', 
-          'prospect', 
-          'inactive' , 
-          'customer_type'] 
+        ] 
    
         
 
@@ -37,7 +40,7 @@ class CustomerEmailForm(forms.ModelForm):
         fields = ['email']
 
 
-# class TelephoneForm(forms.ModelForm):
-#     class Meta:
-#         model = Telephone
-#         fields = ['phone_number']
+class CustomerPhoneForm(forms.ModelForm):
+    class Meta:
+        model = CustomerPhone
+        fields = ['phone']

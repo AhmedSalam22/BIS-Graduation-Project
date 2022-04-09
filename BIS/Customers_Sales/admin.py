@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer , CustomerEmail  , CustomerType , CustomerAddress , CustomerNote
+from .models import Customer , CustomerEmail , CustomerAddress , CustomerNote
 
 
 class CustomerAddressInline(admin.TabularInline):
@@ -24,9 +24,9 @@ class CustomerEmailInline(admin.TabularInline):
 
 
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['first_name' , 'middle_name' , 'last_name' , 'account_number' , 'customer_type']
-    list_filter = ['customer_type' , 'prospect' , 'inactive']
-    search_fields =['first_name' , 'middle_name' , 'last_name' , 'account_number']
+    list_display = ['first_name' , 'middle_name' , 'last_name']
+    # list_filter = ['' , 'prospect' , 'inactive']
+    search_fields =['first_name' , 'middle_name' , 'last_name']
     inlines = [CustomerAddressInline , CustomerEmailInline]
 
     save_on_top = True
@@ -34,13 +34,13 @@ class CustomerAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Main", {
             "fields": [
-                'owner' ,('first_name' , 'middle_name' , 'last_name' ), 'customer_type'
+                'owner' ,('first_name' , 'middle_name' , 'last_name' ), 
             ],
         }),
-        ('Optionl', {
-            "fields" : ['prospect' , 'inactive'] ,
-            "classes" : ('collapse',)
-        }),
+        # ('Optionl', {
+        #     "fields" : ['prospect' , 'inactive'] ,
+        #     "classes" : ('collapse',)
+        # }),
     )
     
 
@@ -50,6 +50,5 @@ class CustomerAdmin(admin.ModelAdmin):
 admin.site.register(Customer , CustomerAdmin)
 admin.site.register([
  CustomerEmail , 
- CustomerType , 
  CustomerAddress , 
  CustomerNote])

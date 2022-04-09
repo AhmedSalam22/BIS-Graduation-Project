@@ -6,7 +6,8 @@ from django.db.models import Value, F
 from .models import Supplier, SupplierPhone, SupplierNote, SupplierAddress, SupplierEmail
 from django.contrib import messages
 from suppliers.forms import SupplierForm, SupplierEmailForm, SupplierPhoneForm, SupplierAddressForm, SupplierNoteForm
-
+from django_filters.views import FilterView
+from suppliers.filters import SupplierFilter
 # Create your views here.
 class CreateSupplierView(LoginRequiredMixin, View):
     template_name = 'suppliers/create_supplier.html'
@@ -79,11 +80,12 @@ class CreateSupplierView(LoginRequiredMixin, View):
 #         return super().form_valid(form)
 
 
-class SupplierListView(LoginRequiredMixin, ListView):
+class SupplierListView(LoginRequiredMixin, FilterView):
     template_name = 'suppliers/supplier_list.html'
     model = Supplier
     paginate_by = 20
     ordering  = ['-id']
+    filterset_class = SupplierFilter
 
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset().filter(
