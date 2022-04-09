@@ -1,0 +1,96 @@
+<head>
+    <style>
+        @page {
+            size: a4 portrait;
+            @frame content_frame {          /* Content Frame */
+                left: 10pt; width: 600pt; top: 10pt; height: 750pt;
+            }
+            @frame footer_frame {           /* Another static Frame */
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+        }
+    
+        table {
+            width:100%;
+            font-size: 16px;
+        }
+
+  
+
+   
+    table thead tr th {
+        text-align:left;
+    }
+
+   
+    table tbody tr {
+        margin-bottom: 3px;
+    }
+    .end-of-transaction  {
+    border-bottom-width: 2px !important;
+    border-style: dashed;
+    }
+
+    .start-of-transaction {
+        border-bottom-width: 0px !important;
+        border-style: none;
+    }
+
+    </style>
+    </head>
+    
+    <body>
+        <!-- Content for Static Frame 'footer_frame' -->
+        <div id="footer_content">(c) - page <pdf:pagenumber>
+            of <pdf:pagecount>
+        </div>
+        <hr>
+            <h1 style="text-align:center">{{ request.user.fs_reporting_period.company_name|default:"AYBA" }} Sales</h1>
+        <hr>
+
+        <!-- HTML Content -->
+    <table width="100%">
+        <thead>
+            <tr>
+                <th style="width: 20px;">Id</th>
+                <th>Date</th>
+                <th>Supplier</th>
+                <th>Net purchases</th>
+                <th>Total Amount Unpaid</th>
+                <th>status</th>
+
+            </tr>
+        </thead>
+           
+        <tbody>
+            
+              {% if sale_list %}
+                {% for  sale in sale_list %}
+                    <tr>
+                        <td>{{ sale.id }}</td>
+                        <td>{{ sale.sales_date }}</td>
+                        <td>{{ sale.customer }}</td>
+                        <td>{{ sale.netsales }}</td>
+                        <td>
+                            {% if sale.status == "UNPAID"%}
+                                {{ sale.total_amt_unpaid }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                        <td>{{ sale.status  }}</td>
+
+                    </tr>
+
+
+                {% endfor %}
+              {% else %}
+                <p>There are no accounts in the database.</p>
+              {% endif %}
+
+           
+        </tbody>
+    </table>
+    <hr>
+    </body>

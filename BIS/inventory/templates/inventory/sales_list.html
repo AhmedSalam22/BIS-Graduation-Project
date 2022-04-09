@@ -8,18 +8,30 @@
         <div class="col-3">
             <div class="card">
                 <div class="card-body">
-                    <form method="get">
+                    <form id="filter-form" method="get">
                         {% load crispy_forms_tags %}  
                         {{ form|crispy }}
                         <div class="d-grid gap-2">
 
                             <button type="submit" class="btn btn-primary">Search</button>
+                            <a class="btn btn-primary" onclick="pdf()" href="#">PDF</a>
+
                         </div>
                      </form>
                 </div>
             </div>
         </div>
         <div class="col-9">
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{% url 'inventory:purchases_dashboard' %}" class="btn btn-primary">
+                    Dashboard
+                  </a> 
+                  <a href="{% url 'inventory:create_sales' %}" class="btn btn-primary">
+                      create new Sales
+                  </a> 
+      
+            </div>
+           
             <div class="card shadow">
                 <div class="card-header py-3">
                     <p class="text-primary m-0 font-weight-bold">All Sales history</p>
@@ -27,17 +39,11 @@
             <div class="card-body">
                   
                     
-                    <a href="{% url 'inventory:purchases_dashboard' %}">
-                      <button class="btn btn-primary">Dashboard</button>
-                    </a> 
-                    <a href="{% url 'inventory:create_sales' %}">
-                        <button class="btn btn-primary">create new Sales</button>
-                    </a> 
-        
+                 
         
             </div>
                 <div class="card-body">
-                    <div class="table-responsive table mt-2" role="grid" aria-describedby="dataTable_info">
+                    <div class="table-responsive table" role="grid" aria-describedby="dataTable_info">
                         <table class="table table-hover table-borderless">
                             <thead class="table-dark">
                                 <tr>
@@ -53,7 +59,7 @@
                                
                                 {% if sale_list %}
                                     {% for sale in sale_list %}
-                                    <tr id="sale_{{sale.id}}" onclick="openSaleDetail(this)">
+                                    <tr id="sale_{{sale.id}}">
                                         <td><strong>{{ sale.sales_date }}</strong></td>
                                         <td><strong>{{ sale.customer}}</strong></td>
                                         <td>
@@ -63,6 +69,7 @@
                                         </td>
                                         <td><strong>{{ sale.due_date }}</strong></td>
                                         <td>
+                                            <a href="{% url 'inventory:sale_detail' sale.id %}"><i class="fa fa-eye btn btn-light"></i></a>
                                             <a href="{% url 'inventory:delete_sales' sale.id %}">
                                                 <button type="button" class="btn btn-danger"><i class="far fa-trash-alt d-xl-flex justify-content-xl-center align-items-xl-center"></i></button>
                                             </a>
@@ -111,7 +118,13 @@
 <script>
     function openSaleDetail(element) {
         const saleId = element.id.split('_')[1];
-        window.open(`/inventory/sale/${saleId}`, '_blank').focus();
+        window.open(`/inventory/sale/${saleId}`, '_blank');
+    }
+
+    function pdf(){
+        const form = document.getElementById('filter-form');
+        window.open(`{% url 'inventory:sales_pdf' %}?`+$(form).serialize(), '_blank').focus();
+
     }
 </script>
 {% endblock %}

@@ -417,6 +417,23 @@ class SupplierInvoicePDFView(LoginRequiredMixin, View):
         pdf = render_to_pdf(self.template_name, ctx)
         return HttpResponse(pdf, content_type='application/pdf')
 
+class CustomerInvoicePDFView(LoginRequiredMixin, View):
+    template_name = 'inventory/customer_invoice.html'
+
+    def get(self, request, *args, **kwargs):
+        ctx = {}
+        get_object_or_404(Sale, owner= self.request.user, pk=kwargs['pk'])
+        ctx['sale'] = Sale.objects.filter(
+            owner= self.request.user, pk=kwargs['pk']
+        ).prefetch_related(
+            'sold_item_set',
+             'salespayment_set'
+        ).first()
+        
+        pdf = render_to_pdf(self.template_name, ctx)
+        return HttpResponse(pdf, content_type='application/pdf')
+
+
 
 class PurchasesPDFView(LoginRequiredMixin, View):
     template_name = 'inventory/purchases_pdf.html'
@@ -917,6 +934,26 @@ class SalesListView(LoginRequiredMixin, ListView):
         context = self.get_context_data()
         
         return self.render_to_response(context)
+
+
+class SalesPDFView(SalesListView):
+    template_name = 'inventory/sales_pdf.html'
+    model = Sale
+    ordering = ['-sales_date']
+    paginate_by = None	
+
+
+    def get(self, request, *args, **kwargs):
+        filters = self.filter_queryset(request)
+        if len(filters) == 0:
+            self.object_list = self.get_queryset()
+        else:
+            self.object_list = self.get_queryset().filter(**filters)
+        context = self.get_context_data()
+
+        pdf = render_to_pdf(self.template_name , context)
+        return HttpResponse(pdf, content_type='application/pdf')
+
 
 class SalesDeleteView(OwnerDeleteView):
     model = Sale

@@ -22,7 +22,7 @@ class Customer(models.Model):
 
 
     def save(self, *args, **kwargs):
-            self.name = f'{self.first_name} {self.middle_name} {self.last_name}'
+            self.name = self.full_name
             super().save(*args, **kwargs)
 
     def __str__(self):

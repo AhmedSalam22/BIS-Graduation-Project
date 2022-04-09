@@ -48,7 +48,10 @@ urlpatterns = [
     path('PivotTable' , views.PivotTableView.as_view() , name="pivot_table"),
     path('sales_allowance_update/<int:sales_pk>', views.UpdateSalesAllowanceView.as_view(), name='sales_allowance_update' ),
     path('supplier_invoice/<int:pk>', views.SupplierInvoicePDFView.as_view(), name='supplier_invoice'),
+    path('customer_invoice/<int:pk>', views.CustomerInvoicePDFView.as_view(), name='customer_invoice'),
+
     path('purchases_pdf', views.PurchasesPDFView.as_view(), name='purchases_pdf'),
+    path('sales_pdf', views.SalesPDFView.as_view(), name='sales_pdf'),
 
 
 ]

@@ -24,8 +24,12 @@
                 </div>
               
                 <div class="card-body">
-                    <div class="row">
-                    <div class="table-responsive table mt-2  table-hover table-borderless" id="dataTable" role="grid" aria-describedby="dataTable_info">
+                    <div class="d-grid gap-2">
+
+                        <a class="btn btn-primary" href="{% url 'Customer_Sales:add_customer' %}">Create Customer</a>
+                    </div>
+                    <div class="table-responsive table mt-2  table-hover table-borderless">
+                        
                         <table class="table">
                             <thead class="table-dark">
                                 <tr>
@@ -63,7 +67,6 @@
                             {% include 'home/pagination_filter.html' %}
                         </div>
                     </div> 
-                </div>
             </div>
         </div>
         </div>

@@ -7,7 +7,7 @@
     {% with total_amount_paid=sale.total_amount_paid paid=sale.paid  sales_return_amount=sale.sales_return net_sales=sale.net_sales allowance=sale.allowance %}
     <div class="d-grid gap-2 d-md-flex justify-content-md-center">
         <button class="btn btn-light" type="button" onclick="printMe()"><i class="far fa-file-pdf"> PDF</i></button>
-        <button class="btn btn-light" type="button"><i class="far fa-file-excel"> Excel</i></button>
+        <a class="btn btn-light" type="button" href="{% url 'inventory:customer_invoice' sale.pk %}"><i class="far fa-file-pdf"> PDF2</i></a>
         {% if paid == False %}
             <button class="btn btn-light" type="button"><strong><a href="{% url 'inventory:create_sales_payment_args' sale.pk %}" target="blank"><i class="fab fa-amazon-pay"> Pay Invoice</i></a></strong></button>
         {% endif %}
@@ -166,10 +166,10 @@
                                 <tr>
                                     <td><strong>{{ forloop.counter }}</strong></td>
                                     <td><strong><a href="{% url 'inventory:detail_inventory' sold_item.item.inventory.id %}" target="blank">{{ sold_item.item.inventory }}</a></strong></td>
-                                    <td><strong>{{ sold_item.quantity}}</strong></td>
-                                    <td><strong>{{ sold_item.sale_price}}</strong></td>
+                                    <td><strong>{{ sold_item.quantity }}</strong></td>
+                                    <td><strong>{{ sold_item.sale_price }}</strong></td>
                                     <td><strong>{% widthratio sold_item.quantity 1 sold_item.sale_price %}</strong></td>
-                                    <td><strong>{{ sold_item.item.inventory.description|truncatechars:50 }}</strong></td>
+                                    <td><strong>{{ sold_item.item.inventory.description|safe|truncatechars:50 }}</strong></td>
                                     <td>
                                         <div class="dropdown">
                                             <div class="text-center" data-toggle="dropdown" aria-expanded="false">

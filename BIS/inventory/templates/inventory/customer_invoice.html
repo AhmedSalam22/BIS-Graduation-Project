@@ -1,0 +1,158 @@
+<head>
+    <title>Invoice #{{purchaseinventory.pk }}</title>
+    <style>
+        @page {
+        size: a4 portrait;
+        @frame header_frame {           /* Static Frame */
+        -pdf-frame-content: header_content;
+        left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+        }
+        @frame content_frame {          /* Content Frame */
+        left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+        }
+        @frame footer_frame {           /* Another static Frame */
+        -pdf-frame-content: footer_content;
+        left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+        }
+        }
+        * {
+            font-size: 105%;
+        }
+        table tr th {
+            padding: 0px;
+            text-align: left;
+        }
+       
+        #invoice-header {
+            background-color:rgba(32, 25, 25, 0.692);
+            text-align: center;
+            color: white;
+            padding-top: 10px;     
+        }
+
+        table tfoot tr td {
+            font-weight: bold;
+        }
+        .invoice-footr {
+            text-align: right;
+            padding-right: 70px;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Content for Static Frame 'header_frame' -->
+    <div id="header_content">
+        <h3>{{ request.user.fs_reporting_period.company_name|default:"AYBA" }} Invoice System</h3>
+    </div>
+    <!-- Content for Static Frame 'footer_frame' -->
+    <div id="footer_content">
+        (c) - page 
+        <pdf:pagenumber>
+        of 
+        <pdf:pagecount>
+    </div>
+    <!-- HTML Content -->
+    <h1 id="invoice-header">Invoice #{{sale.pk }} </h1>
+    <table>
+        <tr>
+            <td>Inovice date: {{  sale.sales_date }}</td>
+            <td>{{ sale.customer }}</td>
+        </tr>
+        <tr>
+            <td>Due date: {{ sale.check_due_date }}</td>
+            <td>Total Amount Paid: <b>{{  sale.total_amount_paid }}</b></td>
+            <td>Amount you will pay if discount applies: {{ sale.amount_if_there_discount }}</td>
+        </tr>
+        <tr>
+            {% if sale.paid %}
+                <td >Status:<b style="color: green;">PAID</b> </td>
+            {% else %}
+                <td >Status:<b style="color:red">UNPAID</b> </td>
+            {% endif %}
+            <td>Amount due: <b>{{ sale.total_amount_unpaid }}</b></td>
+        </tr>
+    </table>
+    <hr>
+    <table>
+        <thead>
+            <tr>
+                <th>item</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for  sold_item in sale.sold_item_set.all %}
+            <tr>
+                <td>{{ sold_item.item.inventory }}</td>
+                <td>{{ sold_item.sale_price }}</td>
+                <td>{{ sold_item.quantity }}</td>
+                <td>{% widthratio sold_item.quantity 1 sold_item.sale_price %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if  sales_return_amount > 0 %}
+    <h3 style="text-align: center; background-color: gainsboro; padding-top: 10px;">List of Returned Item</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>item</th>
+                <th>Num</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for return in sale.salesreturn_set.all %}
+            <tr>
+                <td>{{  return.date }}</td>
+                <td>{{ return.sold_item.item.inventory }}</td>
+                <td>{{ return.num_returned }}</td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    <hr>
+    <table>
+    
+        <tfoot>
+        <tr>
+            <td colspan="3" class="invoice-footr">Total:</td>
+            <td>{{ sale.sub_total }}</td>
+        </tr>
+        {% if sale.frieght_out %}
+        <tr>
+            <td colspan="3" class="invoice-footr">
+                frieght out
+            </td>
+            <td style="color: red;">{{sale.frieght_out }}</td>
+        </tr>
+        {% endif %}
+        {% if sale.sales_allowance > 0%}
+        <tr>
+            <td colspan="3" class="invoice-footr">Allowance</td>
+            <td style="color: red;">{{ sale.sales_allowance }}</td>
+        </tr>
+        {% endif %}
+        {% if sale.num_units_returned > 0 %}
+        <tr>
+            <td colspan="3" class="invoice-footr">Cost of unit's returned:</td>
+            <td>{{ sale.sales_return }}</td>
+        </tr>
+        {% endif %}
+        {% if sale.sales_allowance > 0 or sale.num_units_returned > 0 %}
+        <tr>
+            <td colspan="3" class="invoice-footr">Net Purchases:</td>
+            <td>{{ sale.net_sales }}</td>
+        </tr>
+        {% endif %}
+    </tfoot>    
+    </table>
+    <hr>
+</body>
+</html>

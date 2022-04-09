@@ -35,11 +35,11 @@ class CoustomerView(LoginRequiredMixin, View):
                 'customer_form' : CustomerForm(),
                 'customer_address_form' : CustomerAddressForm(),
                 'cutomer_note_form': CustomerNoteForm(),
-                'customer_email_form': CustomerEmailForm()
+                'customer_email_form': CustomerEmailForm(),
+                'customer_phone_form': CustomerPhoneForm()
             }
         }
 
-        ctx['forms']['customer_form'].fields["customer_type"].queryset = CustomerType.objects.filter(owner=request.user)
 
         return render(request, self.template_name, ctx)
 
@@ -50,7 +50,9 @@ class CoustomerView(LoginRequiredMixin, View):
                 'customer_form' : CustomerForm(request.POST),
                 'customer_address_form' : CustomerAddressForm(request.POST),
                 'cutomer_note_form': CustomerNoteForm(request.POST),
-                'customer_email_form': CustomerEmailForm(request.POST)
+                'customer_email_form': CustomerEmailForm(request.POST),
+                'customer_phone_form': CustomerPhoneForm(request.POST)
+
             }
         }
 
@@ -77,6 +79,11 @@ class CoustomerView(LoginRequiredMixin, View):
                 email = ctx['forms']['customer_email_form'].save(commit=False)
                 email.customer = customer
                 email.save()
+            if ctx['forms']['customer_phone_form'].cleaned_data['phone']:
+                phone = ctx['forms']['customer_phone_forn'].save(commit=False)
+                phone.customer = customer
+                phone.save()
+                
             messages.success(request, 'Your Customer Was Created successfully')
 
         return redirect(reverse_lazy(self.success_url))

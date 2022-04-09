@@ -1069,6 +1069,10 @@ class Sale(DueDateMixin, models.Model):
         """
         return self.sub_total - self.sales_return - self.sales_allowance
 
+    @cached_property
+    def total_amount_unpaid(self):
+        return self.net_sales - self.total_amount_paid
+
     def save(self, *args, **kwargs):
         self.due_date = self.check_due_date()
         super().save(*args, **kwargs)
