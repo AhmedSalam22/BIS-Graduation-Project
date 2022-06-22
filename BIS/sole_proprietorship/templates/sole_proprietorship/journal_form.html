@@ -1,24 +1,27 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block css %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<style>
+  .error {
+    font-size: 1em;
+  }
+</style>
 {% endblock %}
 {% block javascript_top %}
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
-
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
 <script>
   $(document).ready(function() {
-         $('.select2').select2({
-            theme: 'bootstrap4'
-         });
+    $('.select2').select2();
+
   });
    $(document).change(function() {
-         $('.select2').select2({
-            theme: 'bootstrap4'
-         });
+        $('.select2').select2();
+       
   });
-</script>
+</script> -->
 {% endblock%}
 
 {% block content %}
@@ -41,12 +44,15 @@
              {% if form %}
                     {{ form }}
               {% endif %}    
+              {% comment %}
                 {{ formset.management_form|crispy  }}  
-                                
-                {% for form in formset %}
-                    {% comment %} {{ form|crispy }} {% endcomment %}
-                        {% crispy form helper %}
-                {% endfor %}
+              {% endcomment %}
+                {% crispy formset helper %}
+                {% comment %}
+                    {% for form in formset %}
+                            {% crispy form helper %}
+                    {% endfor %}
+                {% endcomment %}
                 <hr>
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -62,8 +68,9 @@
     <script>
         $('.link-formset').formset({
             addText: '<i class="fa fa-plus add"></i> Add Transation',
-            deleteText: '<i class="far fa-trash-alt"></i>Remove'
+            deleteText: "<div class='btn btn-danger btn-circle'><i class='fas fa-trash'></i></div>",
         });
+        
     </script>
 {% endblock %}
 

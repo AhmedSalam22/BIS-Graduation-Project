@@ -26,6 +26,9 @@ class JournalFormSetForm(ModelForm):
         self.user = user
         self.fields['account'].queryset = Accounts.objects.filter(owner = user)
         self.fields['account'].widget.attrs.update({'class': 'select2'})
+        self.empty_permitted = False  #It will make sure any displayed forms must not be empty when submitted.
+
+
         # self.fields['date'].widget =  forms.widgets.DateInput(attrs={'type': 'date'})
         # self.fields["date"].initial = timezone.localdate()
           
@@ -49,7 +52,7 @@ class JournalFormSetHelper(FormHelper):
         )
         self.render_required_fields = True
         self.form_tag = False
-        # self.template = 'bootstrap/table_inline_formset.html'
+        self.template = 'home/table_inline_formset.html'
 
 
 
