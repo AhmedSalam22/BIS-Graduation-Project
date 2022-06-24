@@ -1,27 +1,23 @@
 {% extends "sole_proprietorship/index.html" %}
 {% block css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.3/dist/css/tom-select.css" rel="stylesheet">
 
 <style>
   .error {
     font-size: 1em;
   }
+  .custom-select {
+    padding: 0px;
+  }
 </style>
 {% endblock %}
 {% block javascript_top %}
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
-<script>
-  $(document).ready(function() {
-    $('.select2').select2();
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.3/dist/js/tom-select.complete.min.js"></script>
 
-  });
-   $(document).change(function() {
-        $('.select2').select2();
-       
-  });
-</script> -->
+  <script>
+ 
+</script> 
 {% endblock%}
 
 {% block content %}
@@ -65,13 +61,39 @@
 </diV>
 </div>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.2.2/jquery.formset.min.js"></script> 
-    <script>
-        $('.link-formset').formset({
-            addText: '<i class="fa fa-plus add"></i> Add Transation',
-            deleteText: "<div class='btn btn-danger btn-circle'><i class='fas fa-trash'></i></div>",
-        });
-        
-    </script>
+<script>
+  let settings = {
+        create: false,
+        sortField: {
+          field: "text",
+          direction: "asc"
+        }   
+      }
+    let indexOfFormset;
+   $(document).ready(function() {
+    $('.link-formset').formset({
+        addText: '<i class="fa fa-plus add"></i> Add Transation',
+        deleteText: "<div class='btn btn-danger btn-circle'><i class='fas fa-trash'></i></div>",
+        added : function(row){
+          indexOfFormset = $("tbody .link-formset.dynamic-form").length - 1;
+          console.log(indexOfFormset);
+          // console.log($(row).children().first().first());
+          new TomSelect(`#form-${indexOfFormset}-id_form-1-account`, settings); 
+
+        },
+        removed: function(row) {
+          console.log('removed');
+        }
+    });
+    document.querySelectorAll('.select_account').forEach((el)=>{
+      new TomSelect(el, settings);
+    });
+
+  
+  });
+    
+    
+</script>
 {% endblock %}
 
 

@@ -1,19 +1,19 @@
 
 <table class="dataframe table table-hover table-borderless">
-<thead>
-    <tr>
-        <th colspan="3">{{ request.user.fs_reporting_period.company_name|default:"AYBA"}}</th>
-    </tr>
-    <tr>
-        <th colspan="3">Owner's Equity Statement</th>
-    </tr>
-    <tr>
-        <th colspan="3">from {{ request.user.fs_reporting_period.start_date }} to {{ request.user.fs_reporting_period.end_date}}</th>
-    </tr>
-</thead>
+    <thead>
+        <tr>
+            <th colspan="3">{{ request.user.fs_reporting_period.company_name|default:"AYBA"}}</th>
+        </tr>
+        <tr>
+            <th colspan="3">Owner's Equity Statement</th>
+        </tr>
+        <tr>
+            <th colspan="3">from {{ request.user.fs_reporting_period.start_date }} to {{ request.user.fs_reporting_period.end_date}}</th>
+        </tr>
+    </thead>
 <tbody>
     <tr>
-        <th>Owner's capital investment </th>
+        <th>Owner's Capital Contribution </th>
         <td></td>
         <td>{{Investment}}</td>
     </tr>

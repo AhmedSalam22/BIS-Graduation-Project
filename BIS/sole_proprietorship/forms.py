@@ -16,16 +16,14 @@ class JournalFormSetForm(ModelForm):
     class Meta:
         model = Journal
         fields = ['account', 'balance' , "transaction_type"]
-        # widgets = {
-        #     "comment":forms.Textarea(attrs={"placeholder":"Type Comment about specific transaction" , "rows":"2"})
-        # }
+      
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.user = user
         self.fields['account'].queryset = Accounts.objects.filter(owner = user)
-        self.fields['account'].widget.attrs.update({'class': 'select2'})
+        self.fields['account'].widget.attrs.update({'class': 'select_account'})
         self.empty_permitted = False  #It will make sure any displayed forms must not be empty when submitted.
 
 

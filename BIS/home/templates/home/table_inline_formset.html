@@ -13,8 +13,7 @@
     <div>
         {{ formset.management_form|crispy }}
     </div>
-    <div class="table-responsive">
-
+    <div>
         <table{% if form_id %} id="{{ form_id }}_table"{% endif%} class="table">
             <thead class="table-dark">
                 {% if formset.readonly and not formset.queryset.exists %}
